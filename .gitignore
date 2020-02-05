@@ -3,3 +3,4 @@
 bleak
 env
 .gitmodules
+tapsdk.egg-info

@@ -10,6 +10,9 @@ TAP python SDK allows you to build python app that can establish BLE connection 
 
 ### Installation
 
+#### Windows
+The Windows BLE backend is actually a wrapper to the dynamic library compiled from windows SDK from 
+
 Download/clone the repo and install it.
 ```console
     git clone https://github.com/TapWithUs/tap-python-sdk
