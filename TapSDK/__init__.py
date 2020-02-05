@@ -7,4 +7,4 @@ if this_platform == "Windows":
 
     # sys.path.append(r"C:\Users\oded\PycharmProjects\tap-sdk")
     clr.AddReference(r"TAPWin")
-    from TapSDK.backends.dotnet.TapWindowsSDK import TapWindowsSDK as TapSDK
+    from tapsdk.backends.dotnet.TapWindowsSDK import TapWindowsSDK as TapSDK

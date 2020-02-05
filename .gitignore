@@ -4,3 +4,4 @@ bleak
 env
 .gitmodules
 tapsdk.egg-info
+*.pyc

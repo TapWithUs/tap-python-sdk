@@ -1,5 +1,5 @@
 import clr
-from TapSDK.TapSDK import TapSDK
+from tapsdk.TapSDK import TapSDK
 
 clr.AddReference(r"TAPWin")
 from TAPWin import TAPManager
