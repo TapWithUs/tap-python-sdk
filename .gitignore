@@ -1,0 +1,7 @@
+.idea
+.vscode
+bleak
+env
+.gitmodules
+tapsdk.egg-info
+*.pyc
