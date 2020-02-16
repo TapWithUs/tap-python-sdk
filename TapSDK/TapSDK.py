@@ -1,7 +1,7 @@
 import abc
 
 
-class TapSDK(abc.ABC):
+class TapSDKBase(abc.ABC):
     def __init__(self):
         pass
 
@@ -19,10 +19,6 @@ class TapSDK(abc.ABC):
 
     @abc.abstractmethod
     def register_disconnection_events(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def run(self):
         raise NotImplementedError()
 
     @abc.abstractmethod
