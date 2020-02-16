@@ -22,10 +22,6 @@ class TapSDKBase(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def run(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
     def set_input_mode(self, mode):
         raise NotImplementedError()
 
