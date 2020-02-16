@@ -1,7 +1,7 @@
 import abc
 
 
-class BlePeripheral(abc.ABC):
+class BlePeripheralBase(abc.ABC):
     def __init__(self):
         pass
 

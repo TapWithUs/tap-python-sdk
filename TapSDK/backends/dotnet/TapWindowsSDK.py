@@ -1,5 +1,5 @@
 import clr
-from tapsdk.TapSDK import TapSDK
+from tapsdk.TapSDK import TapSDKBase
 
 clr.AddReference(r"TAPWin")
 from TAPWin import TAPManager
@@ -7,7 +7,7 @@ from TAPWin import TAPManagerLog
 from TAPWin import TAPInputMode
 
 
-class TapWindowsSDK(TapSDK):
+class TapWindowsSDK(TapSDKBase):
     def __init__(self):
         self.mode = 1
         TAPManagerLog.Instance.OnLineLogged += print

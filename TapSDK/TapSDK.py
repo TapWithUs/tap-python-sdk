@@ -1,7 +1,7 @@
 import abc
 
 
-class TapSDK(abc.ABC):
+class TapSDKBase(abc.ABC):
     def __init__(self):
         pass
 
