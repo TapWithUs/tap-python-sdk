@@ -12,6 +12,7 @@ from bleak.backends.corebluetooth import CBAPP as cbapp
 
 
 from ...TapSDK import TapSDKBase
+from ...models.inputmodes import TapInputModes
 
 service__TAP = "C3FF0001-1D8B-40FD-A56F-C7BD5D0F3370"
 service__NUS = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -108,14 +109,9 @@ class TapMacSDK(TapSDKBase):
                 gesture = data[0]
                 self.air_gesture_event_cb(identifier, gesture)
 
-    async def set_input_mode(self, input_mode):
+    async def set_input_mode(self, input_mode:TapInputModes):
         self.input_mode = input_mode
-        if input_mode == "controller":
-            write_value = bytearray([0x3,0xc,0x0,0x1])
-        if input_mode == "text":
-            write_value = bytearray([0x3,0xc,0x0,0x0])
-        if input_mode == "raw":
-            write_value = bytearray([0x3,0xc,0x0,0x0])
+        write_value = input_mode.get_command()
 
         if self.input_mode_refresh.is_running == False:
             await self.input_mode_refresh.start()
@@ -124,7 +120,7 @@ class TapMacSDK(TapSDKBase):
 
     async def _refresh_input_mode(self):
         await self.set_input_mode(self.input_mode)
-        logger.debug("Input Mode Refreshed: " + self.input_mode)
+        logger.debug("Input Mode Refreshed: " + self.input_mode.get_name())
         
     async def _write_input_mode(self, value):
         await self.manager.write_gatt_char(characteristic__RX, value)
