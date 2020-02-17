@@ -12,14 +12,8 @@ from bleak.backends.corebluetooth import CBAPP as cbapp
 
 
 from ...TapSDK import TapSDKBase
+from ...models import TapInputModes, TapUUID
 
-service__TAP = "C3FF0001-1D8B-40FD-A56F-C7BD5D0F3370"
-service__NUS = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-characteristic__TAPData = "C3FF0005-1D8B-40FD-A56F-C7BD5D0F3370"
-characteristic__MouseData = "C3FF0006-1D8B-40FD-A56F-C7BD5D0F3370"
-characteristic__UICommands = "C3FF0009-1D8B-40FD-A56F-C7BD5D0F3370"
-characteristic__AirGesture = "C3FF000A-1D8B-40FD-A56F-C7BD5D0F3370"
-characteristic__RX = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 
 import objc
 import uuid
@@ -43,7 +37,8 @@ class TapClient(BleakClient):
         return True
 
 def get_paired_taps():
-    paired_taps = cbapp.central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_([CBUUID.UUIDWithString_(str(uuid.UUID('C3FF0001-1D8B-40FD-A56F-C7BD5D0F3370')))])
+    paired_taps = cbapp.central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
+        [CBUUID.UUIDWithString_(str(uuid.UUID(TapUUID.tap_service)))])
     # await cbapp.central_manager_delegate.connect_(a[0])
     logger.debug("Found connected Taps @ {}".format(paired_taps))
     return paired_taps
@@ -61,22 +56,22 @@ class TapMacSDK(TapSDKBase):
 
     async def register_tap_events(self, cb: Callable):
         if cb:
-            await self.manager.start_notify(characteristic__TAPData, self.on_tapped)
+            await self.manager.start_notify(TapUUID.tap_data_characteristic, self.on_tapped)
             self.tap_event_cb = cb
 
     async def register_mouse_events(self, cb: Callable):
         if cb:
-            await self.manager.start_notify(characteristic__MouseData, self.on_moused)
+            await self.manager.start_notify(TapUUID.mouse_data_characteristic, self.on_moused)
             self.mouse_event_cb = cb
     
     async def register_air_gesture_events(self, cb: Callable):
         if cb:
-            await self.manager.start_notify(characteristic__AirGesture, self.on_air_gesture)
+            await self.manager.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
             self.air_gesture_event_cb = cb
 
     async def register_raw_data_events(self, cb: Callable):
         if cb:
-            await self.manager.start_notify(characteristic__MouseData, self.on_raw_data)
+            await self.manager.start_notify(TapUUID.raw_sensors_chaaracteristic, self.on_raw_data)
             self.raw_data_event_cb = cb
 
     def register_connection_events(self, cb: Callable):
@@ -108,14 +103,9 @@ class TapMacSDK(TapSDKBase):
                 gesture = data[0]
                 self.air_gesture_event_cb(identifier, gesture)
 
-    async def set_input_mode(self, input_mode):
+    async def set_input_mode(self, input_mode:TapInputModes):
         self.input_mode = input_mode
-        if input_mode == "controller":
-            write_value = bytearray([0x3,0xc,0x0,0x1])
-        if input_mode == "text":
-            write_value = bytearray([0x3,0xc,0x0,0x0])
-        if input_mode == "raw":
-            write_value = bytearray([0x3,0xc,0x0,0x0])
+        write_value = input_mode.get_command()
 
         if self.input_mode_refresh.is_running == False:
             await self.input_mode_refresh.start()
@@ -124,10 +114,10 @@ class TapMacSDK(TapSDKBase):
 
     async def _refresh_input_mode(self):
         await self.set_input_mode(self.input_mode)
-        logger.debug("Input Mode Refreshed: " + self.input_mode)
+        logger.debug("Input Mode Refreshed: " + self.input_mode.get_name())
         
     async def _write_input_mode(self, value):
-        await self.manager.write_gatt_char(characteristic__RX, value)
+        await self.manager.write_gatt_char(TapUUID.tap_mode_characteristic, value)
     
     async def list_connected_taps(self):
         devices = await discover(loop=self.loop)

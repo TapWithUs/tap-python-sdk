@@ -1,10 +1,13 @@
 from tapsdk.backends.macos.TapMacSDK import TapMacSDK
+from tapsdk.models.inputmodes import TapInputModes
 import os
 os.environ["PYTHONASYNCIODEBUG"] = str(1)
 import asyncio
 import platform
 import logging
 from bleak import _logger as logger
+
+from tapsdk.models import AirGestures
 
 
 def notification_handler(sender, data):
@@ -15,7 +18,7 @@ def OnTapped(identifier, tapcode):
     print(identifier + " tapped " + str(tapcode))
 
 def OnGesture(identifier, gesture):
-    print(identifier + " gesture " + str(gesture))
+    print(identifier + " gesture " + str(AirGestures(gesture)))
 
 def OnTapConnected(self, identifier, name, fw):
     print(identifier + " Tap: " + str(name), " FW Version: ", fw)
@@ -45,7 +48,7 @@ async def run(loop, debug=False):
     x = await client.manager.is_connected()
     logger.info("Connected: {0}".format(x))
 
-    await client.set_input_mode("controller")
+    await client.set_input_mode(TapInputModes("controller"))
 
     await client.register_air_gesture_events(OnGesture)
     await client.register_tap_events(OnTapped)
