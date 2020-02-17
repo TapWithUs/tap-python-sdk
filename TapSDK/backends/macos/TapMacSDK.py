@@ -102,6 +102,15 @@ class TapMacSDK(TapSDKBase):
             if data[0] != 0x14:
                 gesture = data[0]
                 self.air_gesture_event_cb(identifier, gesture)
+    
+    async def send_haptic_command(self, pattern):
+        if len(pattern) > 18:
+            pattern = pattern[:18]
+        for i, d in enumerate(pattern):
+            pattern[i] = max(0,min(255,d//10))
+ 
+        write_value = bytearray([0x0,0x2] + pattern)
+        await self.manager.write_gatt_char(TapUUID.ui_cmd_characteristic, write_value)
 
     async def set_input_mode(self, input_mode:TapInputModes):
         self.input_mode = input_mode

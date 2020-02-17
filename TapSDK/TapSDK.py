@@ -25,3 +25,7 @@ class TapSDKBase(abc.ABC):
     def set_input_mode(self, mode):
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def send_haptic_command(self, pattern):
+        raise NotImplementedError()
+
