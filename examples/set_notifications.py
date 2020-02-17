@@ -7,6 +7,8 @@ import platform
 import logging
 from bleak import _logger as logger
 
+from tapsdk.models import AirGestures
+
 
 def notification_handler(sender, data):
     """Simple notification handler which prints the data received."""
@@ -16,7 +18,7 @@ def OnTapped(identifier, tapcode):
     print(identifier + " tapped " + str(tapcode))
 
 def OnGesture(identifier, gesture):
-    print(identifier + " gesture " + str(gesture))
+    print(identifier + " gesture " + str(AirGestures(gesture)))
 
 def OnTapConnected(self, identifier, name, fw):
     print(identifier + " Tap: " + str(name), " FW Version: ", fw)
