@@ -53,6 +53,10 @@ async def run(loop, debug=False):
     await client.register_air_gesture_events(OnGesture)
     await client.register_tap_events(OnTapped)
     # await client.register_mouse_events(OnMoused)
+    
+    await asyncio.sleep(5)
+
+    await client.send_haptic_command([100, 200, 300, 400, 500])
 
     await asyncio.sleep(50.0, loop=loop)
 
