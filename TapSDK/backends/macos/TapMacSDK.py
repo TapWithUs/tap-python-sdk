@@ -51,15 +51,13 @@ def get_paired_taps():
 class TapMacSDK(TapSDKBase):
     def __init__(self, loop: AbstractEventLoop = None):
         super(TapMacSDK, self).__init__()
-        self.mode = 1
         self.loop = loop
         self.manager = TapClient("29934722-8924-4B47-AF8E-923D6C9FED82", loop)
         self.mouse_event_cb = None
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
         self.raw_data_event_cb = None
-        self.input_mode = None
-
+        self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
 
     async def register_tap_events(self, cb: Callable):
         if cb:
@@ -82,10 +80,10 @@ class TapMacSDK(TapSDKBase):
             self.raw_data_event_cb = cb
 
     def register_connection_events(self, cb: Callable):
-        TAPManager.Instance.OnTapConnected += self.OnTapConnected
+        pass
 
     def register_disconnection_events(self, cb: Callable):
-        TAPManager.Instance.OnTapDisconnected += self.OnTapDisconnected
+        pass
 
     def on_moused(self, identifier, data):
         if self.mouse_event_cb:
@@ -110,18 +108,51 @@ class TapMacSDK(TapSDKBase):
                 gesture = data[0]
                 self.air_gesture_event_cb(identifier, gesture)
 
-    async def set_input_mode(self, mode):
-        if mode == "controller":
-            self.mode = mode
+    async def set_input_mode(self, input_mode):
+        self.input_mode = input_mode
+        if input_mode == "controller":
             write_value = bytearray([0x3,0xc,0x0,0x1])
-        if mode == "text":
+        if input_mode == "text":
             write_value = bytearray([0x3,0xc,0x0,0x0])
-        if mode == "raw":
-            self.mode = mode
+        if input_mode == "raw":
+            write_value = bytearray([0x3,0xc,0x0,0x0])
+
+        if self.input_mode_refresh.is_running == False:
+            await self.input_mode_refresh.start()
+
+        await self._write_input_mode(write_value)
+
+    async def _refresh_input_mode(self):
+        await self.set_input_mode(self.input_mode)
+        logger.debug("Input Mode Refreshed: " + self.input_mode)
         
-        await self.manager.write_gatt_char(characteristic__RX, write_value)
+    async def _write_input_mode(self, value):
+        await self.manager.write_gatt_char(characteristic__RX, value)
     
     async def list_connected_taps(self):
         devices = await discover(loop=self.loop)
         return devices
 
+class InputModeAutoRefresh:
+    def __init__(self, set_function: Callable, timeout:int=10):
+        self.set_function = set_function
+        self.is_running = False
+        self.timeout = timeout
+        self.wd_task = None
+
+    async def start(self):
+        if self.is_running == False:
+            self.wd_task = asyncio.create_task(self.periodic())
+            self.is_running = True
+            logger.debug("Input Mode Auto Refresh Started")
+    
+    async def stop(self):
+        if self.is_running == True:
+            self.wd_task.cancel()
+            self.is_running = False
+            logger.debug("Input Mode Auto Refresh Stopped")
+
+    async def periodic(self):
+        while True:
+            await self.set_function()
+            await asyncio.sleep(self.timeout)
