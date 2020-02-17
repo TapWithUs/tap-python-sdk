@@ -43,7 +43,11 @@ class TapSDK(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def set_raw_sensors_mode(self, device_accel_sens, imu_gyro_sens, imu_accel_sens):
+    def set_raw_sensors_mode(self, device_accel_sens, imu_gyro_sens, imu_accel_sens, identifier):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def send_vibration_sequence(self, sequence, identifier):
         raise NotImplementedError
 
     class TapMode(IntEnum):

@@ -1,4 +1,5 @@
 import clr
+from System import Array
 from TapSDK.TapSDK import TapSDK
 
 clr.AddReference(r"TAPWin")
@@ -13,9 +14,6 @@ from TAPWin import RawSensorData
 class TapWindowsSDK(TapSDK):
     def __init__(self):
         TapSDK.__init__(self)
-        self.airGestureState = False
-        self.mode = None
-        self.tapConnected = False
         TAPManagerLog.Instance.OnLineLogged += print
 
     @staticmethod
@@ -23,12 +21,9 @@ class TapWindowsSDK(TapSDK):
         print(identifier + " tapped " + str(tapcode))
 
     def OnTapConnected(self, identifier, name, fw):
-        self.tapConnected = True
         print(identifier + " Tap: " + str(name), " FW Version: ", fw)
 
     def OnTapDisconnected(self, identifier):
-        self.tapConnected = False
-        self.mode = None
         print(identifier + " Tap: " + identifier + " disconnected")
 
     @staticmethod
@@ -89,21 +84,40 @@ class TapWindowsSDK(TapSDK):
         else:
             TAPManager.Instance.OnChangedAirGestureState += self.OnChangedAirGestureState
 
-    def set_input_mode(self, mode, tap_identifier=""):
-        self.mode = mode
-        print("input mode: " + str(mode))
-        if mode == self.TapMode.Text.value:
-            TAPManager.Instance.SetTapInputMode(TAPInputMode.Text(), "")
-        if mode == self.TapMode.Controller.value:
-            TAPManager.Instance.SetTapInputMode(TAPInputMode.Controller(), "")
-        if mode == self.TapMode.ControllerWithHIDMouse:
-            TAPManager.Instance.SetTapInputMode(TAPInputMode.ControllerWithMouseHID(), "")
+    def get_input_mode_object(self, mode_num):
+        if mode_num == self.TapMode.Text.value:
+            return TAPInputMode.Text()
+        if mode_num == self.TapMode.Controller.value:
+            return TAPInputMode.Controller()
+        if mode_num == self.TapMode.ControllerWithHIDMouse:
+            return TAPInputMode.ControllerWithMouseHID()
 
-    def set_raw_sensors_mode(self, device_accel_sens, imu_gyro_sens, imu_accel_sens):
-        TAPManager.Instance.SetTapInputMode(TAPInputMode.RawSensor(RawSensorSensitivity(device_accel_sens, imu_gyro_sens, imu_accel_sens)))
+        print("Unhandled value. Defaulting to Controller mode object")
+        return TAPInputMode.Controller()
+
+    def set_input_mode(self, mode, tap_identifier=""):
+        print("input mode: " + TapSDK.TapMode(mode).name)
+        input_mode_obj = self.get_input_mode_object(mode)
+        TAPManager.Instance.SetTapInputMode(input_mode_obj, tap_identifier)
+
+    def set_default_input_mode(self, mode, identifier=""):
+        set_all = False
+        if identifier == "":
+            set_all = True
+        mode_obj = self.get_input_mode_object(mode)
+        TAPManager.Instance.setDefaultInputMode(mode_obj, set_all)
+
+    def set_raw_sensors_mode(self, device_accel_sens=0, imu_gyro_sens=0, imu_accel_sens=0, identifier=""):
+        TAPManager.Instance.SetTapInputMode(TAPInputMode.RawSensor(RawSensorSensitivity(device_accel_sens, imu_gyro_sens, imu_accel_sens)), identifier)
+
+    def send_vibration_sequence(self, sequence, identifier):
+        vibrations_array = Array[int](sequence)
+        TAPManager.Instance.Vibrate(vibrations_array, identifier)
 
     def run(self):
-        TAPManager.Instance.setDefaultInputMode(TAPInputMode.Controller(), True)
+        # TAPManager.Instance.setDefaultInputMode(TAPInputMode.Controller(), True)
+        self.set_default_input_mode(TapSDK.TapMode.Controller.value)
         TAPManager.Instance.Start()
+
 
 
