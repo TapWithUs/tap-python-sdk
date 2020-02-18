@@ -16,6 +16,10 @@ class TapSDKBase(abc.ABC):
     @abc.abstractmethod
     def register_connection_events(self):
         raise NotImplementedError()
+   
+    @abc.abstractmethod
+    def register_raw_data_events(self):
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def register_disconnection_events(self):

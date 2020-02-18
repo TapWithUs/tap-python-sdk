@@ -13,7 +13,7 @@ from bleak.backends.corebluetooth import CBAPP as cbapp
 
 from ...TapSDK import TapSDKBase
 from ...models import TapInputModes, TapUUID
-
+from tapsdk import parsers
 
 import objc
 import uuid
@@ -93,6 +93,11 @@ class TapMacSDK(TapSDKBase):
             tapcode = data[0]
             self.tap_event_cb(identifier, tapcode)
 
+    def on_raw_data(self, identifier, data):
+        if self.raw_data_event_cb:
+            messages = parsers.raw_data_msg(data)
+            self.raw_data_event_cb(identifier, messages)
+
     def on_air_gesture(self, identifier, data):
         # if self.mouse_mode_changed_event_cb:
         #     if data[0] == 0x14: # mouse mode event
@@ -113,6 +118,12 @@ class TapMacSDK(TapSDKBase):
         await self.manager.write_gatt_char(TapUUID.ui_cmd_characteristic, write_value)
 
     async def set_input_mode(self, input_mode:TapInputModes):
+        if  (input_mode.mode == "raw" and 
+            self.input_mode.mode == "raw" and 
+            self.input_mode.get_command() != input_mode.get_command()):
+            logger.warning("Can't change \"raw\" sensitivities while in \"raw\"")
+            return
+
         self.input_mode = input_mode
         write_value = input_mode.get_command()
 
