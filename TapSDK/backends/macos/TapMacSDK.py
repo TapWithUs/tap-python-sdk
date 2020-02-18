@@ -12,7 +12,7 @@ from bleak.backends.corebluetooth import CBAPP as cbapp
 
 
 from ...TapSDK import TapSDKBase
-from ...models import TapInputModes, TapUUID, 
+from ...models import TapInputModes, TapUUID
 from tapsdk import parsers
 
 import objc

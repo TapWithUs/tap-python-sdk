@@ -7,6 +7,7 @@ class TapInputModes:
                 "text" : {"name": "Text Mode", "code": bytearray([0x3,0xc,0x0,0x0])},
                 "raw" : {"name": "Raw sensors Mode", "code": bytearray([0x3,0xc,0x0,0xa])}
                 }
+        self.sensitivity = sensitivity
         if mode in self._modes.keys():
             self.mode = mode
             if mode == "raw":
@@ -15,13 +16,14 @@ class TapInputModes:
             logging.warning("Invalid mode \"%s\". Set to \"text\"" % mode)
             self.mode = "text"
         
+        
     def _register_sensitivity(self, sensitivity):
         if isinstance(sensitivity, list) and len(sensitivity) == 3:
-            sensitivity[0] = max(0, min(4,sensitivity[0]))
-            sensitivity[1] = max(0, min(5,sensitivity[1]))
-            sensitivity[2] = max(0, min(4,sensitivity[2]))
+            sensitivity[0] = max(0, min(4,sensitivity[0])) # fingers accelerometers
+            sensitivity[1] = max(0, min(5,sensitivity[1])) # imu gyro
+            sensitivity[2] = max(0, min(4,sensitivity[2])) # imu accelerometer
+            self.sensitivity = sensitivity
             self._modes["raw"]["code"] =  self._modes["raw"]["code"][:4] + bytearray(sensitivity)
-
 
     def get_command(self):
         return self._modes[self.mode]["code"]

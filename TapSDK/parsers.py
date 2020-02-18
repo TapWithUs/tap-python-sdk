@@ -39,9 +39,9 @@ def raw_data_msg(data: bytearray):
 		ptr += 4
 
 		# resolve message type
-		if ts > parse_raw_data_msg.msg_type_value:
+		if ts > raw_data_msg.msg_type_value:
 			msg = "accl"
-			ts -= parse_raw_data_msg.msg_type_value
+			ts -= raw_data_msg.msg_type_value
 			num_of_samples = 15
 		else:
 			msg = "imu"
@@ -56,4 +56,4 @@ def raw_data_msg(data: bytearray):
 		messages.append({"type":msg, "ts":ts, "payload":payload})
 	
 	return messages
-parse_raw_data_msg.msg_type_value = 2**31
+raw_data_msg.msg_type_value = 2**31
