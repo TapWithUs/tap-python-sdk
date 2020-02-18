@@ -11,6 +11,8 @@ class AirGestures(Enum):
 	LEFT_TWO_FINGERS    = 7
 	RIGHT               = 8
 	RIGHT_TWO_FINGERS   = 9
+	THUMB_FINGER		= 12
+	THUMB_MIDDLE   		= 14
 
 class MouseModes(Enum):
 	STDBY               = 0

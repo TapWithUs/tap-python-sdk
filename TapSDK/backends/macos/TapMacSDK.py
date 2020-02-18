@@ -13,6 +13,7 @@ from bleak.backends.corebluetooth import CBAPP as cbapp
 
 from ...TapSDK import TapSDKBase
 from ...models import TapInputModes, TapUUID
+from ...models.enumerations import MouseModes
 from tapsdk import parsers
 
 import objc
@@ -53,6 +54,7 @@ class TapMacSDK(TapSDKBase):
         self.air_gesture_event_cb = None
         self.raw_data_event_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
+        self.mouse_mode = MouseModes.STDBY
 
     async def register_tap_events(self, cb: Callable):
         if cb:
@@ -82,28 +84,26 @@ class TapMacSDK(TapSDKBase):
 
     def on_moused(self, identifier, data):
         if self.mouse_event_cb:
-            if len(data) >= 10 and data[0] == 0:
-                vx = int.from_bytes(data[1:3],"little", signed=True)
-                vy = int.from_bytes(data[3:5],"little", signed=True)
-                prox = data[9] == 1
-                self.mouse_event_cb(identifier, vx, vy, prox)
+            vx, vy, prox = parsers.mouse_data_msg(data)
+            self.mouse_event_cb(identifier, vx, vy, prox)
     
     def on_tapped(self, identifier, data):
-        if self.tap_event_cb:
-            tapcode = data[0]
+        tapcode = parsers.tap_data_msg(data)
+        if self.mouse_mode == MouseModes.AIR_MOUSE:
+            if tapcode in [2, 4]:
+                self.on_air_gesture(identifier, [tapcode+10])
+        elif self.tap_event_cb:
             self.tap_event_cb(identifier, tapcode)
-
+    
     def on_raw_data(self, identifier, data):
         if self.raw_data_event_cb:
             messages = parsers.raw_data_msg(data)
             self.raw_data_event_cb(identifier, messages)
 
     def on_air_gesture(self, identifier, data):
-        # if self.mouse_mode_changed_event_cb:
-        #     if data[0] == 0x14: # mouse mode event
-        #         mouse_mode = data[1]
-        #         self.mouse_mode_event_cb(identifier, mouse_mode)
-        if self.air_gesture_event_cb:
+        if data[0] == 0x14: # mouse mode event
+            self.mouse_mode = MouseModes(data[1])
+        elif self.air_gesture_event_cb:
             if data[0] != 0x14:
                 gesture = data[0]
                 self.air_gesture_event_cb(identifier, gesture)

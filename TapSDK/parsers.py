@@ -1,4 +1,3 @@
-
 def tapcode_to_fingers(tapcode:int):
 	return '{0:05b}'.format(1)[::-1]
 
