@@ -1,13 +1,9 @@
 import platform
+from enum import Enum
 
 this_platform = platform.system()
 
 if this_platform == "Windows":
-    import clr
-
-    # sys.path.append(r"C:\Users\oded\PycharmProjects\tap-sdk")
-    clr.AddReference(r"TAPWin")
-    from tapsdk.backends.dotnet.TapWindowsSDK import TapWindowsSDK as TapSDK
-
+    from tapsdk.backends.dotnet.TapSDK import TapWindowsSDK as TapSDK
 elif this_platform == "Darwin":
-    from tapsdk.backends.macos.TapMacSDK import TapMacSDK as TapSDK 
+    from tapsdk.backends.macos.TapSDK import TapMacSDK as TapSDK 

@@ -108,16 +108,16 @@ class TapMacSDK(TapSDKBase):
                 gesture = data[0]
                 self.air_gesture_event_cb(identifier, gesture)
     
-    async def send_haptic_command(self, pattern):
-        if len(pattern) > 18:
-            pattern = pattern[:18]
-        for i, d in enumerate(pattern):
-            pattern[i] = max(0,min(255,d//10))
+    async def send_vibration_sequence(self, sequence, identifier=None):
+        if len(sequence) > 18:
+            sequence = sequence[:18]
+        for i, d in enumerate(sequence):
+            sequence[i] = max(0,min(255,d//10))
  
-        write_value = bytearray([0x0,0x2] + pattern)
+        write_value = bytearray([0x0,0x2] + sequence)
         await self.manager.write_gatt_char(TapUUID.ui_cmd_characteristic, write_value)
 
-    async def set_input_mode(self, input_mode:TapInputModes):
+    async def set_input_mode(self, input_mode:TapInputModes, identifier=None):
         if  (input_mode.mode == "raw" and 
             self.input_mode.mode == "raw" and 
             self.input_mode.get_command() != input_mode.get_command()):

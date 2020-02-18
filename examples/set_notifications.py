@@ -1,4 +1,4 @@
-from tapsdk.backends.macos.TapMacSDK import TapMacSDK
+from tapsdk.backends.macos.TapSDK import TapMacSDK
 from tapsdk.models.inputmodes import TapInputModes
 import os
 os.environ["PYTHONASYNCIODEBUG"] = str(1)
@@ -67,7 +67,7 @@ async def run(loop, debug=False):
     
     await asyncio.sleep(5)
     await client.set_input_mode(TapInputModes("raw"))
-    # await client.send_haptic_command([100, 200, 300, 400, 500])
+    # await client.send_vibration_sequence([100, 200, 300, 400, 500])
 
     await asyncio.sleep(50.0, loop=loop)
 
