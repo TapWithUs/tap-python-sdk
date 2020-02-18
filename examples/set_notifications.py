@@ -12,7 +12,7 @@ from tapsdk.models import AirGestures
 
 def notification_handler(sender, data):
     """Simple notification handler which prints the data received."""
-    print("{0}: {1} aaaaaaaa".format(sender, data))
+    print("{0}: {1}".format(sender, data))
 
 def OnTapped(identifier, tapcode):
     print(identifier + " tapped " + str(tapcode))
@@ -29,6 +29,16 @@ def OnTapDisconnected(self, identifier):
 def OnMoused(identifier, vx, vy, isMouse):
     print(identifier + " mouse movement: %d, %d, %d" %(vx, vy, isMouse))
 
+def OnRawData(identifier, packets):
+    imu_msg = [m for m in packets if m["type"] == "imu"][0]
+    if len(imu_msg) > 0:
+        OnRawData.cnt += 1
+        if OnRawData.cnt == 10:
+            OnRawData.cnt = 0
+            logger.info(identifier + " raw imu : " + str(imu_msg["ts"]))
+
+OnRawData.cnt = 0
+
 
 async def run(loop, debug=False):
     if debug:
@@ -38,7 +48,7 @@ async def run(loop, debug=False):
         l = logging.getLogger("asyncio")
         l.setLevel(logging.DEBUG)
         h = logging.StreamHandler(sys.stdout)
-        h.setLevel(logging.DEBUG)
+        h.setLevel(logging.INFO)
         l.addHandler(h)
         logger.addHandler(h)
     
@@ -52,11 +62,12 @@ async def run(loop, debug=False):
 
     await client.register_air_gesture_events(OnGesture)
     await client.register_tap_events(OnTapped)
+    await client.register_raw_data_events(OnRawData)
     # await client.register_mouse_events(OnMoused)
     
     await asyncio.sleep(5)
-
-    await client.send_haptic_command([100, 200, 300, 400, 500])
+    await client.set_input_mode(TapInputModes("raw"))
+    # await client.send_haptic_command([100, 200, 300, 400, 500])
 
     await asyncio.sleep(50.0, loop=loop)
 
