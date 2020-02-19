@@ -1,4 +1,5 @@
-from TapSDK import TapSDK
+from tapsdk import TapSDK, TapInputModes
+from tapsdk.models import AirGestures
 
 tap_instance = TapSDK()
 tap_identifiers = []
@@ -37,13 +38,13 @@ def on_tap_event(identifier, tapcode):
 
 
 def on_air_gesture_event(identifier, air_gesture):
-    print(" Air gesture: " + TapSDK.AirGestures(air_gesture).name)
-    if air_gesture == TapSDK.AirGestures.OneFingerUp.value:
+    print(" Air gesture: " + AirGestures(air_gesture).name)
+    if air_gesture == AirGestures.UP_ONE_FINGER.value:
         tap_instance.set_raw_sensors_mode(0, 0, 0, identifier)
-    if air_gesture == TapSDK.AirGestures.OnefingerDown.value:
-        tap_instance.set_input_mode(TapSDK.TapMode.Text.value, identifier)
-    if air_gesture == TapSDK.AirGestures.OnefingerLeft.value:
-        tap_instance.set_input_mode(TapSDK.TapMode.Controller.value, identifier)
+    if air_gesture == AirGestures.DOWN_ONE_FINGER.value:
+        tap_instance.set_input_mode(TapInputModes("text"), identifier)
+    if air_gesture == AirGestures.LEFT_ONE_FINGER.value:
+        tap_instance.set_input_mode(TapInputModes("controller"), identifier)
 
 
 def on_air_gesture_state_event(identifier: str, air_gesture_state: bool):
@@ -57,7 +58,7 @@ def on_air_gesture_state_event(identifier: str, air_gesture_state: bool):
 
 def on_raw_sensor_data(identifier, raw_sensor_data):
     if raw_sensor_data.GetPoint(1).z > 2000 and raw_sensor_data.GetPoint(2).z > 2000 and raw_sensor_data.GetPoint(3).z > 2000 and raw_sensor_data.GetPoint(4).z > 2000:
-        tap_instance.set_input_mode(TapSDK.TapMode.Controller.value, identifier)
+        tap_instance.set_input_mode(TapInputModes("controller"), identifier)
 
 
 def main():
@@ -67,7 +68,7 @@ def main():
     tap_instance.register_tap_events(on_tap_event)
     tap_instance.register_raw_data_events(on_raw_sensor_data)
     tap_instance.register_air_gesture_events(on_air_gesture_event)
-    tap_instance.register_air_gesture_events(on_air_gesture_state_event)
+    tap_instance.register_air_gesture_state_events(on_air_gesture_state_event)
     tap_instance.run()
 
     while True:

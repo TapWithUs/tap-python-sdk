@@ -1,5 +1,7 @@
-from tapsdk.backends.macos.TapSDK import TapMacSDK
-from tapsdk.models.inputmodes import TapInputModes
+from tapsdk import TapSDK, TapInputModes
+from tapsdk.models import AirGestures
+
+
 import os
 os.environ["PYTHONASYNCIODEBUG"] = str(1)
 import asyncio
@@ -7,12 +9,15 @@ import platform
 import logging
 from bleak import _logger as logger
 
-from tapsdk.models import AirGestures
+
 
 
 def notification_handler(sender, data):
     """Simple notification handler which prints the data received."""
     print("{0}: {1}".format(sender, data))
+
+def OnMouseModeChange(identifier, mouse_mode):
+    print(identifier + " changed to mode " + str(mouse_mode))
 
 def OnTapped(identifier, tapcode):
     print(identifier + " tapped " + str(tapcode))
@@ -52,7 +57,7 @@ async def run(loop, debug=False):
         l.addHandler(h)
         logger.addHandler(h)
     
-    client = TapMacSDK(loop)
+    client = TapSDK(loop)
     # devices = await client.list_connected_taps()
     x = await client.manager.connect_retrieved()
     x = await client.manager.is_connected()
@@ -63,10 +68,11 @@ async def run(loop, debug=False):
     await client.register_air_gesture_events(OnGesture)
     await client.register_tap_events(OnTapped)
     await client.register_raw_data_events(OnRawData)
-    # await client.register_mouse_events(OnMoused)
+    await client.register_mouse_events(OnMoused)
+    await client.register_air_gesture_state_events(OnMouseModeChange)
     
-    await asyncio.sleep(5)
-    await client.set_input_mode(TapInputModes("raw"))
+    # await asyncio.sleep(5)
+    # await client.set_input_mode(TapInputModes("raw"))
     # await client.send_vibration_sequence([100, 200, 300, 400, 500])
 
     await asyncio.sleep(50.0, loop=loop)
