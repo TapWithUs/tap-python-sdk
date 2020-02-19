@@ -12,7 +12,8 @@ from bleak.backends.corebluetooth import CBAPP as cbapp
 
 
 from ...TapSDK import TapSDKBase
-from ...models import TapInputModes, TapUUID
+from ...models import TapUUID
+from .inputmodes import TapInputModes
 from ...models.enumerations import MouseModes
 from tapsdk import parsers
 
@@ -53,6 +54,7 @@ class TapMacSDK(TapSDKBase):
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
         self.raw_data_event_cb = None
+        self.air_gesture_state_event_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
 
@@ -70,10 +72,15 @@ class TapMacSDK(TapSDKBase):
         if cb:
             await self.manager.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
             self.air_gesture_event_cb = cb
+    
+    async def register_air_gesture_state_events(self, cb: Callable):
+        if cb:
+            await self.manager.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
+            self.air_gesture_state_event_cb = cb
 
     async def register_raw_data_events(self, cb: Callable):
         if cb:
-            await self.manager.start_notify(TapUUID.raw_sensors_chaaracteristic, self.on_raw_data)
+            await self.manager.start_notify(TapUUID.raw_sensors_characteristic, self.on_raw_data)
             self.raw_data_event_cb = cb
 
     def register_connection_events(self, cb: Callable):
@@ -103,6 +110,8 @@ class TapMacSDK(TapSDKBase):
     def on_air_gesture(self, identifier, data):
         if data[0] == 0x14: # mouse mode event
             self.mouse_mode = MouseModes(data[1])
+            if self.air_gesture_state_event_cb:
+                self.air_gesture_state_event_cb(identifier, self.mouse_mode)
         elif self.air_gesture_event_cb:
             if data[0] != 0x14:
                 gesture = data[0]

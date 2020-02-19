@@ -1,10 +1,15 @@
 import logging
+import clr
+
+clr.AddReference(r"TAPWin")
+from TAPWin import TAPInputMode
 
 class TapInputModes:
     def __init__(self, mode, sensitivity:list=[0,0,0]):
         self._modes = {
-                "controller" : {"name": "Controller Mode", "code": bytearray([0x3,0xc,0x0,0x1])},
-                "text" : {"name": "Text Mode", "code": bytearray([0x3,0xc,0x0,0x0])},
+                "text" : {"name": "Text Mode", "code": TAPInputMode.Text()},
+                "controller" : {"name": "Controller Mode", "code": TAPInputMode.Controller()},
+                "controller_text" : {"name": "Controller and Text Mode", "code": TAPInputMode.ControllerWithMouseHID()},
                 "raw" : {"name": "Raw sensors Mode", "code": bytearray([0x3,0xc,0x0,0xa])}
                 }
         self.sensitivity = sensitivity
