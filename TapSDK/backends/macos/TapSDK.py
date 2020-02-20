@@ -57,6 +57,7 @@ class TapMacSDK(TapSDKBase):
         self.air_gesture_state_event_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
+        self.input_mode = TapInputModes("text")
 
     async def register_tap_events(self, cb: Callable):
         if cb:
@@ -83,10 +84,10 @@ class TapMacSDK(TapSDKBase):
             await self.manager.start_notify(TapUUID.raw_sensors_characteristic, self.on_raw_data)
             self.raw_data_event_cb = cb
 
-    def register_connection_events(self, cb: Callable):
+    async def register_connection_events(self, cb: Callable):
         pass
 
-    def register_disconnection_events(self, cb: Callable):
+    async def register_disconnection_events(self, cb: Callable):
         pass
 
     def on_moused(self, identifier, data):
@@ -111,7 +112,7 @@ class TapMacSDK(TapSDKBase):
         if data[0] == 0x14: # mouse mode event
             self.mouse_mode = MouseModes(data[1])
             if self.air_gesture_state_event_cb:
-                self.air_gesture_state_event_cb(identifier, self.mouse_mode)
+                self.air_gesture_state_event_cb(identifier, self.mouse_mode == MouseModes.AIR_MOUSE)
         elif self.air_gesture_event_cb:
             if data[0] != 0x14:
                 gesture = data[0]
@@ -151,6 +152,9 @@ class TapMacSDK(TapSDKBase):
     async def list_connected_taps(self):
         devices = await discover(loop=self.loop)
         return devices
+    
+    async def run(self):
+        await self.manager.connect_retrieved()
 
 class InputModeAutoRefresh:
     def __init__(self, set_function: Callable, timeout:int=10):

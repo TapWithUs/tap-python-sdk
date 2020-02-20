@@ -42,4 +42,8 @@ class TapSDKBase(abc.ABC):
     def send_vibration_sequence(self, sequence, identifier):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def run(self):
+        raise NotImplementedError
+
 
