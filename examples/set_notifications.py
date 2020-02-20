@@ -9,6 +9,8 @@ import platform
 import logging
 from bleak import _logger as logger
 
+import time
+
 
 
 
@@ -35,13 +37,29 @@ def OnMoused(identifier, vx, vy, isMouse):
     print(identifier + " mouse movement: %d, %d, %d" %(vx, vy, isMouse))
 
 def OnRawData(identifier, packets):
-    imu_msg = [m for m in packets if m["type"] == "imu"][0]
-    if len(imu_msg) > 0:
-        OnRawData.cnt += 1
-        if OnRawData.cnt == 10:
-            OnRawData.cnt = 0
-            logger.info(identifier + " raw imu : " + str(imu_msg["ts"]))
+    # imu_msg = [m for m in packets if m["type"] == "imu"][0]
+    # if len(imu_msg) > 0:
+    #     OnRawData.cnt += 1
+    #     if OnRawData.cnt == 10:
+    #         OnRawData.cnt = 0
+    #         logger.info(identifier + " raw imu : " + str(imu_msg["ts"]))
 
+    for m in packets:
+        if m["type"] == "imu":
+            # print("imu")
+            OnRawData.imu_cnt += 1
+            if OnRawData.imu_cnt == 208:
+                OnRawData.imu_cnt = 0
+                # print("imu, " + str(time.time()) + ", " + str(m["payload"]))
+        if m["type"] == "accl":
+            # print("accl")
+            OnRawData.accl_cnt += 1
+            if OnRawData.accl_cnt == 200:
+                OnRawData.accl_cnt = 0
+                print("accl, " + str(time.time()) + ", " + str(m["payload"]))
+    
+OnRawData.imu_cnt = 0
+OnRawData.accl_cnt = 0
 OnRawData.cnt = 0
 
 
@@ -65,14 +83,18 @@ async def run(loop, debug=False):
 
     await client.set_input_mode(TapInputModes("controller"))
 
-    await client.register_air_gesture_events(OnGesture)
-    await client.register_tap_events(OnTapped)
+    # await client.register_air_gesture_events(OnGesture)
+    # await client.register_tap_events(OnTapped)
     await client.register_raw_data_events(OnRawData)
-    await client.register_mouse_events(OnMoused)
-    await client.register_air_gesture_state_events(OnMouseModeChange)
+    # await client.register_mouse_events(OnMoused)
+    # await client.register_air_gesture_state_events(OnMouseModeChange)
     
-    # await asyncio.sleep(5)
-    # await client.set_input_mode(TapInputModes("raw"))
+    await asyncio.sleep(3)
+    await client.set_input_mode(TapInputModes("raw", sensitivity=[0,0,0]))
+    # await asyncio.sleep(3)
+    # await client.set_input_mode(TapInputModes("text"))
+    # await asyncio.sleep(3)
+    # await client.set_input_mode(TapInputModes("raw", sensitivity=[2,2,2]))
     # await client.send_vibration_sequence([100, 200, 300, 400, 500])
 
     await asyncio.sleep(50.0, loop=loop)

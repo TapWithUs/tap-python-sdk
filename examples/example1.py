@@ -1,7 +1,9 @@
+import asyncio
+
 from tapsdk import TapSDK, TapInputModes
 from tapsdk.models import AirGestures
 
-tap_instance = TapSDK()
+tap_instance = []
 tap_identifiers = []
 
 
@@ -15,8 +17,6 @@ def on_connect(identifier, name, fw):
 
 def on_disconnect(identifier):
     print("Tap has disconnected")
-    tap_instance.airGestureState = False
-    tap_instance.mode = None
     tap_identifiers.remove(identifier)
     for identifier in tap_identifiers:
         print(identifier)
@@ -30,29 +30,27 @@ def on_mouse_event(identifier, dx, dy, isMouse):
         # print("Air: ", str(dx), str(dy))
 
 
-def on_tap_event(identifier, tapcode):
+async def on_tap_event(identifier, tapcode):
     print(identifier, str(tapcode))
     if int(tapcode) == 17:
         sequence = [500, 200, 500, 500, 500, 200]
-        tap_instance.send_vibration_sequence(sequence, identifier)
+        await tap_instance.send_vibration_sequence(sequence, identifier)
 
 
-def on_air_gesture_event(identifier, air_gesture):
+async def on_air_gesture_event(identifier, air_gesture):
     print(" Air gesture: " + AirGestures(air_gesture).name)
     if air_gesture == AirGestures.UP_ONE_FINGER.value:
-        tap_instance.set_raw_sensors_mode(0, 0, 0, identifier)
+        await tap_instance.set_raw_sensors_mode(0, 0, 0, identifier)
     if air_gesture == AirGestures.DOWN_ONE_FINGER.value:
-        tap_instance.set_input_mode(TapInputModes("text"), identifier)
+        await tap_instance.set_input_mode(TapInputModes("text"), identifier)
     if air_gesture == AirGestures.LEFT_ONE_FINGER.value:
-        tap_instance.set_input_mode(TapInputModes("controller"), identifier)
+        await tap_instance.set_input_mode(TapInputModes("controller"), identifier)
 
 
 def on_air_gesture_state_event(identifier: str, air_gesture_state: bool):
     if air_gesture_state:
-        tap_instance.airGestureState = True
         print("Entered air mouse mode")
     else:
-        tap_instance.airGestureState = False
         print("Left air mouse mode")
 
 
@@ -61,19 +59,25 @@ def on_raw_sensor_data(identifier, raw_sensor_data):
         tap_instance.set_input_mode(TapInputModes("controller"), identifier)
 
 
-def main():
-    tap_instance.register_connection_events(on_connect)
-    tap_instance.register_disconnection_events(on_disconnect)
-    tap_instance.register_mouse_events(on_mouse_event)
-    tap_instance.register_tap_events(on_tap_event)
-    tap_instance.register_raw_data_events(on_raw_sensor_data)
-    tap_instance.register_air_gesture_events(on_air_gesture_event)
-    tap_instance.register_air_gesture_state_events(on_air_gesture_state_event)
-    tap_instance.run()
+async def main(loop):
+    global tap_instance
+    tap_instance = TapSDK(loop)
+    await print("aaa")
+    await tap_instance.run()
+    await tap_instance.register_connection_events(on_connect)
+    await tap_instance.register_disconnection_events(on_disconnect)
+    await tap_instance.register_mouse_events(on_mouse_event)
+    await tap_instance.register_tap_events(on_tap_event)
+    await tap_instance.register_raw_data_events(on_raw_sensor_data)
+    await tap_instance.register_air_gesture_events(on_air_gesture_event)
+    await tap_instance.register_air_gesture_state_events(on_air_gesture_state_event)
+    await tap_instance.set_input_mode(TapInputModes("controller"))
+    await asyncio.sleep(50.0, loop=loop)
 
     while True:
         pass
 
 
 if __name__ == "__main__":
-    main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(loop))
