@@ -18,23 +18,30 @@ def notification_handler(sender, data):
     """Simple notification handler which prints the data received."""
     print("{0}: {1}".format(sender, data))
 
+
 def OnMouseModeChange(identifier, mouse_mode):
     print(identifier + " changed to mode " + str(mouse_mode))
+
 
 def OnTapped(identifier, tapcode):
     print(identifier + " tapped " + str(tapcode))
 
+
 def OnGesture(identifier, gesture):
     print(identifier + " gesture " + str(AirGestures(gesture)))
+
 
 def OnTapConnected(self, identifier, name, fw):
     print(identifier + " Tap: " + str(name), " FW Version: ", fw)
 
+
 def OnTapDisconnected(self, identifier):
     print(identifier + " Tap: " + identifier + " disconnected")
 
+
 def OnMoused(identifier, vx, vy, isMouse):
     print(identifier + " mouse movement: %d, %d, %d" %(vx, vy, isMouse))
+
 
 def OnRawData(identifier, packets):
     # imu_msg = [m for m in packets if m["type"] == "imu"][0]
