@@ -19,13 +19,10 @@ EMAIL = "support@tapwithus.com"
 AUTHOR = "Tap systems Inc."
 
 REQUIRED = [
-    # Linux reqs
-    'txdbus;platform_system=="Linux"',
     # macOS reqs
-    'pyobjc;platform_system=="Darwin"',
-    'pyobjc-framework-CoreBluetooth;platform_system=="Darwin"',
+    'bleak;platform_system=="Darwin"',
     # Windows reqs
-    'pythonnet;platform_system=="Windows"',
+    'pythonnet;platform_system=="Windows"'
 ]
 
 
@@ -82,15 +79,14 @@ setup(
     author=AUTHOR,
     author_email=EMAIL,
     url=URL,
-    packages=find_packages(exclude=("tests", "examples", "docs", "BleakUWPBridge")),
-    # package_data={"bleak.backends.dotnet": ["*.dll"]},
-    # entry_points={"console_scripts": ["bleak-lescan=bleak:cli"]},
+    packages=find_packages(exclude=("tests", "examples", "docs")),
+    # package_data={"tapsdk.backends.dotnet": ["*.dll"]},
     install_requires=REQUIRED,
     # test_suite="tests",
     # tests_require=TEST_REQUIRED,
     include_package_data=True,
     license="MIT",
-    python_requires='>=3.6'
+    python_requires='>=3.7'
     # classifiers=[
     #     # Trove classifiers
     #     # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -99,13 +95,11 @@ setup(
     #     "Topic :: Communications",
     #     "License :: OSI Approved :: MIT License",
     #     "Operating System :: Microsoft :: Windows :: Windows 10",
-    #     "Operating System :: POSIX :: Linux",
     #     "Operating System :: MacOS :: MacOS X",
     #     "Programming Language :: Python",
     #     "Programming Language :: Python :: 3",
-    #     # "Programming Language :: Python :: 3.5",
-    #     # "Programming Language :: Python :: 3.6",
     #     "Programming Language :: Python :: 3.7",
+    #     "Programming Language :: Python :: 3.8"
     # ],
     # $ setup.py publish support.
     # cmdclass={"upload": UploadCommand},

@@ -1,0 +1,12 @@
+include History.md
+include LICENSE
+include Readme.md
+
+recursive-include tests *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
+recursive-include docs *.rst *.md conf.py Makefile make.bat *.jpg *.png *.gif
+
+# Add the TAPWin DLL to the build.
+include tapsdk/backends/dotnet/TAPWin.dll
