@@ -7,23 +7,23 @@ class TapSDKBase(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def register_connection_events(self, listener):
+        raise NotImplementedError()
+    
+    @abc.abstractmethod
+    def register_disconnection_events(self, listener):
+        raise NotImplementedError()
+    
+    @abc.abstractmethod
     def register_tap_events(self, listener):
         raise NotImplementedError()
 
     @abc.abstractmethod
     def register_mouse_events(self, listener):
         raise NotImplementedError()
-
-    @abc.abstractmethod
-    def register_connection_events(self, listener):
-        raise NotImplementedError()
    
     @abc.abstractmethod
-    def register_raw_data_events(self):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def register_disconnection_events(self, listener):
+    def register_raw_data_events(self, listener):
         raise NotImplementedError()
 
     @abc.abstractmethod

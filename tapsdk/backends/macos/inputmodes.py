@@ -1,6 +1,6 @@
 import logging
 
-class TapInputModes:
+class TapInputMode:
     def __init__(self, mode, sensitivity:list=[0,0,0]):
         self._modes = {
                 "text" : {"name": "Text Mode", "code": bytearray([0x3,0xc,0x0,0x0])},

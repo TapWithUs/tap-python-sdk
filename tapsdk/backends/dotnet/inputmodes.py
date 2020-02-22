@@ -7,7 +7,7 @@ from TAPWin import TAPInputMode
 from TAPWin import RawSensorSensitivity
 
 
-class TapInputModes:
+class TapInputMode:
     def __init__(self, mode, sensitivity: list=[0, 0, 0]):
         self._modes = {
                 "text" : {"name": "Text Mode", "code": TAPInputMode.Text()},

@@ -9,21 +9,16 @@ from bleak import BleakClient
 from bleak import _logger as logger
 from bleak.backends.corebluetooth.discovery import discover
 from bleak.backends.corebluetooth import CBAPP as cbapp
-
+from bleak.backends.corebluetooth.CentralManagerDelegate import string2uuid
 
 from ...TapSDK import TapSDKBase
 from ...models import TapUUID
-from .inputmodes import TapInputModes
+from .inputmodes import TapInputMode
 from ...models.enumerations import MouseModes
 from tapsdk import parsers
 
-import objc
-import uuid
-objc.loadBundle("CoreBluetooth", globals(),
-    bundle_path=objc.pathForFramework(u'/System/Library/Frameworks/IOBluetooth.framework/Versions/A/Frameworks/CoreBluetooth.framework'))
-
 class TapClient(BleakClient):
-    def __init__(self, address, loop=None, **kwargs):
+    def __init__(self, address="", loop=None, **kwargs):
         super().__init__(address, loop=loop, **kwargs)
     
     async def connect_retrieved(self, **kwargs) -> bool:
@@ -40,8 +35,7 @@ class TapClient(BleakClient):
 
 def get_paired_taps():
     paired_taps = cbapp.central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
-        [CBUUID.UUIDWithString_(str(uuid.UUID(TapUUID.tap_service)))])
-    # await cbapp.central_manager_delegate.connect_(a[0])
+                    [string2uuid(TapUUID.tap_service)])
     logger.debug("Found connected Taps @ {}".format(paired_taps))
     return paired_taps
 
@@ -49,7 +43,7 @@ class TapMacSDK(TapSDKBase):
     def __init__(self, loop: AbstractEventLoop = None):
         super(TapMacSDK, self).__init__()
         self.loop = loop
-        self.manager = TapClient("29934722-8924-4B47-AF8E-923D6C9FED82", loop)
+        self.manager = TapClient(loop=loop)
         self.mouse_event_cb = None
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
@@ -57,7 +51,7 @@ class TapMacSDK(TapSDKBase):
         self.air_gesture_state_event_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
-        self.input_mode = TapInputModes("text")
+        self.input_mode = TapInputMode("text")
 
     async def register_tap_events(self, cb: Callable):
         if cb:
@@ -92,21 +86,22 @@ class TapMacSDK(TapSDKBase):
 
     def on_moused(self, identifier, data):
         if self.mouse_event_cb:
-            vx, vy, prox = parsers.mouse_data_msg(data)
-            self.mouse_event_cb(identifier, vx, vy, prox)
+            args = parsers.mouse_data_msg(data)
+            self.mouse_event_cb(identifier, *args)
     
     def on_tapped(self, identifier, data):
-        tapcode = parsers.tap_data_msg(data)
+        args = parsers.tap_data_msg(data)
         if self.mouse_mode == MouseModes.AIR_MOUSE:
+            tapcode = args[0]
             if tapcode in [2, 4]:
                 self.on_air_gesture(identifier, [tapcode+10])
         elif self.tap_event_cb:
-            self.tap_event_cb(identifier, tapcode)
+            self.tap_event_cb(identifier, *args)
     
     def on_raw_data(self, identifier, data):
         if self.raw_data_event_cb:
-            messages = parsers.raw_data_msg(data)
-            self.raw_data_event_cb(identifier, messages)
+            args = parsers.raw_data_msg(data)
+            self.raw_data_event_cb(identifier, *args)
 
     def on_air_gesture(self, identifier, data):
         if data[0] == 0x14: # mouse mode event
@@ -114,11 +109,10 @@ class TapMacSDK(TapSDKBase):
             if self.air_gesture_state_event_cb:
                 self.air_gesture_state_event_cb(identifier, self.mouse_mode == MouseModes.AIR_MOUSE)
         elif self.air_gesture_event_cb:
-            if data[0] != 0x14:
-                gesture = data[0]
-                self.air_gesture_event_cb(identifier, gesture)
+            args = parsers.air_gesture_data_msg(data)
+            self.air_gesture_event_cb(identifier, *args)
     
-    async def send_vibration_sequence(self, sequence, identifier=None):
+    async def send_vibration_sequence(self, sequence:list, identifier=None):
         if len(sequence) > 18:
             sequence = sequence[:18]
         for i, d in enumerate(sequence):
@@ -127,7 +121,7 @@ class TapMacSDK(TapSDKBase):
         write_value = bytearray([0x0,0x2] + sequence)
         await self.manager.write_gatt_char(TapUUID.ui_cmd_characteristic, write_value)
 
-    async def set_input_mode(self, input_mode:TapInputModes, identifier=None):
+    async def set_input_mode(self, input_mode:TapInputMode, identifier=None):
         if  (input_mode.mode == "raw" and 
             self.input_mode.mode == "raw" and 
             self.input_mode.get_command() != input_mode.get_command()):

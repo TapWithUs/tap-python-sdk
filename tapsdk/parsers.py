@@ -6,9 +6,12 @@ def mouse_data_msg(data: bytearray):
 	vy = int.from_bytes(data[3:5],"little", signed=True)
 	prox = data[9] == 1
 	return vx, vy, prox
+
+def air_gesture_data_msg(data: bytearray):
+	return [data[0]]
 	
 def tap_data_msg(data: bytearray):
-	return data[0]
+	return [data[0]]
 
 def raw_data_msg(data: bytearray):
 	'''

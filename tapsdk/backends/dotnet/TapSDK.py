@@ -1,6 +1,6 @@
 import clr
 from ...TapSDK import TapSDKBase
-from .inputmodes import TapInputModes
+from .inputmodes import TapInputMode
 import System
 
 clr.AddReference(r"tapsdk/backends/dotnet/TAPWin")
@@ -45,7 +45,7 @@ class TapWindowsSDK(TapSDKBase):
         if listener is not None:
             TAPManager.Instance.OnChangedAirGestureState += listener
 
-    def set_input_mode(self, mode:TapInputModes, tap_identifier=""):
+    def set_input_mode(self, mode:TapInputMode, tap_identifier=""):
         print("input mode: " + mode.get_name())
         TAPManager.Instance.SetTapInputMode(mode.get_object(), tap_identifier)
 
@@ -53,10 +53,10 @@ class TapWindowsSDK(TapSDKBase):
         set_all = False
         if identifier == "":
             set_all = True
-        mode_obj = TapInputModes(mode).get_object()
+        mode_obj = TapInputMode(mode).get_object()
         TAPManager.Instance.SetDefaultInputMode(mode_obj, set_all)
 
-    def send_vibration_sequence(self, sequence, identifier):
+    def send_vibration_sequence(self, sequence:list, identifier):
         vibrations_array = System.Array[int](sequence)
         TAPManager.Instance.Vibrate(vibrations_array, identifier)
 

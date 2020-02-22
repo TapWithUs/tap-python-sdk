@@ -1,4 +1,4 @@
-from tapsdk import TapSDK, TapInputModes
+from tapsdk import TapSDK, TapInputMode
 from tapsdk.models import AirGestures
 
 
@@ -88,20 +88,20 @@ async def run(loop, debug=False):
     x = await client.manager.is_connected()
     logger.info("Connected: {0}".format(x))
 
-    await client.set_input_mode(TapInputModes("controller"))
+    await client.set_input_mode(TapInputMode("controller"))
 
-    # await client.register_air_gesture_events(OnGesture)
-    # await client.register_tap_events(OnTapped)
-    await client.register_raw_data_events(OnRawData)
-    # await client.register_mouse_events(OnMoused)
-    # await client.register_air_gesture_state_events(OnMouseModeChange)
+    await client.register_air_gesture_events(OnGesture)
+    await client.register_tap_events(OnTapped)
+    # await client.register_raw_data_events(OnRawData)
+    await client.register_mouse_events(OnMoused)
+    await client.register_air_gesture_state_events(OnMouseModeChange)
     
     await asyncio.sleep(3)
-    await client.set_input_mode(TapInputModes("raw", sensitivity=[0,0,0]))
+    # await client.set_input_mode(TapInputMode("raw", sensitivity=[0,0,0]))
     # await asyncio.sleep(3)
-    # await client.set_input_mode(TapInputModes("text"))
+    # await client.set_input_mode(TapInputMode("text"))
     # await asyncio.sleep(3)
-    # await client.set_input_mode(TapInputModes("raw", sensitivity=[2,2,2]))
+    # await client.set_input_mode(TapInputMode("raw", sensitivity=[2,2,2]))
     # await client.send_vibration_sequence([100, 200, 300, 400, 500])
 
     await asyncio.sleep(50.0, loop=loop)
@@ -110,4 +110,3 @@ async def run(loop, debug=False):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(loop, True))
-    # asyncio.run(run(loop, True))
