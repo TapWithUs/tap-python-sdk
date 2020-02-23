@@ -1,10 +1,12 @@
 # History
 
-## 0.1.0 (2020-02-20)
+
+## 0.2.0 (2020-02-22)
 ______________________
 ### Main features
 
-* SDK created.
+* Added dll to enable windows backend.
+* fix parsers output types on gesture and tap messages
 
 ### Known Issues
 * Windows backend -  
@@ -14,5 +16,12 @@ ______________________
     * Doesn't support multiple Tap strap connections.
     * OnConnect and OnDisconnect events are not implemented 
     * Raw sensor data is given unscaled (i.e. unitless), thereforein order to scale to physical units need to multiply by the relevant scale factor
+
+
+## 0.1.0 (2020-02-20)
+______________________
+### Main features
+
+* SDK created.
 
 
