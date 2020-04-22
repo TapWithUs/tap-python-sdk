@@ -20,7 +20,7 @@ AUTHOR = "Tap systems Inc."
 
 REQUIRED = [
     # macOS reqs
-    'bleak;platform_system=="Darwin"',
+    'bleak==0.5.1;platform_system=="Darwin"',
     # Windows reqs
     'pythonnet;platform_system=="Windows"'
 ]
