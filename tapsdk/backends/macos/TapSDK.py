@@ -101,7 +101,7 @@ class TapMacSDK(TapSDKBase):
     def on_raw_data(self, identifier, data):
         if self.raw_data_event_cb:
             args = parsers.raw_data_msg(data)
-            self.raw_data_event_cb(identifier, *args)
+            self.raw_data_event_cb(identifier, args)
 
     def on_air_gesture(self, identifier, data):
         if data[0] == 0x14: # mouse mode event
