@@ -212,4 +212,7 @@ An up-to-date list of known issues is available [here](History.md).
 Please refer to the issues tab! :)
 
 
-
+# Linux
+```
+sudo apt-get install libbluetooth-dev
+```
