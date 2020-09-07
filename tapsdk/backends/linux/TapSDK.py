@@ -72,7 +72,7 @@ class TapLinuxSDK(TapSDKBase):
         self.air_gesture_state_event_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
-        self.input_mode = TapInputMode("raw")
+        self.input_mode = TapInputMode("text")
 
     async def register_tap_events(self, cb: Callable):
         if cb:
