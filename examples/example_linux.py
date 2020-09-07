@@ -38,33 +38,27 @@ def OnMoused(identifier, vx, vy, isMouse):
 
 
 def OnRawData(identifier, packets):
-    OnRawData.cnt += 1
-    if OnRawData.cnt % 20:
-        return
+    # imu_msg = [m for m in packets if m["type"] == "imu"][0]
+    # if len(imu_msg) > 0:
+    #     OnRawData.cnt += 1
+    #     if OnRawData.cnt == 10:
+    #         OnRawData.cnt = 0
+    #         logger.info(identifier + " raw imu : " + str(imu_msg["ts"]))
 
-    for imu_mgs in list(filter(lambda m: m["type"] == "accl", packets))[:1]:
-        payload = [("{:>2}".format(int(p / 10))) for p in imu_mgs["payload"]]
-        logger.warning("{} raw imu : {}".format(identifier, payload))
-
-
-    """
     for m in packets:
         if m["type"] == "imu":
             # print("imu")
             OnRawData.imu_cnt += 1
             if OnRawData.imu_cnt == 208:
                 OnRawData.imu_cnt = 0
-                # print("imu, " + str(time.time()) + ", " + str(m["payload"]))
+                print("imu, " + str(time.time()) + ", " + str(m["payload"][2::3]))
         if m["type"] == "accl":
             # print("accl")
             OnRawData.accl_cnt += 1
             if OnRawData.accl_cnt == 200:
                 OnRawData.accl_cnt = 0
-                print("accl, " + str(time.time()) + ", " + str(m["payload"]))
-
-"""
-
-
+                print("accl, " + str(time.time()) + ", " + str(m["payload"][2::3]))
+    
 OnRawData.imu_cnt = 0
 OnRawData.accl_cnt = 0
 OnRawData.cnt = 0
@@ -79,33 +73,31 @@ async def run(loop=None, debug=False):
         h.setLevel(logging.WARNING)
         logger.addHandler(h)
 
-    sdk = TapSDK(None, loop)
-    if not await sdk.client.connect_retrieved():
+    client = TapSDK(None, loop)
+    if not await client.client.connect_retrieved():
         logger.error("Failed to connect the the Device.")
         return
 
-    logger.info("Connected to {}".format(sdk.client.address))
+    logger.info("Connected to {}".format(client.client.address))
 
-    vibrations = [10000]
-    logger.info("sending vibration sequence: {}".format(vibrations))
-    await sdk.send_vibration_sequence(vibrations)
+    await client.set_input_mode(TapInputMode("controller"))
 
-    await sdk.register_air_gesture_events(OnGesture)
-    await sdk.register_tap_events(OnTapped)
-    await sdk.register_raw_data_events(OnRawData)
-    await sdk.register_mouse_events(OnMoused)
-    await sdk.register_air_gesture_state_events(OnMouseModeChange)
+    await client.register_air_gesture_events(OnGesture)
+    await client.register_tap_events(OnTapped)
+    await client.register_raw_data_events(OnRawData)
+    await client.register_mouse_events(OnMoused)
+    await client.register_air_gesture_state_events(OnMouseModeChange)
 
     # logger.info("Changing to text mode")
-    await sdk.set_input_mode(TapInputMode("text"))
+    await client.set_input_mode(TapInputMode("text"))
     # await asyncio.sleep(30))
     logger.info("Changing to raw mode")
-    await sdk.set_input_mode(TapInputMode("raw", sensitivity=[1023, 1023, 1023]))
+    await client.set_input_mode(TapInputMode("raw"))
+    # await client.send_vibration_sequence([100, 200, 300, 400, 500])
 
-    await asyncio.sleep(2 * 60)
-    await sdk.send_vibration_sequence(vibrations)
+    await asyncio.sleep(50.0, loop=loop)
 
 
 if __name__ == "__main__":
-    event_loop = asyncio.get_event_loop()
-    event_loop.run_until_complete(run(event_loop, True))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run(loop, True))
