@@ -9,3 +9,8 @@ if this_platform == "Windows":
 elif this_platform == "Darwin":
     from tapsdk.backends.macos.TapSDK import TapMacSDK as TapSDK 
     from tapsdk.backends.macos.inputmodes import TapInputMode
+elif this_platform == "Linux":
+    from tapsdk.backends.linux.TapSDK import TapLinuxSDK as TapSDK
+    from tapsdk.backends.linux.inputmodes import TapInputMode
+else:
+   raise ValueError("Value for platfrom is unknown: {}".format(this_platform))
