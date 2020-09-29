@@ -38,7 +38,7 @@ tap_device = TapSDK()
 ```
 Note that the SDK will not scan for BLE peripherals, therefore you'll have to pair the Tap manually with your machine.
 
-Note: ensure that you have updated your tap strap and enabled developer mode in the TapManager app
+Also make sure that you have updated your tap strap to the latest version.
 
 ### Features
 
@@ -169,6 +169,9 @@ Resgister callback to events air gesture entarnce/exit.
     ```in_airgesture_state``` is a boolean indication to the new state of air gesture.
 
 ### Raw sensors mode
+
+**Make sure that "Developer mode" is enabled on TapManager app for this mode to work properly**
+
 In raw sensors mode, the Tap continuously sends raw data from the following sensors:
 1. Five 3-axis accelerometers (one per each finger).
     * sampled at 200Hz
@@ -181,6 +184,7 @@ The sensors measurements are given with respect to the reference system below.
 ![alt text](TAP-axis-alpha.png "Tap Strap reference frame")
 
 Each sample (of accelerometer or imu) is preambled wwith a timestamp, referenced to an internal Tap clock.
+
 
 The dynamic range of the sensors is determined with the ```set_input_mode``` method by passing a ```sensitivity``` integers list of length 3 with the following elements (by order): 
 1. Fingers accelerometers sensitivity - 
