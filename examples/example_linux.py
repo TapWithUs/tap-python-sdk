@@ -1,4 +1,5 @@
 import os
+import time
 
 from tapsdk import TapSDK, TapInputMode
 from tapsdk.models import AirGestures
