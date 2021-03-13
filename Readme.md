@@ -83,11 +83,11 @@ For example
     tap_device.set_input_mode(TapInputMode("raw", sensitivity=[2,1,4]))
     ```
 
-2. ```set_haptic_command(self, haptics:list, identifier):```
-This function send a series of haptic activations. ```haptics``` is a list of integers indicates for the actiation and delay periods one after another. The periods are in millisecond units , in the range of [10,2550] and in resolution of 10ms. Each haptic command support up to 18 period definitions (i.e. 9 haptics + delay pairs).  
+2. ```send_vibration_sequence(self, sequence:list, identifier):```
+This function send a series of haptic activations. ```sequence``` is a list of integers indicating for the activation and delay periods one after another. The periods are in millisecond units, in the range of [10,2550] and in resolution of 10ms. Each haptic command support up to 18 period definitions (i.e. 9 haptics + delay pairs).  
 For example, 
     ```python 
-        tap_device.set_haptic_command(haptics=[1000,300,200])
+        tap_device.send_vibration_sequence(sequence=[1000,300,200])
     ```  
     will trigger a 1s haptic, followed by 300ms delay, followed by 200ms haptic.
 
