@@ -199,7 +199,7 @@ The dynamic range of the sensors is determined with the ```set_input_mode``` met
 
 
 2. IMU gyro sensitivity - 
-    | value | sensitivity | scale factor (dps/LSB)|
+    | value | sensitivity | scale factor (mdps/LSB)|
     | :---: | :---: | :---: |
     | 0 (default) | ±500dps | 17.5 |
     | 1 | ±125dps | 4.375 |
