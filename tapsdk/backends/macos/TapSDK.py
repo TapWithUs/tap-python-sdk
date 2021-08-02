@@ -7,15 +7,19 @@ from typing import Callable
 
 from bleak import BleakClient
 from bleak import _logger as logger
-from bleak.backends.corebluetooth.discovery import discover
-from bleak.backends.corebluetooth import CBAPP as cbapp
-from bleak.backends.corebluetooth.CentralManagerDelegate import string2uuid
-
+from bleak import discover
+from bleak.backends.corebluetooth.CentralManagerDelegate import CBUUID, CentralManagerDelegate
 from ...TapSDK import TapSDKBase
 from ...models import TapUUID
 from .inputmodes import TapInputMode
 from ...models.enumerations import MouseModes
 from tapsdk import parsers
+
+def string2uuid(uuid_str: str) -> CBUUID:
+    """Convert a string to a uuid"""
+    return CBUUID.UUIDWithString_(uuid_str)
+
+central_manager_delegate = CentralManagerDelegate.alloc().init()
 
 class TapClient(BleakClient):
     def __init__(self, address="", loop=None, **kwargs):
@@ -23,10 +27,10 @@ class TapClient(BleakClient):
     
     async def connect_retrieved(self, **kwargs) -> bool:
         paired_taps = get_paired_taps()
-
-        logger.debug("Connecting to Tap device @ {}".format(self.address))
-
-        await cbapp.central_manager_delegate.connect_(paired_taps[0])
+        self._peripheral = paired_taps[0]
+        self._central_manager_delegate = central_manager_delegate
+        logger.debug("Connecting to Tap device @ {}".format(self._peripheral))
+        await self.connect()
 
         # Now get services
         await self.get_services()
@@ -34,7 +38,7 @@ class TapClient(BleakClient):
         return True
 
 def get_paired_taps():
-    paired_taps = cbapp.central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
+    paired_taps = central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
                     [string2uuid(TapUUID.tap_service)])
     logger.debug("Found connected Taps @ {}".format(paired_taps))
     return paired_taps
