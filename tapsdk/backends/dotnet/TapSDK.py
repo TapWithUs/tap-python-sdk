@@ -6,6 +6,7 @@ import System
 clr.AddReference(r"tapsdk/backends/dotnet/TAPWin")
 from TAPWin import TAPManager
 from TAPWin import TAPManagerLog
+from TAPWin import TAPManagerLogEvent
 from TAPWin import TAPInputMode
 from TAPWin import RawSensorSensitivity
 from TAPWin import TAPAirGesture
@@ -78,7 +79,7 @@ class TapWindowsSDK(TapSDKBase):
         self.unregister_event(TAPManagerLog.Instance.OnLineLogged, listener)
 
     def set_input_mode(self, mode:TapInputMode, tap_identifier=""):
-        print("input mode: " + mode.get_name())
+        TAPManagerLog.Instance.Log(TAPManagerLogEvent.Info, "input mode: " + mode.get_name(), __file__, __name__)
         TAPManager.Instance.SetTapInputMode(mode.get_object(), tap_identifier)
 
     def set_default_input_mode(self, mode, identifier=""):
