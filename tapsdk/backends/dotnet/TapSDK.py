@@ -13,71 +13,69 @@ from TAPWin import RawSensorData
 
 
 class TapWindowsSDK(TapSDKBase):
+
     def __init__(self, *args):
         super().__init__()
-        self.show_logs()
+        self.register_log_events()
+
+    def register_event(self, event_handler, listener=None):
+        if listener is not None:
+            event_handler += listener
+
+    def unregister_event(self, event_handler, listener=None):
+        if listener is not None:
+            try:
+                event_handler -= listener
+            except ValueError:
+                pass
 
     def register_tap_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnTapped += listener
+        self.register_event(TAPManager.Instance.OnTapped, listener)
 
     def unregister_tap_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnTapped -= listener
+        self.unregister_event(TAPManager.Instance.OnTapped, listener)
 
     def register_mouse_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnMoused += listener
+        self.register_event(TAPManager.Instance.OnMoused, listener)
 
     def unregister_mouse_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnMoused -= listener
+        self.unregister_event(TAPManager.Instance.OnMoused, listener)
 
     def register_connection_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnTapConnected += listener
+        self.register_event(TAPManager.Instance.OnTapConnected, listener)
 
     def unregister_connection_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnTapConnected -= listener
+        self.unregister_event(TAPManager.Instance.OnTapConnected, listener)
 
     def register_disconnection_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnTapDisconnected += listener
+        self.register_event(TAPManager.Instance.OnTapDisconnected, listener)
 
     def unregister_disconnection_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnTapDisconnected -= listener
+        self.unregister_event(TAPManager.Instance.OnTapDisconnected, listener)
 
     def register_raw_data_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnRawSensorDataReceieved += listener
+        self.register_event(TAPManager.Instance.OnRawSensorDataReceieved, listener)
 
     def unregister_raw_data_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnRawSensorDataReceieved -= listener
+        self.unregister_event(TAPManager.Instance.OnRawSensorDataReceieved, listener)
 
     def register_air_gesture_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnAirGestured += listener
+        self.register_event(TAPManager.Instance.OnAirGestured, listener)
 
     def unregister_air_gesture_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnAirGestured -= listener
+        self.unregister_event(TAPManager.Instance.OnAirGestured, listener)
 
     def register_air_gesture_state_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnChangedAirGestureState += listener
+        self.register_event(TAPManager.Instance.OnChangedAirGestureState, listener)
 
     def unregister_air_gesture_state_events(self, listener=None):
-        if listener is not None:
-            TAPManager.Instance.OnChangedAirGestureState -= listener
+        self.unregister_event(TAPManager.Instance.OnChangedAirGestureState, listener)
 
-    def show_logs(self):
-        TAPManagerLog.Instance.OnLineLogged += print
+    def register_log_events(self, listener=print):
+        self.register_event(TAPManagerLog.Instance.OnLineLogged, listener)
 
-    def suppress_logs(self):
-        TAPManagerLog.Instance.OnLineLogged -= print
+    def unregister_log_events(self, listener=print):
+        self.unregister_event(TAPManagerLog.Instance.OnLineLogged, listener)
 
     def set_input_mode(self, mode:TapInputMode, tap_identifier=""):
         print("input mode: " + mode.get_name())
