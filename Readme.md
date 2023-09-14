@@ -183,7 +183,7 @@ In raw sensors mode, the Tap continuously sends raw data from the following sens
 The sensors measurements are given with respect to the reference system below.
 ![alt text](TAP-axis-alpha.png "Tap Strap reference frame")
 
-Each sample (of accelerometer or imu) is preambled wwith a timestamp, referenced to an internal Tap clock.
+Each sample (of accelerometer or imu) is preambled with a millisecond timestamp, referenced to an internal Tap clock.
 
 
 The dynamic range of the sensors is determined with the ```set_input_mode``` method by passing a ```sensitivity``` integers list of length 3 with the following elements (by order): 
