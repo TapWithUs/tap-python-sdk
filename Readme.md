@@ -173,10 +173,10 @@ Resgister callback to events air gesture entarnce/exit.
 **Make sure that "Developer mode" is enabled on TapManager app for this mode to work properly**
 
 In raw sensors mode, the Tap continuously sends raw data from the following sensors:
-1. Five 3-axis accelerometers (one per each finger).
+1. Five 3-axis accelerometers - one per each finger (**available on TAP Strap and Tap Strap 2**).
     * sampled at 200Hz
     * allows dynamic range configuration (±2G, ±4G, ±8G, ±16G)
-2. IMU (3-axis accelerometer + gyro) located on the thumb (**available with TAP Strap 2 only**).
+2. IMU (3-axis accelerometer + gyro) located on the thumb (**available on TAP Strap 2 and TapXR**).
     * sampled at 208Hz. 
     * allows dynamic range configuration for the accelerometer (±2G, ±4G, ±8G, ±16G) and for the gyro (±125dps, ±250dps, ±500dps, ±1000dps, ±2000dps).
 

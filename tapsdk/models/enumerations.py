@@ -11,6 +11,7 @@ class AirGestures(Enum):
 	LEFT_TWO_FINGERS    = 7
 	RIGHT_ONE_FINGER	= 8
 	RIGHT_TWO_FINGERS   = 9
+	PINCH   			= 10
 	THUMB_FINGER		= 12
 	THUMB_MIDDLE   		= 14
 
