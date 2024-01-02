@@ -38,7 +38,7 @@ def on_tap_event(identifier, tapcode):
 
 
 def on_air_gesture_event(identifier, air_gesture):
-    print(" Air gesture: " + AirGestures(air_gesture).name)
+    print(" Air gesture: ", AirGestures(int(air_gesture)).name)
     if air_gesture == AirGestures.UP_ONE_FINGER.value:
         tap_instance.set_input_mode(TapInputMode("raw"), identifier)
     if air_gesture == AirGestures.DOWN_ONE_FINGER.value:

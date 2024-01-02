@@ -1,9 +1,9 @@
 # History
-## 0.5.0 (2021-08-03)
+## 0.5.1 (2024-01-01)
 ______________________
 ### Main features
 
-* Support Bleak 0.12.1 for mac
+* Support TapXR Air Gesture pinch
 
 ### Known Issues
 * Windows backend -  
@@ -13,6 +13,12 @@ ______________________
     * Doesn't support multiple Tap strap connections.
     * OnConnect and OnDisconnect events are not implemented 
     * Raw sensor data is given unscaled (i.e. unitless), thereforein order to scale to physical units need to multiply by the relevant scale factor
+
+## 0.5.0 (2021-08-03)
+______________________
+### Main features
+
+* Support Bleak 0.12.1 for mac
 
 ## 0.3.0 (2020-09-07)
 ______________________
