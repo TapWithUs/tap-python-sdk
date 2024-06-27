@@ -21,17 +21,14 @@ def string2uuid(uuid_str: str) -> CBUUID:
     return CBUUID.UUIDWithString_(uuid_str)
 
 
-central_manager_delegate = CentralManagerDelegate.alloc().init()
-
-
 class TapClient(BleakClient):
     def __init__(self, address="", loop=None, **kwargs):
         super().__init__(address, loop=loop, **kwargs)
 
     async def connect_retrieved(self, **kwargs) -> bool:
-        paired_taps = get_paired_taps()
+        self._central_manager_delegate = CentralManagerDelegate.alloc().init()
+        paired_taps = self.get_paired_taps()
         self._peripheral = paired_taps[0]
-        self._central_manager_delegate = central_manager_delegate
         logger.debug("Connecting to Tap device @ {}".format(self._peripheral))
         await self.connect()
 
@@ -40,12 +37,11 @@ class TapClient(BleakClient):
 
         return True
 
-
-def get_paired_taps():
-    paired_taps = central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
-                    [string2uuid(TapUUID.tap_service)])
-    logger.debug("Found connected Taps @ {}".format(paired_taps))
-    return paired_taps
+    def get_paired_taps(self):
+        paired_taps = self._central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
+                        [string2uuid(TapUUID.tap_service)])
+        logger.debug("Found connected Taps @ {}".format(paired_taps))
+        return paired_taps
 
 
 class TapMacSDK(TapSDKBase):
@@ -74,12 +70,18 @@ class TapMacSDK(TapSDKBase):
 
     async def register_air_gesture_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
+            try:
+                await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
+            except Exception as e:
+                logger.warning("Failed to start notify for air gesture state: " + str(e))
             self.air_gesture_event_cb = cb
 
     async def register_air_gesture_state_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
+            try:
+                await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
+            except Exception as e:
+                logger.warning("Failed to start notify for air gesture state: " + str(e))
             self.air_gesture_state_event_cb = cb
 
     async def register_raw_data_events(self, cb: Callable):
@@ -116,7 +118,7 @@ class TapMacSDK(TapSDKBase):
         if data[0] == 0x14:  # mouse mode event
             self.mouse_mode = MouseModes(data[1])
             if self.air_gesture_state_event_cb:
-                self.air_gesture_state_event_cb(identifier, self.mouse_mode == MouseModes.AIR_MOUSE)
+                self.air_gesture_state_event_cb(identifier, self.mouse_mode)
         elif self.air_gesture_event_cb:
             args = parsers.air_gesture_data_msg(data)
             self.air_gesture_event_cb(identifier, *args)

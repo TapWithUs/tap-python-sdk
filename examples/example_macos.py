@@ -35,7 +35,7 @@ async def run(loop):
     await client.register_tap_events(OnTapped)
     await client.register_raw_data_events(OnRawData)
     await client.register_mouse_events(OnMoused)
-    # await client.register_air_gesture_state_events(OnMouseModeChange)
+    await client.register_air_gesture_state_events(OnMouseModeChange)
 
     print("Set Controller Mode for 10 seconds")
     await client.set_input_mode(TapInputMode("controller"))
