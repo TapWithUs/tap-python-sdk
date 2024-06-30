@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from tapsdk import TapInputMode, TapSDK
+from tapsdk import TapInputMode, TapSDK, InputType
 from tapsdk.models import AirGestures
 
 
@@ -37,8 +37,20 @@ async def run(loop):
     await client.register_mouse_events(OnMoused)
     await client.register_air_gesture_state_events(OnMouseModeChange)
 
-    print("Set Controller Mode for 10 seconds")
+    print("Set Controller Mode for 5 seconds")
     await client.set_input_mode(TapInputMode("controller"))
+    await asyncio.sleep(5)
+
+    print("Force Mouse Mode for 5 seconds")
+    await client.set_input_type(InputType.MOUSE)
+    await asyncio.sleep(5)
+    
+    print("Force keyboard Mode for 5 seconds")
+    await client.set_input_type(InputType.KEYBOARD)
+    await asyncio.sleep(5)
+
+    print("Set auto Mode for 10 seconds")
+    await client.set_input_type(InputType.AUTO)
     await asyncio.sleep(10)
 
     print("Set Text Mode for 10 seconds")

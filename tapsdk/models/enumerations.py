@@ -1,6 +1,19 @@
 from enum import Enum
 
 
+class MouseModes(Enum):
+    STDBY = 0
+    AIR_MOUSE = 1
+    OPTICAL1 = 2
+    OPTICAL2 = 3
+
+
+class InputType(Enum):
+    MOUSE = 1
+    KEYBOARD = 2
+    AUTO = 3
+
+
 class AirGestures(Enum):
     NONE = 0
     GENERAL = 1
@@ -18,10 +31,3 @@ class AirGestures(Enum):
     STATE_OPEN = 100
     STATE_THUMB_FINGER = 101
     STATE_THUMB_MIDDLE = 102
-
-
-class MouseModes(Enum):
-    STDBY = 0
-    AIR_MOUSE = 1
-    OPTICAL1 = 2
-    OPTICAL2 = 3
