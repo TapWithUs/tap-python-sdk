@@ -1,25 +1,23 @@
 import asyncio
 from asyncio.events import AbstractEventLoop
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 from typing import Callable
 
-from bleak import BleakClient, discover
+from bleak import BleakClient
 from bleak import _logger as logger
-from bleak.backends.client import BaseBleakClient
+from bleak import discover
 
 from tapsdk import parsers
-from .inputmodes import TapInputMode
-from ...TapSDK import TapSDKBase
+
 from ...models import TapUUID
 from ...models.enumerations import MouseModes
+from ...TapSDK import TapSDKBase
+from .inputmodes import TapInputMode
 
 
 class TapClient(BleakClient):
     def __init__(self, address=None, loop=None, **kwargs):
         super().__init__(address, loop=loop, **kwargs)
-
-    def set_disconnected_callback(self, callback: Callable[[BaseBleakClient], None], **kwargs) -> None:
-        pass
 
     async def connect_retrieved(self, **kwargs) -> bool:
         await self.connect()
@@ -58,13 +56,38 @@ def is_tap_device(device):
     return True or len(device.metadata) > 0
 
 
+def get_mac_addr() -> str:
+    try:
+        with Popen(["bt-device", "--list"], stdout=PIPE, text=True) as btdevice_process:
+            exit_code = btdevice_process.wait()
+            if exit_code:
+                raise ConnectionError("Failed to find any TAP decive")
+            connected_bt_devices = btdevice_process.stdout.read().splitlines()
+            tap_devices = list(filter(lambda line: line.startswith("Tap"), connected_bt_devices))
+            for d in tap_devices:
+                logger.info("Found tap device: {}".format(d))
+            if len(tap_devices) > 1:
+                print("Found more than 1 Tap device:")
+                [print(f"{i+1}. {d}") for i, d in enumerate(tap_devices)]
+                tap_devices = [tap_devices[int(input("Select the device number: ")) - 1]]
+            if len(tap_devices) == 0:
+                raise ValueError(
+                    "No Tap device was found. Make sure the device is connected and its human readable name "
+                    "starts with Tap.")
+            device_decs = tap_devices[0]
+            tap_mac_address = device_decs[-18:-1]  # only the mac_address part of the description.
+            return tap_mac_address
+    except Exception as e:
+        logger.error("Failed to find any TAP device: {}".format(e))
+        raise e
+
+
 class TapLinuxSDK(TapSDKBase):
     def __init__(self, address=None, loop: AbstractEventLoop = None):
         super(TapLinuxSDK, self).__init__()
-        self.address = address if address else self.get_mac_addr()
+        self.address = address if address else get_mac_addr()
         self.client = TapClient(self.address)
         self.loop = loop
-        self.address = address
         self.mouse_event_cb = None
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
@@ -76,27 +99,27 @@ class TapLinuxSDK(TapSDKBase):
 
     async def register_tap_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.tap_data_characteristic.lower(), self.on_tapped)
+            await self.client.start_notify(TapUUID.tap_data_characteristic, self.on_tapped)
             self.tap_event_cb = cb
 
     async def register_mouse_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.mouse_data_characteristic.lower(), self.on_moused)
+            await self.client.start_notify(TapUUID.mouse_data_characteristic, self.on_moused)
             self.mouse_event_cb = cb
 
     async def register_air_gesture_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.air_gesture_data_characteristic.lower(), self.on_air_gesture)
+            await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
             self.air_gesture_event_cb = cb
 
     async def register_air_gesture_state_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.air_gesture_data_characteristic.lower(), self.on_air_gesture)
+            await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
             self.air_gesture_state_event_cb = cb
 
     async def register_raw_data_events(self, cb: Callable):
         if cb:
-            await self.client.start_notify(TapUUID.raw_sensors_characteristic.lower(), self.on_raw_data)
+            await self.client.start_notify(TapUUID.raw_sensors_characteristic, self.on_raw_data)
             self.raw_data_event_cb = cb
 
     async def register_connection_events(self, cb: Callable):
@@ -104,31 +127,6 @@ class TapLinuxSDK(TapSDKBase):
 
     async def register_disconnection_events(self, cb: Callable):
         pass
-
-    def get_mac_addr(self) -> str:
-        try:
-            with Popen(["bt-device", "--list"], stdout=PIPE, text=True) as btdevice_process:
-                exit_code = btdevice_process.wait()
-                if exit_code:
-                    raise ConnectionError("Failed to find any TAP decive")
-                connected_bt_devices = btdevice_process.stdout.read().splitlines();
-                tap_devices = list(filter(lambda line: line.startswith("Tap_"), connected_bt_devices))
-                for d in tap_devices:
-                    logger.info("Found tap device: {}".format(d))
-                if len(tap_devices) > 1:
-                    raise ValueError(
-                        "Found more than 1 Tap device. Set the MAC address of the device you want to connect to "
-                        "and try again.")
-                if len(tap_devices) == 0:
-                    raise ValueError(
-                        "No Tap device was found. Make sure the device is connected and its human readable name "
-                        "starts with Tap_.")
-                device_decs = tap_devices[0]
-                tap_mac_address = device_decs[-18:-1]  # only the mac_address part of the description.
-                return tap_mac_address
-        except Exception as e:
-            logger.error("Failed to find any TAP device: {}".format(e))
-            raise e
 
     def on_moused(self, identifier, data):
         if self.mouse_event_cb:
@@ -158,19 +156,18 @@ class TapLinuxSDK(TapSDKBase):
             args = parsers.air_gesture_data_msg(data)
             self.air_gesture_event_cb(identifier, *args)
 
-    async def send_vibration_sequence(self, sequence: list, identifier=None):
+    async def send_vibration_sequence(self, sequence, identifier=None):
         if len(sequence) > 18:
             sequence = sequence[:18]
         for i, d in enumerate(sequence):
             sequence[i] = max(0, min(255, d // 10))
 
         write_value = bytearray([0x0, 0x2] + sequence)
-        await self.client.write_gatt_char(TapUUID.ui_cmd_characteristic.lower(), write_value)
+        await self.client.write_gatt_char(TapUUID.ui_cmd_characteristic, write_value)
 
     async def set_input_mode(self, input_mode: TapInputMode, identifier=None):
-        if (input_mode.mode == "raw" and
-                self.input_mode.mode == "raw" and
-                self.input_mode.get_command() != input_mode.get_command()):
+        if (input_mode.mode == "raw" and self.input_mode.mode == "raw" and
+           self.input_mode.get_command() != input_mode.get_command()):
             logger.warning("Can't change \"raw\" sensitivities while in \"raw\"")
             return
 
@@ -188,18 +185,17 @@ class TapLinuxSDK(TapSDKBase):
 
     async def _write_input_mode(self, value):
         await self.client.write_gatt_char(TapUUID.tap_mode_characteristic.lower(), value)
-        pass
 
     async def list_connected_taps(self):
         devices = await discover(loop=self.loop)
         return devices
 
     async def run(self):
-        await self.connect_retrieved()
+        await self.client.connect_retrieved()
 
 
 class InputModeAutoRefresh:
-    def __init__(self, set_function: Callable, timeout: int = 10):
+    def __init__(self, set_function, timeout=10):
         self.set_function = set_function
         self.is_running = False
         self.timeout = timeout
