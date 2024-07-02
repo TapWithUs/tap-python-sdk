@@ -1,5 +1,5 @@
 import logging
-from tapsdk import InputType
+from ...models.enumerations import InputType
 
 
 class TapInputMode:
