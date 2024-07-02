@@ -27,7 +27,7 @@ def OnRawData(identifier, packets):
 
 
 async def run(loop):
-    client = TapSDK(loop)
+    client = TapSDK(loop=loop)
     await client.run()
     print("Connected: {0}".format(client.client.is_connected))
 
