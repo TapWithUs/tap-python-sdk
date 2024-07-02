@@ -1,4 +1,5 @@
 import logging
+from tapsdk import InputType
 
 class TapInputMode:
     def __init__(self, mode, sensitivity:list=[0,0,0]):
@@ -31,4 +32,10 @@ class TapInputMode:
 
     def get_name(self):
         return self._modes[self.mode]["name"]
+    
+
+def input_type_command(input_type):
+    assert isinstance(input_type, InputType), "input_type must be of type InputType"
+    return bytearray([0x3, 0xd, 0x0, input_type.value])
+
 

@@ -7,12 +7,12 @@ from bleak import BleakClient
 from bleak import _logger as logger
 from bleak import discover
 
-from tapsdk import parsers
+from tapsdk import InputType, parsers
 
 from ...models import TapUUID
 from ...models.enumerations import MouseModes
 from ...TapSDK import TapSDKBase
-from .inputmodes import TapInputMode
+from .inputmodes import TapInputMode, input_type_command
 
 
 class TapClient(BleakClient):
@@ -96,6 +96,7 @@ class TapLinuxSDK(TapSDKBase):
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
         self.input_mode = TapInputMode("text")
+        self.input_type = InputType.AUTO
 
     async def register_tap_events(self, cb: Callable):
         if cb:
@@ -179,9 +180,21 @@ class TapLinuxSDK(TapSDKBase):
 
         await self._write_input_mode(write_value)
 
+    async def set_input_type(self, input_type: InputType, identifier=None):
+        assert isinstance(input_type, InputType), "input_type must be of type InputType"
+        self.input_type = input_type
+        write_value = input_type_command(self.input_type)
+
+        if not self.input_mode_refresh.is_running:
+            await self.input_mode_refresh.start()
+
+        await self._write_input_mode(write_value)
+
     async def _refresh_input_mode(self):
         await self.set_input_mode(self.input_mode)
         logger.debug("Input Mode Refreshed: " + self.input_mode.get_name())
+        await self.set_input_type(self.input_type)
+        logger.debug(f"Input Type Refreshed: {self.input_type}")
 
     async def _write_input_mode(self, value):
         await self.client.write_gatt_char(TapUUID.tap_mode_characteristic.lower(), value)
