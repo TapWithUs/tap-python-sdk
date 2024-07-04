@@ -2,7 +2,7 @@
 
 ### What Is This ?
 
-TAP python SDK allows you to build python app that can establish BLE connection with the Tap Strap, send commands and receive events and data - Thus allowing TAP to act as a controller for your app!  
+TAP python SDK allows you to build python app that can establish BLE connection with Tap Strap and TapXR, send commands and receive events and data - Thus allowing TAP to act as a controller for your app!  
 The library is developed with Python >= 3.7 and is **currently in beta**.
 
 
@@ -36,20 +36,20 @@ Then just import the main class
 from tapsdk import TapSDK
 tap_device = TapSDK()
 ```
-Note that the SDK will not scan for BLE peripherals, therefore you'll have to pair the Tap manually with your machine.
+Note that the SDK will not scan for BLE peripherals, therefore you'll have to pair the Tap device manually with your machine.
 
-Also make sure that you have updated your tap strap to the latest version.
+Also make sure that you have updated your Tap device to the latest version.
 
 ### Features
 
-This SDK implements two basic interfaces with the Tap Strap.
+This SDK implements two basic interfaces with a Tap device.
 
-First is setting the operation mode of the Tap strap:
+First is setting the operation mode:
 
-1. *Text mode* - the strap will operate normally, with no events being sent to the SDK
-2. *Controller mode* - the strap will send events to the SDK
-3. *Controller and Text mode* - the strap will operate normally, in parallel with sending events to the SDK
-4. *Raw data mode* - the strap will stream raw sensors data to the SDK.
+1. *Text mode* - the Tap device will operate normally, with no events being sent to the SDK
+2. *Controller mode* - the Tap device will send events to the SDK
+3. *Controller and Text mode* - the Tap device will operate normally, in parallel with sending events to the SDK
+4. *Raw data mode* - tha Tap device will stream raw sensors data to the SDK.
 
 Second, subscribing to the following events:
 
@@ -58,10 +58,17 @@ Second, subscribing to the following events:
 3. *AirGesture event* - whenever one of the gestures is detected
 4. *Raw data* - whenever new raw data sample is being made.
 
-Additional to these functional event, there are also some state events, such as connection and disconnection of Tap straps to the SDK backend.
+Additional to these functional event, there are also some state events, such as connection and disconnection of Tap devices to the SDK backend.
+
+#### Spatial Control - NEW
+Authorized developers can gain access to the experimantal Spatial Control features:
+1. Extended AirGesture state - enabling aggregation for pinch, drag and swipe gestures.
+2. Select input type - enabling the selection of input type to be activated - i.e. AirMouse/Tapping. 
+
+These featureas are only available on TapXR and only for qualified developers. Request access [here](https://www.tapwithus.com/contact-us/)
 
 
-
+### High level API
 The SDK uses callbacks to implement user functions on the various events. To register a callback, you just have to instance a TapSDK object and just:
 
 ```python
@@ -81,9 +88,19 @@ For example
     Also, when instantiating a ```TapInputMode``` for raw sensors mode, additional argument ```sensitivity``` (list with 3 integers) is optional for example
     ```python
     tap_device.set_input_mode(TapInputMode("raw", sensitivity=[2,1,4]))
-    ```
 
-2. ```send_vibration_sequence(self, sequence:list, identifier):```
+2. ```set_input_type(self, input_type:InputType, identifier):```   
+    > **Only for TapXR and with Spatial Control experimental firmware**
+
+    This function sends a command to force input type. It accepts an enum of type ```InputType``` initialized with any of the types ```["MOUSE", "KEYBOARD", "AUTO"]```  
+    For example 
+    ```python
+    from tapsdk import InputType
+    tap_device.set_input_mode(InputType.AUTO)
+    ```  
+    This will set the input to be automatically selected by the Tap device, based on hand posture.
+
+3. ```send_vibration_sequence(self, sequence:list, identifier):```
 This function send a series of haptic activations. ```sequence``` is a list of integers indicating for the activation and delay periods one after another. The periods are in millisecond units, in the range of [10,2550] and in resolution of 10ms. Each haptic command support up to 18 period definitions (i.e. 9 haptics + delay pairs).  
 For example, 
     ```python 
@@ -172,8 +189,8 @@ Resgister callback to events air gesture entarnce/exit.
 
 **Make sure that "Developer mode" is enabled on TapManager app for this mode to work properly**
 
-In raw sensors mode, the Tap continuously sends raw data from the following sensors:
-1. Five 3-axis accelerometers - one per each finger (**available on TAP Strap and Tap Strap 2**).
+In raw sensors mode, the Tap device continuously sends raw data from the following sensors:
+1. Five 3-axis accelerometers - one per each finger (**available only on TAP Strap and Tap Strap 2**).
     * sampled at 200Hz
     * allows dynamic range configuration (±2G, ±4G, ±8G, ±16G)
 2. IMU (3-axis accelerometer + gyro) located on the thumb (**available on TAP Strap 2 and TapXR**).
@@ -181,7 +198,9 @@ In raw sensors mode, the Tap continuously sends raw data from the following sens
     * allows dynamic range configuration for the accelerometer (±2G, ±4G, ±8G, ±16G) and for the gyro (±125dps, ±250dps, ±500dps, ±1000dps, ±2000dps).
 
 The sensors measurements are given with respect to the reference system below.
+
 ![alt text](TAP-axis-alpha.png "Tap Strap reference frame")
+![alt text](TAPXR-axis.png "TapXR reference frame")
 
 Each sample (of accelerometer or imu) is preambled with a millisecond timestamp, referenced to an internal Tap clock.
 
