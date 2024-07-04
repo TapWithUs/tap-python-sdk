@@ -1,18 +1,26 @@
 # History
-## 0.5.1 (2024-01-01)
+## 0.6.0 (2024-07-04)
 ______________________
 ### Main features
 
-* Support TapXR Air Gesture pinch
+* Added Spatial features for TapXR.
+* Mac and Linux backends unified to posix backend.
 
 ### Known Issues
 * Windows backend -  
     * Raw sensor data rate might be lower than expected.
     * Sometimes a Tap strap wouldn't be detected upon connection. In this case try restarting your Tap and/or the Python application. In worst case scenario re-pair your Tap. 
+    * Spatial features are still not available for Windows backend.
 * MacOS & Linux backends - 
     * Doesn't support multiple Tap strap connections.
     * OnConnect and OnDisconnect events are not implemented 
     * Raw sensor data is given unscaled (i.e. unitless), thereforein order to scale to physical units need to multiply by the relevant scale factor
+
+## 0.5.1 (2024-01-01)
+______________________
+### Main features
+
+* Support TapXR Air Gesture pinch
 
 ## 0.5.0 (2021-08-03)
 ______________________
