@@ -13,7 +13,6 @@ ______________________
     * Spatial features are still not available for Windows backend.
 * MacOS & Linux backends - 
     * Doesn't support multiple Tap strap connections.
-    * OnConnect and OnDisconnect events are not implemented 
     * Raw sensor data is given unscaled (i.e. unitless), thereforein order to scale to physical units need to multiply by the relevant scale factor
 
 ## 0.5.1 (2024-01-01)

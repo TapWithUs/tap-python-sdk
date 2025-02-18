@@ -3,9 +3,8 @@ import platform
 from asyncio.events import AbstractEventLoop
 from typing import Callable
 
-from bleak import BleakClient
+from bleak import BleakClient, BleakScanner
 from bleak import _logger as logger
-from bleak import discover
 
 from . import parsers
 from .enumerations import InputType, MouseModes
@@ -37,6 +36,8 @@ if platform.system() == "Darwin":
         async def connect_retrieved(self, **kwargs) -> bool:
             self._central_manager_delegate = CentralManagerDelegate.alloc().init()
             paired_taps = self.get_paired_taps()
+            if len(paired_taps) == 0:
+                return False
             self._peripheral = paired_taps[0]
             logger.debug("Connecting to Tap device @ {}".format(self._peripheral))
             await self.connect()
@@ -52,6 +53,14 @@ if platform.system() == "Darwin":
             logger.debug("Found connected Taps @ {}".format(paired_taps))
             return paired_taps
 
+elif platform.system() == "Windows":
+    class TapClient(BleakClient):
+        def __init__(self, address="", loop=None, **kwargs):
+            super().__init__(address, loop=loop, **kwargs)
+
+        async def connect_retrieved(self, **kwargs) -> bool:
+            return False
+
 elif platform.system() == "Linux":
     class TapClient(BleakClient):
         def __init__(self, address=None, loop=None, **kwargs):
@@ -60,7 +69,7 @@ elif platform.system() == "Linux":
 
         async def connect_retrieved(self, **kwargs) -> bool:
             await self.connect()
-            connected = await self.is_connected()
+            connected = self.is_connected()
             if connected:
                 logger.info("Connected to {0}".format(self.address))
                 await self.__debug()
@@ -133,24 +142,19 @@ class TapSDK():
         self.input_type = InputType.AUTO
 
     def register_tap_events(self, cb: Callable):
-        if cb:
-            self.tap_event_cb = cb
+        self.tap_event_cb = cb
 
     def register_mouse_events(self, cb: Callable):
-        if cb:
-            self.mouse_event_cb = cb
+        self.mouse_event_cb = cb
 
     def register_air_gesture_events(self, cb: Callable):
-        if cb:
-            self.air_gesture_event_cb = cb
+        self.air_gesture_event_cb = cb
 
     def register_air_gesture_state_events(self, cb: Callable):
-        if cb:
-            self.air_gesture_state_event_cb = cb
+        self.air_gesture_state_event_cb = cb
 
     def register_raw_data_events(self, cb: Callable):
-        if cb:
-            self.raw_data_event_cb = cb
+        self.raw_data_event_cb = cb
 
     def register_connection_events(self, cb: Callable):
         self.connection_cb = cb
@@ -228,13 +232,29 @@ class TapSDK():
     async def _write_input_mode(self, value):
         await self.client.write_gatt_char(tap_mode_characteristic, value)
 
-    async def list_connected_taps(self):
-        devices = await discover(loop=self.loop)
-        return devices
 
     async def run(self):
-        await self.client.connect_retrieved()
-        if self.client.is_connected():
+        stop_event = asyncio.Event()
+        devices = []
+
+        async def detection_cb(device, adv_data):
+            print("detected ", device, adv_data)
+            if tap_service.lower() in adv_data.service_uuids:
+                if device.address not in [d.address for d in devices]:
+                    devices.append(device)
+                    print("detected ", device, adv_data)
+                    stop_event.set()
+
+        connected = await self.client.connect_retrieved()
+        if not connected:
+            print("Couldn't find connected Tap device. Scanning for Tap devices...")
+            async with BleakScanner(detection_callback=detection_cb) as _:
+                await stop_event.wait()
+
+            self.client = TapClient(devices[0])
+            await self.client.connect()
+            await self.client.pair()
+        if self.client.is_connected:
             for ch, cb in [(tap_data_characteristic, self.on_tapped),
                            (mouse_data_characteristic, self.on_moused),
                            (air_gesture_data_characteristic, self.on_air_gesture),
