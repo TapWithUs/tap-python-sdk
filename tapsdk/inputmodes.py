@@ -1,5 +1,5 @@
 import logging
-from ...models.enumerations import InputType
+from .enumerations import InputType
 
 
 class TapInputMode:
