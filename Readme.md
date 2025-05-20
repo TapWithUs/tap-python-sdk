@@ -240,6 +240,10 @@ The dynamic range of the sensors is determined with the ```set_input_mode``` met
 ### Examples
 
 You can find some examples in the [examples folder](examples).
+### Testing
+
+Install test requirements and run `pytest`.
+
 
 ### Known Issues
 An up-to-date list of known issues is available [here](History.md).
