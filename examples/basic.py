@@ -53,7 +53,7 @@ async def run(loop):
     print("Force Mouse Mode for 5 seconds")
     await client.set_input_type(InputType.MOUSE)
     await asyncio.sleep(5)
-    
+
     print("Force keyboard Mode for 5 seconds")
     await client.set_input_type(InputType.KEYBOARD)
     await asyncio.sleep(5)

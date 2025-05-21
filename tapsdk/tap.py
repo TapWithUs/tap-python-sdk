@@ -232,7 +232,6 @@ class TapSDK():
     async def _write_input_mode(self, value):
         await self.client.write_gatt_char(tap_mode_characteristic, value)
 
-
     async def run(self):
         stop_event = asyncio.Event()
         devices = []
