@@ -240,9 +240,20 @@ The dynamic range of the sensors is determined with the ```set_input_mode``` met
 ### Examples
 
 You can find some examples in the [examples folder](examples).
+
 ### Testing
 
-Install test requirements and run `pytest`.
+To run the tests, first install the development dependencies:
+
+```bash
+pip install .[dev]
+```
+
+Then run the tests using pytest:
+
+```bash
+pytest
+```
 
 
 ### Known Issues

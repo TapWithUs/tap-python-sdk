@@ -12,11 +12,44 @@ def test_tap_data_msg():
 
 
 def test_raw_data_msg():
-    ts = 42
-    payload = [1, 2, 3, 4, 5, 6]
-    msg = bytearray()
-    msg += ts.to_bytes(4, "little")
-    for v in payload:
-        msg += v.to_bytes(2, "little", signed=True)
-    msg += bytearray([0, 0, 0, 0])
-    assert parsers.raw_data_msg(msg) == [{"type": "imu", "ts": ts, "payload": payload}]
+    # 1. packet with one imu message
+    # IMU message: type=0, timestamp=123, 6 samples (12 bytes)
+    ts = 123
+    imu_ts = ts  # type bit is 0, so ts stays 123
+    imu_bytes = imu_ts.to_bytes(4, 'little', signed=False)
+    imu_payload = b''
+    imu_samples = [100, -100, 200, -200, 300, -300]
+    for v in imu_samples:
+        imu_payload += v.to_bytes(2, 'little', signed=True)
+    imu_packet = bytearray(imu_bytes + imu_payload)
+    result = parsers.raw_data_msg(imu_packet)
+    assert result == [{
+        'type': 'imu',
+        'ts': 123,
+        'payload': imu_samples
+    }]
+
+    # 2. packet with one accl message
+    # Accl message: type=1, timestamp=456, 15 samples (30 bytes)
+    accl_ts = (1 << 31) + 456  # set MSB for accl
+    accl_bytes = accl_ts.to_bytes(4, 'little', signed=False)
+    accl_samples = list(range(1, 16))
+    accl_payload = b''
+    for v in accl_samples:
+        accl_payload += v.to_bytes(2, 'little', signed=True)
+    accl_packet = bytearray(accl_bytes + accl_payload)
+    result = parsers.raw_data_msg(accl_packet)
+    assert result == [{
+        'type': 'accl',
+        'ts': 456,
+        'payload': accl_samples
+    }]
+
+    # 3. packet with imu message and accl message
+    # imu first, then accl
+    combo_packet = bytearray(imu_bytes + imu_payload + accl_bytes + accl_payload)
+    result = parsers.raw_data_msg(combo_packet)
+    assert result == [
+        {'type': 'imu', 'ts': 123, 'payload': imu_samples},
+        {'type': 'accl', 'ts': 456, 'payload': accl_samples}
+    ]
