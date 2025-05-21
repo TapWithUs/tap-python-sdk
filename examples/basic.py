@@ -72,7 +72,7 @@ async def run(loop):
 
     print("Set Raw Mode for 5 seconds")
     await asyncio.sleep(2)
-    await client.set_input_mode(TapInputMode("raw", sensitivity=[0, 0, 0]))
+    await client.set_input_mode(TapInputMode("raw", sensitivity=[0, 0, 0], scaled=True))
     await asyncio.sleep(5)
 
 

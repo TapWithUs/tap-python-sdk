@@ -178,7 +178,12 @@ class TapSDK():
 
     def on_raw_data(self, identifier, data):
         if self.raw_data_event_cb:
-            args = parsers.raw_data_msg(data)
+            scale = False
+            sens = [0, 0, 0]
+            if isinstance(self.input_mode, TapInputMode) and self.input_mode.mode == "raw":
+                scale = getattr(self.input_mode, "scaled", False)
+                sens = getattr(self.input_mode, "sensitivity", [0, 0, 0])
+            args = parsers.raw_data_msg(data, scaled=scale, sensitivity=sens)
             self.raw_data_event_cb(identifier, args)
 
     def on_air_gesture(self, identifier, data):

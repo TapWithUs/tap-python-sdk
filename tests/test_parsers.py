@@ -53,3 +53,24 @@ def test_raw_data_msg():
         {'type': 'imu', 'ts': 123, 'payload': imu_samples},
         {'type': 'accl', 'ts': 456, 'payload': accl_samples}
     ]
+
+
+def test_raw_data_msg_scaled():
+    ts = 123
+    imu_ts = ts
+    imu_bytes = imu_ts.to_bytes(4, 'little', signed=False)
+    imu_samples = [100, -100, 200, -200, 300, -300]
+    payload = b''
+    for v in imu_samples:
+        payload += v.to_bytes(2, 'little', signed=True)
+    packet = bytearray(imu_bytes + payload)
+    result = parsers.raw_data_msg(packet, scaled=True, sensitivity=[0, 0, 0])
+    g_scale = 17.5 / 1000
+    a_scale = 0.122 / 1000
+    expected = [imu_samples[i] * g_scale if i < 3 else imu_samples[i] * a_scale
+                for i in range(6)]
+    assert result == [{
+        'type': 'imu',
+        'ts': 123,
+        'payload': expected
+    }]

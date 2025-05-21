@@ -13,5 +13,11 @@ def test_input_mode_raw_with_sensitivity():
     assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 1, 2, 3])
 
 
+def test_input_mode_raw_scaled():
+    mode = TapInputMode("raw", scaled=True)
+    assert mode.scaled is True
+    assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 0, 0, 0])
+
+
 def test_input_type_command():
     assert input_type_command(InputType.MOUSE) == bytearray([0x3, 0xd, 0x0, InputType.MOUSE.value])

@@ -7,13 +7,9 @@ ______________________
 * Mac and Linux backends unified to posix backend.
 
 ### Known Issues
-* Windows backend -  
-    * Raw sensor data rate might be lower than expected.
-    * Sometimes a Tap strap wouldn't be detected upon connection. In this case try restarting your Tap and/or the Python application. In worst case scenario re-pair your Tap. 
-    * Spatial features are still not available for Windows backend.
-* MacOS & Linux backends - 
-    * Doesn't support multiple Tap strap connections.
-    * Raw sensor data is given unscaled (i.e. unitless), thereforein order to scale to physical units need to multiply by the relevant scale factor
+* Doesn't support multiple Tap strap connections.
+* Windows backend can only connect with a Tap that is not connectd to the PC.
+
 
 ## 0.5.1 (2024-01-01)
 ______________________
