@@ -1,6 +1,8 @@
 import logging
 from .enumerations import InputType
 
+logger = logging.getLogger(__name__)
+
 
 class TapInputMode:
     def __init__(self, mode, sensitivity=[0, 0, 0]):
@@ -16,7 +18,7 @@ class TapInputMode:
             if mode == "raw":
                 self._register_sensitivity(sensitivity)
         else:
-            logging.warning("Invalid mode \"%s\". Set to \"text\"" % mode)
+            logger.warning("Invalid mode \"%s\". Set to \"text\"", mode)
             self.mode = "text"
 
     def _register_sensitivity(self, sensitivity):

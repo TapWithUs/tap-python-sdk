@@ -1,36 +1,41 @@
 import asyncio
+import logging
 import time
 
 from tapsdk import TapInputMode, TapSDK, InputType, AirGestures
 
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 def OnDisconnection(identifier):
-    print("Disconnected. ", identifier)
+    logger.info("Disconnected. %s", identifier)
 
 
 def OnConnection(identifier):
-    print("Connected. ", identifier)
+    logger.info("Connected. %s", identifier)
 
 
 def OnMouseModeChange(identifier, mouse_mode):
-    print(str(identifier) + " changed to mode " + str(mouse_mode))
+    logger.info("%s changed to mode %s", identifier, mouse_mode)
 
 
 def OnTapped(identifier, tapcode):
-    print(str(identifier) + " tapped " + str(tapcode))
+    logger.info("%s tapped %s", identifier, tapcode)
 
 
 def OnGesture(identifier, gesture):
-    print(str(identifier) + " gesture " + str(AirGestures(gesture)))
+    logger.info("%s gesture %s", identifier, AirGestures(gesture))
 
 
 def OnMoused(identifier, vx, vy, isMouse):
-    print(str(identifier) + " mouse movement: %d, %d, %d" % (vx, vy, isMouse))
+    logger.info("%s mouse movement: %d, %d, %d", identifier, vx, vy, isMouse)
 
 
 def OnRawData(identifier, packets):
     for m in packets:
-        print(f"{m['type']}, {time.time()}, {m['payload']}")
+        logger.info("%s, %s, %s", m['type'], time.time(), m['payload'])
 
 
 async def run(loop):
@@ -44,33 +49,33 @@ async def run(loop):
     client.register_mouse_events(OnMoused)
     client.register_air_gesture_state_events(OnMouseModeChange)
     await client.run()
-    print("Connected: {0}".format(client.client.is_connected))
+    logger.info("Connected: %s", client.client.is_connected)
 
-    print("Set Controller Mode for 5 seconds")
+    logger.info("Set Controller Mode for 5 seconds")
     await client.set_input_mode(TapInputMode("controller"))
     await asyncio.sleep(5)
 
-    print("Force Mouse Mode for 5 seconds")
+    logger.info("Force Mouse Mode for 5 seconds")
     await client.set_input_type(InputType.MOUSE)
     await asyncio.sleep(5)
 
-    print("Force keyboard Mode for 5 seconds")
+    logger.info("Force keyboard Mode for 5 seconds")
     await client.set_input_type(InputType.KEYBOARD)
     await asyncio.sleep(5)
 
-    print("Set auto Mode for 10 seconds")
+    logger.info("Set auto Mode for 10 seconds")
     await client.set_input_type(InputType.AUTO)
     await asyncio.sleep(10)
 
-    print("Set Text Mode for 10 seconds")
+    logger.info("Set Text Mode for 10 seconds")
     await client.set_input_mode(TapInputMode("text"))
     await asyncio.sleep(10)
 
-    print("Send Haptics")
+    logger.info("Send Haptics")
     await client.send_vibration_sequence([100, 200, 100, 200, 500])
     await asyncio.sleep(5)
 
-    print("Set Raw Mode for 5 seconds")
+    logger.info("Set Raw Mode for 5 seconds")
     await asyncio.sleep(2)
     await client.set_input_mode(TapInputMode("raw", sensitivity=[0, 0, 0]))
     await asyncio.sleep(5)
