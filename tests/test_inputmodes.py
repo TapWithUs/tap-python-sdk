@@ -1,4 +1,3 @@
-import pytest
 from tapsdk.inputmodes import TapInputMode, input_type_command
 from tapsdk.enumerations import InputType
 
