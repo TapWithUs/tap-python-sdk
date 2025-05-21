@@ -1,15 +1,16 @@
 import asyncio
+import logging
 import platform
 from asyncio.events import AbstractEventLoop
 from typing import Callable
 
 from bleak import BleakClient, BleakScanner
-from bleak import _logger as logger
 
 from . import parsers
 from .enumerations import InputType, MouseModes
 from .inputmodes import TapInputMode, input_type_command
 
+logger = logging.getLogger(__name__)
 
 tap_service = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370'
 nus_service = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
@@ -109,10 +110,11 @@ elif platform.system() == "Linux":
                 connected_bt_devices = btdevice_process.stdout.read().splitlines()
                 tap_devices = list(filter(lambda line: line.startswith("Tap"), connected_bt_devices))
                 for d in tap_devices:
-                    logger.info("Found tap device: {}".format(d))
+                    logger.info("Found tap device: %s", d)
                 if len(tap_devices) > 1:
-                    print("Found more than 1 Tap device:")
-                    [print(f"{i+1}. {d}") for i, d in enumerate(tap_devices)]
+                    logger.info("Found more than 1 Tap device:")
+                    for i, d in enumerate(tap_devices):
+                        logger.info("%s. %s", i + 1, d)
                     tap_devices = [tap_devices[int(input("Select the device number: ")) - 1]]
                 if len(tap_devices) == 0:
                     raise ValueError(
@@ -237,16 +239,16 @@ class TapSDK():
         devices = []
 
         async def detection_cb(device, adv_data):
-            print("detected ", device, adv_data)
+            logger.debug("detected %s %s", device, adv_data)
             if tap_service.lower() in adv_data.service_uuids:
                 if device.address not in [d.address for d in devices]:
                     devices.append(device)
-                    print("detected ", device, adv_data)
+                    logger.debug("detected %s %s", device, adv_data)
                     stop_event.set()
 
         connected = await self.client.connect_retrieved()
         if not connected:
-            print("Couldn't find connected Tap device. Scanning for Tap devices...")
+            logger.info("Couldn't find connected Tap device. Scanning for Tap devices...")
             async with BleakScanner(detection_callback=detection_cb) as _:
                 await stop_event.wait()
 
