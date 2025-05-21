@@ -87,7 +87,7 @@ setup(
     license="MIT",
     python_requires='>=3.9',
     extras_require={
-        "dev": ["pytest"]
+        "dev": ["pytest", "flake8"]
     },
     # classifiers=[
     #     # Trove classifiers
