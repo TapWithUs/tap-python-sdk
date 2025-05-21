@@ -3,15 +3,23 @@ import platform
 from asyncio.events import AbstractEventLoop
 from typing import Callable
 
-from bleak import BleakClient
+from bleak import BleakClient, BleakScanner
 from bleak import _logger as logger
-from bleak import discover
 
-from ... import parsers
-from ...models import TapUUID
-from ...models.enumerations import InputType, MouseModes
-from ...TapSDK import TapSDKBase
+from . import parsers
+from .enumerations import InputType, MouseModes
 from .inputmodes import TapInputMode, input_type_command
+
+
+tap_service = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370'
+nus_service = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
+tap_data_characteristic = 'c3ff0005-1d8b-40fd-a56f-c7bd5d0f3370'
+mouse_data_characteristic = 'c3ff0006-1d8b-40fd-a56f-c7bd5d0f3370'
+ui_cmd_characteristic = 'c3ff0009-1d8b-40fd-a56f-c7bd5d0f3370'
+air_gesture_data_characteristic = 'c3ff000a-1d8b-40fd-a56f-c7bd5d0f3370'
+tap_mode_characteristic = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'        # nus rx
+raw_sensors_characteristic = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'     # nus tx
+
 
 if platform.system() == "Darwin":
     from bleak.backends.corebluetooth.CentralManagerDelegate import (
@@ -28,6 +36,8 @@ if platform.system() == "Darwin":
         async def connect_retrieved(self, **kwargs) -> bool:
             self._central_manager_delegate = CentralManagerDelegate.alloc().init()
             paired_taps = self.get_paired_taps()
+            if len(paired_taps) == 0:
+                return False
             self._peripheral = paired_taps[0]
             logger.debug("Connecting to Tap device @ {}".format(self._peripheral))
             await self.connect()
@@ -39,9 +49,17 @@ if platform.system() == "Darwin":
 
         def get_paired_taps(self):
             paired_taps = self._central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
-                            [string2uuid(TapUUID.tap_service)])
+                            [string2uuid(tap_service)])
             logger.debug("Found connected Taps @ {}".format(paired_taps))
             return paired_taps
+
+elif platform.system() == "Windows":
+    class TapClient(BleakClient):
+        def __init__(self, address="", loop=None, **kwargs):
+            super().__init__(address, loop=loop, **kwargs)
+
+        async def connect_retrieved(self, **kwargs) -> bool:
+            return False
 
 elif platform.system() == "Linux":
     class TapClient(BleakClient):
@@ -51,7 +69,7 @@ elif platform.system() == "Linux":
 
         async def connect_retrieved(self, **kwargs) -> bool:
             await self.connect()
-            connected = await self.is_connected()
+            connected = self.is_connected()
             if connected:
                 logger.info("Connected to {0}".format(self.address))
                 await self.__debug()
@@ -108,9 +126,8 @@ elif platform.system() == "Linux":
             raise e
 
 
-class TapPosixSDK(TapSDKBase):
+class TapSDK():
     def __init__(self, loop: AbstractEventLoop = None, **kwargs):
-        super(TapPosixSDK, self).__init__()
         self.client = TapClient(loop=loop, address=kwargs.get("address"))
         self.loop = loop
         self.mouse_event_cb = None
@@ -118,47 +135,32 @@ class TapPosixSDK(TapSDKBase):
         self.air_gesture_event_cb = None
         self.raw_data_event_cb = None
         self.air_gesture_state_event_cb = None
+        self.connection_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
         self.input_mode = TapInputMode("text")
         self.input_type = InputType.AUTO
 
-    async def register_tap_events(self, cb: Callable):
-        if cb:
-            await self.client.start_notify(TapUUID.tap_data_characteristic, self.on_tapped)
-            self.tap_event_cb = cb
+    def register_tap_events(self, cb: Callable):
+        self.tap_event_cb = cb
 
-    async def register_mouse_events(self, cb: Callable):
-        if cb:
-            await self.client.start_notify(TapUUID.mouse_data_characteristic, self.on_moused)
-            self.mouse_event_cb = cb
+    def register_mouse_events(self, cb: Callable):
+        self.mouse_event_cb = cb
 
-    async def register_air_gesture_events(self, cb: Callable):
-        if cb:
-            try:
-                await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
-            except Exception as e:
-                logger.warning("Failed to start notify for air gesture state: " + str(e))
-            self.air_gesture_event_cb = cb
+    def register_air_gesture_events(self, cb: Callable):
+        self.air_gesture_event_cb = cb
 
-    async def register_air_gesture_state_events(self, cb: Callable):
-        if cb:
-            try:
-                await self.client.start_notify(TapUUID.air_gesture_data_characteristic, self.on_air_gesture)
-            except Exception as e:
-                logger.warning("Failed to start notify for air gesture state: " + str(e))
-            self.air_gesture_state_event_cb = cb
+    def register_air_gesture_state_events(self, cb: Callable):
+        self.air_gesture_state_event_cb = cb
 
-    async def register_raw_data_events(self, cb: Callable):
-        if cb:
-            await self.client.start_notify(TapUUID.raw_sensors_characteristic, self.on_raw_data)
-            self.raw_data_event_cb = cb
+    def register_raw_data_events(self, cb: Callable):
+        self.raw_data_event_cb = cb
 
-    async def register_connection_events(self, cb: Callable):
-        pass
+    def register_connection_events(self, cb: Callable):
+        self.connection_cb = cb
 
-    async def register_disconnection_events(self, cb: Callable):
-        pass
+    def register_disconnection_events(self, cb: Callable):
+        self.client.set_disconnected_callback(cb)
 
     def on_moused(self, identifier, data):
         if self.mouse_event_cb:
@@ -195,7 +197,7 @@ class TapPosixSDK(TapSDKBase):
             sequence[i] = max(0, min(255, d // 10))
 
         write_value = bytearray([0x0, 0x2] + sequence)
-        await self.client.write_gatt_char(TapUUID.ui_cmd_characteristic, write_value)
+        await self.client.write_gatt_char(ui_cmd_characteristic, write_value)
 
     async def set_input_mode(self, input_mode: TapInputMode, identifier=None):
         if (input_mode.mode == "raw" and self.input_mode.mode == "raw" and
@@ -228,14 +230,40 @@ class TapPosixSDK(TapSDKBase):
         logger.debug(f"Input Type Refreshed: {self.input_type}")
 
     async def _write_input_mode(self, value):
-        await self.client.write_gatt_char(TapUUID.tap_mode_characteristic, value)
-
-    async def list_connected_taps(self):
-        devices = await discover(loop=self.loop)
-        return devices
+        await self.client.write_gatt_char(tap_mode_characteristic, value)
 
     async def run(self):
-        await self.client.connect_retrieved()
+        stop_event = asyncio.Event()
+        devices = []
+
+        async def detection_cb(device, adv_data):
+            print("detected ", device, adv_data)
+            if tap_service.lower() in adv_data.service_uuids:
+                if device.address not in [d.address for d in devices]:
+                    devices.append(device)
+                    print("detected ", device, adv_data)
+                    stop_event.set()
+
+        connected = await self.client.connect_retrieved()
+        if not connected:
+            print("Couldn't find connected Tap device. Scanning for Tap devices...")
+            async with BleakScanner(detection_callback=detection_cb) as _:
+                await stop_event.wait()
+
+            self.client = TapClient(devices[0], loop=self.loop)
+            await self.client.connect()
+            await self.client.pair()
+        if self.client.is_connected:
+            for ch, cb in [(tap_data_characteristic, self.on_tapped),
+                           (mouse_data_characteristic, self.on_moused),
+                           (air_gesture_data_characteristic, self.on_air_gesture),
+                           (raw_sensors_characteristic, self.on_raw_data)]:
+                try:
+                    await self.client.start_notify(ch, cb)
+                except Exception as e:
+                    logger.warning("Failed to start notify for air gesture state: " + str(e))
+            if self.connection_cb:
+                self.connection_cb(self)
 
 
 class InputModeAutoRefresh:

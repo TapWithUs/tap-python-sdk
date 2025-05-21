@@ -21,7 +21,7 @@ AUTHOR = "Tap systems Inc."
 REQUIRED = [
     # linux reqs
     'bleak==0.6.4;platform_system=="Linux"',
-     # macOS reqs
+    # macOS reqs
     'bleak==0.12.1;platform_system=="Darwin"',
     # Windows reqs
     'pythonnet;platform_system=="Windows"'
@@ -82,13 +82,13 @@ setup(
     author_email=EMAIL,
     url=URL,
     packages=find_packages(exclude=("tests", "examples", "docs")),
-    # package_data={"tapsdk.backends.dotnet": ["*.dll"]},
     install_requires=REQUIRED,
-    # test_suite="tests",
-    # tests_require=TEST_REQUIRED,
     include_package_data=True,
     license="MIT",
-    python_requires='>=3.7'
+    python_requires='>=3.9',
+    extras_require={
+        "dev": ["pytest", "flake8"]
+    },
     # classifiers=[
     #     # Trove classifiers
     #     # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers

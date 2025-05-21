@@ -1,8 +1,15 @@
 import asyncio
 import time
 
-from tapsdk import TapInputMode, TapSDK, InputType
-from tapsdk.models import AirGestures
+from tapsdk import TapInputMode, TapSDK, InputType, AirGestures
+
+
+def OnDisconnection(identifier):
+    print("Disconnected. ", identifier)
+
+
+def OnConnection(identifier):
+    print("Connected. ", identifier)
 
 
 def OnMouseModeChange(identifier, mouse_mode):
@@ -28,14 +35,16 @@ def OnRawData(identifier, packets):
 
 async def run(loop):
     client = TapSDK(loop=loop)
+
+    client.register_disconnection_events(OnDisconnection)
+    client.register_connection_events(OnConnection)
+    client.register_air_gesture_events(OnGesture)
+    client.register_tap_events(OnTapped)
+    client.register_raw_data_events(OnRawData)
+    client.register_mouse_events(OnMoused)
+    client.register_air_gesture_state_events(OnMouseModeChange)
     await client.run()
     print("Connected: {0}".format(client.client.is_connected))
-
-    await client.register_air_gesture_events(OnGesture)
-    await client.register_tap_events(OnTapped)
-    await client.register_raw_data_events(OnRawData)
-    await client.register_mouse_events(OnMoused)
-    await client.register_air_gesture_state_events(OnMouseModeChange)
 
     print("Set Controller Mode for 5 seconds")
     await client.set_input_mode(TapInputMode("controller"))
@@ -44,7 +53,7 @@ async def run(loop):
     print("Force Mouse Mode for 5 seconds")
     await client.set_input_type(InputType.MOUSE)
     await asyncio.sleep(5)
-    
+
     print("Force keyboard Mode for 5 seconds")
     await client.set_input_type(InputType.KEYBOARD)
     await asyncio.sleep(5)
