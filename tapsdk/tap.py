@@ -250,7 +250,7 @@ class TapSDK():
             async with BleakScanner(detection_callback=detection_cb) as _:
                 await stop_event.wait()
 
-            self.client = TapClient(devices[0])
+            self.client = TapClient(devices[0], loop=self.loop)
             await self.client.connect()
             await self.client.pair()
         if self.client.is_connected:
