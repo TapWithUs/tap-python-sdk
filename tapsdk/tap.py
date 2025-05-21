@@ -6,12 +6,11 @@ from typing import Callable
 
 from bleak import BleakClient, BleakScanner
 
-logger = logging.getLogger(__name__)
-
 from . import parsers
 from .enumerations import InputType, MouseModes
 from .inputmodes import TapInputMode, input_type_command
 
+logger = logging.getLogger(__name__)
 
 tap_service = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370'
 nus_service = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
