@@ -3,7 +3,7 @@
 ### What Is This ?
 
 TAP python SDK allows you to build python app that can establish BLE connection with Tap Strap and TapXR, send commands and receive events and data - Thus allowing TAP to act as a controller for your app!  
-The library is developed with Python >= 3.7 and is **currently in beta**.
+The library is developed with Python >= 3.9 and is **currently in beta**.
 
 
 ### Supported Platforms
