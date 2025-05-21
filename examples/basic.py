@@ -2,10 +2,10 @@ import asyncio
 import logging
 import time
 
-from tapsdk import TapInputMode, TapSDK, InputType, AirGestures
-
+from tapsdk import AirGestures, InputType, TapInputMode, TapSDK
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("tapsdk").setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
