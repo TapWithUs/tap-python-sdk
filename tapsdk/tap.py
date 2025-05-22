@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import platform
-from asyncio.events import AbstractEventLoop
 from typing import Callable
 
 from bleak import BleakClient, BleakScanner
@@ -31,8 +30,8 @@ if platform.system() == "Darwin":
         return CBUUID.UUIDWithString_(uuid_str)
 
     class TapClient(BleakClient):
-        def __init__(self, address="", loop=None, **kwargs):
-            super().__init__(address, loop=loop, **kwargs)
+        def __init__(self, address="", **kwargs):
+            super().__init__(address, **kwargs)
 
         async def connect_retrieved(self, **kwargs) -> bool:
             self._central_manager_delegate = CentralManagerDelegate.alloc().init()
@@ -56,17 +55,17 @@ if platform.system() == "Darwin":
 
 elif platform.system() == "Windows":
     class TapClient(BleakClient):
-        def __init__(self, address="", loop=None, **kwargs):
-            super().__init__(address, loop=loop, **kwargs)
+        def __init__(self, address="", **kwargs):
+            super().__init__(address, **kwargs)
 
         async def connect_retrieved(self, **kwargs) -> bool:
             return False
 
 elif platform.system() == "Linux":
     class TapClient(BleakClient):
-        def __init__(self, address=None, loop=None, **kwargs):
+        def __init__(self, address=None, **kwargs):
             address = address if address else get_mac_addr()
-            super().__init__(address, loop=loop, **kwargs)
+            super().__init__(address, **kwargs)
 
         async def connect_retrieved(self, **kwargs) -> bool:
             await self.connect()
@@ -129,9 +128,8 @@ elif platform.system() == "Linux":
 
 
 class TapSDK():
-    def __init__(self, loop: AbstractEventLoop = None, **kwargs):
-        self.client = TapClient(loop=loop, address=kwargs.get("address"))
-        self.loop = loop
+    def __init__(self, **kwargs):
+        self.client = TapClient(address=kwargs.get("address"))
         self.mouse_event_cb = None
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
@@ -252,7 +250,7 @@ class TapSDK():
             async with BleakScanner(detection_callback=detection_cb) as _:
                 await stop_event.wait()
 
-            self.client = TapClient(devices[0], loop=self.loop)
+            self.client = TapClient(devices[0])
             await self.client.connect()
             await self.client.pair()
         if self.client.is_connected:

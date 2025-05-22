@@ -38,8 +38,8 @@ def OnRawData(identifier, packets):
         logger.info("%s, %s, %s", m['type'], time.time(), m['payload'])
 
 
-async def run(loop):
-    client = TapSDK(loop=loop)
+async def run():
+    client = TapSDK()
 
     client.register_disconnection_events(OnDisconnection)
     client.register_connection_events(OnConnection)
@@ -82,6 +82,4 @@ async def run(loop):
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.set_debug(True)
-    loop.run_until_complete(run(loop))
+    asyncio.run(run())
