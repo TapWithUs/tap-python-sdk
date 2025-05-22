@@ -15,7 +15,7 @@ class TapInputMode:
         if mode in self._modes.keys():
             self.mode = mode
             if mode == "raw":
-                self._register_sensitivity(sensitivity)
+                self._register_sensitivity(self.sensitivity)
         else:
             logging.warning("Invalid mode \"%s\". Set to \"text\"" % mode)
             self.mode = "text"
