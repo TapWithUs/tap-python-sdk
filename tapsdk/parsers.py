@@ -19,7 +19,8 @@ def tap_data_msg(data: bytearray):
 
 def raw_data_msg(data: bytearray, scaled: bool = False, sensitivity=None):
     '''
-    raw data is packed into messages with the following structure:
+    Parses raw data messages into structured data with optional scaling.
+    Raw data is packed into messages with the following structure:
          [msg_type (1 bit)][timestamp (31 bit)][payload (12 - 30 bytes)]
              * msg type     - '0' for imu message
                         - '1' for accelerometers message

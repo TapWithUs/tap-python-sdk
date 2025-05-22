@@ -8,7 +8,7 @@ ______________________
 
 ### Known Issues
 * Doesn't support multiple Tap strap connections.
-* Windows backend can only connect with a Tap that is not connectd to the PC.
+* Windows backend can only connect with a Tap that is not connected to the PC.
 
 
 ## 0.5.1 (2024-01-01)
