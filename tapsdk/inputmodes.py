@@ -5,18 +5,19 @@ logger = logging.getLogger(__name__)
 
 
 class TapInputMode:
-    def __init__(self, mode, sensitivity=[0, 0, 0]):
+    def __init__(self, mode, sensitivity=None, scaled=False):
         self._modes = {
                 "text": {"name": "Text Mode", "code": bytearray([0x3, 0xc, 0x0, 0x0])},
                 "controller": {"name": "Controller Mode", "code": bytearray([0x3, 0xc, 0x0, 0x1])},
                 "controller_text": {"name": "Controller and Text Mode", "code": bytearray([0x3, 0xc, 0x0, 0x3])},
                 "raw": {"name": "Raw sensors Mode", "code": bytearray([0x3, 0xc, 0x0, 0xa])}
                 }
-        self.sensitivity = sensitivity
+        self.sensitivity = sensitivity or [0, 0, 0]
+        self.scaled = scaled
         if mode in self._modes.keys():
             self.mode = mode
             if mode == "raw":
-                self._register_sensitivity(sensitivity)
+                self._register_sensitivity(self.sensitivity)
         else:
             logger.warning("Invalid mode \"%s\". Set to \"text\"", mode)
             self.mode = "text"

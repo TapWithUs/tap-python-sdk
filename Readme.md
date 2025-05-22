@@ -85,9 +85,9 @@ For example
     from tapsdk import TapInputMode
     tap_device.set_input_mode(TapInputMode("controller"))
     ```  
-    Also, when instantiating a ```TapInputMode``` for raw sensors mode, additional argument ```sensitivity``` (list with 3 integers) is optional for example
+    Also, when instantiating a ```TapInputMode``` for raw sensors mode, additional arguments ```sensitivity``` (list with 3 integers) and ```scaled``` are optional. When ```scaled``` is set to ```True```, the IMU values will be converted to dps and g according to the given sensitivity.
     ```python
-    tap_device.set_input_mode(TapInputMode("raw", sensitivity=[2,1,4]))
+    tap_device.set_input_mode(TapInputMode("raw", sensitivity=[2,1,4], scaled=True))
 
 2. ```set_input_type(self, input_type:InputType, identifier):```   
     > **Only for TapXR and with Spatial Control experimental firmware**
