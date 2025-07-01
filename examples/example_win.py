@@ -63,6 +63,24 @@ def on_raw_sensor_data(identifier, raw_sensor_data):
 def main():
     global tap_instance
     tap_instance = TapSDK()
+    
+    # NEW: List connected TAP devices before starting
+    print("Checking for connected TAP devices...")
+    try:
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        connected_taps = loop.run_until_complete(tap_instance.list_connected_taps())
+        if connected_taps:
+            print(f"Found {len(connected_taps)} connected TAP device(s):")
+            for i, tap in enumerate(connected_taps):
+                print(f"  {i+1}. {tap}")
+        else:
+            print("No connected TAP devices found. Make sure your TAP is paired and connected.")
+    except Exception as e:
+        print(f"Could not retrieve connected TAPs: {e}")
+        print("Continuing anyway...")
+    
     tap_instance.run()
     tap_instance.register_connection_events(on_connect)
     tap_instance.register_disconnection_events(on_disconnect)

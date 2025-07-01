@@ -46,4 +46,8 @@ class TapSDKBase(abc.ABC):
     def run(self):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    async def list_connected_taps(self):
+        raise NotImplementedError
+
 

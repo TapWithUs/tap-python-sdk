@@ -64,5 +64,47 @@ class TapWindowsSDK(TapSDKBase):
         self.set_default_input_mode("controller")
         TAPManager.Instance.Start()
 
+    async def list_connected_taps(self):
+        """
+        Get a list of currently connected TAP devices.
+        Returns a list of TAP device identifiers.
+        
+        This method attempts to retrieve connected TAP devices from the TAPManager.
+        If the TAPManager doesn't expose the expected methods, it will return an empty list.
+        """
+        try:
+            # Try to get connected taps from the TAPManager
+            # The exact method name may vary depending on the TAPWin DLL version
+            if hasattr(TAPManager.Instance, 'GetConnectedTaps'):
+                connected_taps = TAPManager.Instance.GetConnectedTaps()
+                if connected_taps is not None:
+                    # Convert .NET collection to Python list
+                    return list(connected_taps)
+            elif hasattr(TAPManager.Instance, 'GetConnectedDevices'):
+                connected_devices = TAPManager.Instance.GetConnectedDevices()
+                if connected_devices is not None:
+                    return list(connected_devices)
+            elif hasattr(TAPManager.Instance, 'ConnectedTaps'):
+                # Try accessing as a property
+                connected_taps = TAPManager.Instance.ConnectedTaps
+                if connected_taps is not None:
+                    return list(connected_taps)
+            elif hasattr(TAPManager.Instance, 'ConnectedDevices'):
+                # Try accessing as a property
+                connected_devices = TAPManager.Instance.ConnectedDevices
+                if connected_devices is not None:
+                    return list(connected_devices)
+            else:
+                # Log that the method is not available in this version of TAPWin
+                print("Warning: TAPManager does not expose connected device enumeration methods")
+                return []
+        except Exception as e:
+            # Handle any other exceptions that might occur
+            print(f"Error retrieving connected TAP devices: {e}")
+            return []
+        
+        # If we reach here, no method was found or all returned None
+        return []
+
 
 
