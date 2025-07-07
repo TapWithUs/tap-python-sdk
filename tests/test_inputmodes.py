@@ -12,7 +12,7 @@ def test_input_mode_basic():
 def test_input_mode_raw_with_sensitivity():
     mode = InputModeRaw(
         finger_accl_sensitivity=FingerAcclSensitivity.G2,
-        imu_gyro_sensitivity=ImuGyroSensitivity.G250,
+        imu_gyro_sensitivity=ImuGyroSensitivity.DPS250,
         imu_accl_sensitivity=ImuAcclSensitivity.G8
     )
     assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 1, 2, 3])

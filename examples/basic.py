@@ -80,7 +80,7 @@ async def run():
     logger.info("Set Raw Mode for 5 seconds")
     await asyncio.sleep(2)
     await client.set_input_mode(im.InputModeRaw(finger_accl_sens=FingerAcclSensitivity.G16,
-                                                imu_gyro_sens=ImuGyroSensitivity.G500,
+                                                imu_gyro_sens=ImuGyroSensitivity.DPS500,
                                                 imu_accl_sens=ImuAcclSensitivity.G4,
                                                 scaled=True))
     await asyncio.sleep(5)

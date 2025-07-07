@@ -92,7 +92,7 @@ For example:
     await tap_device.set_input_mode(InputModeRaw(
         scaled=True,
         finger_accl_sensitivity=FingerAcclSensitivity.G4,
-        imu_gyro_sensitivity=ImuGyroSensitivity.G250,
+        imu_gyro_sensitivity=ImuGyroSensitivity.DPS250,
         imu_accl_sensitivity=ImuAcclSensitivity.G4
     ))
     ```
@@ -218,7 +218,7 @@ from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAc
 await tap_device.set_input_mode(InputModeRaw(
     scaled=True,
     finger_accl_sensitivity=FingerAcclSensitivity.G4,
-    imu_gyro_sensitivity=ImuGyroSensitivity.G250,
+    imu_gyro_sensitivity=ImuGyroSensitivity.DPS250,
     imu_accl_sensitivity=ImuAcclSensitivity.G4
 ))
 ```

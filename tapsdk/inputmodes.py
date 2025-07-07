@@ -61,7 +61,7 @@ class InputModeRaw(InputMode):
         self.name = "Raw sensors Mode"
         self.scaled = scaled
         self.sensitivity = RawSensorsSensitivity(finger_accl_sensitivity or FingerAcclSensitivity.G2,
-                                                 imu_gyro_sensitivity or ImuGyroSensitivity.G125,
+                                                 imu_gyro_sensitivity or ImuGyroSensitivity.DPS125,
                                                  imu_accl_sensitivity or ImuAcclSensitivity.G2)
         self.code = bytearray([0xa]) + bytearray(self.sensitivity.tolist())
 

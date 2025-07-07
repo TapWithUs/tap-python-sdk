@@ -41,11 +41,11 @@ class FingerAcclSensitivity(Enum):
 
 
 class ImuGyroSensitivity(Enum):
-    G125 = 1
-    G250 = 2
-    G500 = 3
-    G1000 = 4
-    G2000 = 5
+    DPS125 = 1
+    DPS250 = 2
+    DPS500 = 3
+    DPS1000 = 4
+    DPS2000 = 5
 
 
 class ImuAcclSensitivity(Enum):
