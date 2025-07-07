@@ -81,22 +81,21 @@ tap_device.register_tap_events(on_tap_event)
 1. ```set_input_mode(self, input_mode:InputMode, identifier=None):```
 This function sends a mode selection command. It accepts an object of type ```InputMode``` such as ```InputModeText```, ```InputModeController```, ```InputModeControllerText```, or ```InputModeRaw```.  
 For example:
-```python
-from tapsdk import InputModeController
-await tap_device.set_input_mode(InputModeController())
-```  
-For raw sensors mode, you can specify sensitivity and scaling:
-```python
-from tapsdk import InputModeRaw
-from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity
-await tap_device.set_input_mode(InputModeRaw(
-    scaled=True,
-    finger_accl_sensitivity=FingerAcclSensitivity.G4,
-    imu_gyro_sensitivity=ImuGyroSensitivity.G250,
-    imu_accl_sensitivity=ImuAcclSensitivity.G4
-))
-```
-
+    ```python
+    from tapsdk import InputModeController
+    await tap_device.set_input_mode(InputModeController())
+    ```  
+    For raw sensors mode, you can specify sensitivity and scaling:
+    ```python
+    from tapsdk import InputModeRaw
+    from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity
+    await tap_device.set_input_mode(InputModeRaw(
+        scaled=True,
+        finger_accl_sensitivity=FingerAcclSensitivity.G4,
+        imu_gyro_sensitivity=ImuGyroSensitivity.G250,
+        imu_accl_sensitivity=ImuAcclSensitivity.G4
+    ))
+    ```
 2. ```set_input_type(self, input_type:InputType, identifier=None):```   
     > **Only for TapXR and with Spatial Control experimental firmware**
 
@@ -111,87 +110,85 @@ await tap_device.set_input_mode(InputModeRaw(
 3. ```send_vibration_sequence(self, sequence:list, identifier=None):```
 This function sends a series of haptic activations. ```sequence``` is a list of integers indicating the activation and delay periods one after another. The periods are in millisecond units, in the range of [10,2550] and in resolution of 10ms. Each haptic command supports up to 18 period definitions (i.e. 9 haptics + delay pairs).  
 For example: 
-```python 
-await tap_device.send_vibration_sequence(sequence=[1000,300,200])
-```  
-will trigger a 1s haptic, followed by 300ms delay, followed by 200ms haptic.
+    ```python 
+    await tap_device.send_vibration_sequence(sequence=[1000,300,200])
+    ```  
+    will trigger a 1s haptic, followed by 300ms delay, followed by 200ms haptic.
 
 
 #### Events list
 1. ```register_connection_events(self, listener:Callable):```  
 Register callback to a Tap strap connection event.
-```python
-def on_connect(tap_sdk_instance):
-    print("Connected to Tap device")
+    ```python
+    def on_connect(tap_sdk_instance):
+        print("Connected to Tap device")
 
-tap_device.register_connection_events(on_connect)
-``` 
+    tap_device.register_connection_events(on_connect)
+    ``` 
 
 2. ```register_disconnection_events(self, listener:Callable):```  
 Register callback to a Tap strap disconnection event.
-```python
-def on_disconnect(client):
-    print("Tap device disconnected")
+    ```python
+    def on_disconnect(client):
+        print("Tap device disconnected")
 
-tap_device.register_disconnection_events(on_disconnect)
-``` 
-
+    tap_device.register_disconnection_events(on_disconnect)
+    ``` 
 
 3. ```register_tap_events(self, listener:Callable):```  
 Register callback to a tap event.
-```python
-def on_tap_event(identifier, tapcode):
-    print(identifier + " - tapped " + str(tapcode))
+    ```python
+    def on_tap_event(identifier, tapcode):
+        print(identifier + " - tapped " + str(tapcode))
 
-tap_device.register_tap_events(on_tap_event)
-```    
-```tapcode``` is an 8-bit unsigned number, between 1 and 31 which is formed by a binary representation of the fingers that are tapped.
+    tap_device.register_tap_events(on_tap_event)
+    ```    
+    ```tapcode``` is an 8-bit unsigned number, between 1 and 31 which is formed by a binary representation of the fingers that are tapped.
 The LSb is thumb finger, the MSb is the pinky finger. 
 For example: if combination equals 5 - its binary form is 10100 - means that the thumb and the middle fingers were tapped.
 
 
 4. ```register_mouse_events(self, listener:Callable):```  
 Register callback to a mouse or air mouse movement event.
-```python
-def on_mouse_event(identifier, vx, vy, proximity):
-    print(identifier + " - moused: %d, %d" %(vx, vy))
+    ```python
+    def on_mouse_event(identifier, vx, vy, proximity):
+        print(identifier + " - moused: %d, %d" %(vx, vy))
 
-tap_device.register_mouse_events(on_mouse_event)
-``` 
-```vx``` and ```vy``` are the horizontal and vertical velocities of the mouse movement respectively.
+    tap_device.register_mouse_events(on_mouse_event)
+    ``` 
+    ```vx``` and ```vy``` are the horizontal and vertical velocities of the mouse movement respectively.
 ```proximity``` is a boolean that indicates proximity with a surface.
-
 5. ```register_raw_data_events(self, listener:Callable):```  
 Register callback to raw sensors data packet received event.
-```python
-def on_raw_sensor_data(identifier, raw_sensor_data):
-    print(identifier + " - raw data received: " + str(raw_sensor_data))
+    ```python
+    def on_raw_sensor_data(identifier, raw_sensor_data):
+        print(identifier + " - raw data received: " + str(raw_sensor_data))
 
-tap_device.register_raw_data_events(on_raw_sensor_data)
-``` 
-You'll find more information on that mode in the dedicated section below or [here](https://tapwithus.atlassian.net/wiki/spaces/TD/pages/792002574/Tap+Strap+Raw+Sensors+Mode).
+    tap_device.register_raw_data_events(on_raw_sensor_data)
+    ``` 
+    You'll find more information on that mode in the dedicated section below or [here](https://tapwithus.atlassian.net/wiki/spaces/TD/pages/792002574/Tap+Strap+Raw+Sensors+Mode).
 
 6. ```register_air_gesture_events(self, listener:Callable):```  
 Register callback to air gesture events.
-```python
-from tapsdk import AirGestures
+    ```python
+    from tapsdk import AirGestures
 
-def on_airgesture(identifier, gesture):
-    print(identifier + " - gesture: " + str(AirGestures(gesture)))
+    def on_airgesture(identifier, gesture):
+        print(identifier + " - gesture: " + str(AirGestures(gesture)))
 
-tap_device.register_air_gesture_events(on_airgesture)
-``` 
-```gesture``` is an integer code of the air gesture detected. The air gesture values are enumerated in the ```AirGestures``` class.
+    tap_device.register_air_gesture_events(on_airgesture)
+    ``` 
+    ```gesture``` is an integer code of the air gesture detected. The air gesture values are enumerated in the ```AirGestures``` class.
 
 7. ```register_air_gesture_state_events(self, listener:Callable):```  
 Register callback to events air gesture entrance/exit.
-```python
-def on_airgesture_state_change(identifier, in_airgesture_state):
-    print(identifier + " - gesture: " + str(in_airgesture_state))
+    ```python
+    def on_airgesture_state_change(identifier, in_airgesture_state):
+        print(identifier + " - gesture: " + str(in_airgesture_state))
 
-tap_device.register_air_gesture_state_events(on_airgesture_state_change)
-``` 
-```in_airgesture_state``` is a boolean indication to the new state of air gesture.
+    tap_device.register_air_gesture_state_events(on_airgesture_state_change)
+    ``` 
+    ```in_airgesture_state``` is a boolean indication to the new state of air gesture.
 
 ### Raw sensors mode
 
