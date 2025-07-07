@@ -7,7 +7,7 @@ from bleak import BleakClient, BleakScanner
 
 from . import parsers
 from .enumerations import InputType, MouseModes
-from .inputmodes import TapInputMode, input_type_command
+from .inputmodes import InputModeText, InputMode, InputModeRaw, input_type_command
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ class TapSDK():
         self.connection_cb = None
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
-        self.input_mode = TapInputMode("text")
+        self.input_mode = InputModeText()  # Default input mode is Text Mode
         self.input_type = InputType.AUTO
 
     def register_tap_events(self, cb: Callable):
@@ -178,12 +178,11 @@ class TapSDK():
 
     def on_raw_data(self, identifier, data):
         if self.raw_data_event_cb:
-            scale = False
-            sensitivity = [0, 0, 0]
-            if isinstance(self.input_mode, TapInputMode) and self.input_mode.mode == "raw":
-                scale = getattr(self.input_mode, "scaled", scale)
-                sensitivity = getattr(self.input_mode, "sensitivity", sensitivity)
-            args = parsers.raw_data_msg(data, scaled=scale, sensitivity=sensitivity)
+            scale_factors = None
+            if isinstance(self.input_mode, InputModeRaw):
+                if self.input_mode.scaled:
+                    scale_factors = self.input_mode.scale_values()
+            args = parsers.raw_data_msg(data, scale_factors=scale_factors)
             self.raw_data_event_cb(identifier, args)
 
     def on_air_gesture(self, identifier, data):
@@ -204,7 +203,7 @@ class TapSDK():
         write_value = bytearray([0x0, 0x2] + sequence)
         await self.client.write_gatt_char(ui_cmd_characteristic, write_value)
 
-    async def set_input_mode(self, input_mode: TapInputMode, identifier=None):
+    async def set_input_mode(self, input_mode: InputMode, identifier=None):
         if (input_mode.mode == "raw" and self.input_mode.mode == "raw" and
            self.input_mode.get_command() != input_mode.get_command()):
             logger.warning("Can't change \"raw\" sensitivities while in \"raw\"")

@@ -17,7 +17,7 @@ def tap_data_msg(data: bytearray):
     return [data[0]]
 
 
-def raw_data_msg(data: bytearray, scaled: bool = False, sensitivity=None):
+def raw_data_msg(data: bytearray, scale_factors=None):
     '''
     Parses raw data messages into structured data with optional scaling.
     Raw data is packed into messages with the following structure:
@@ -35,13 +35,6 @@ def raw_data_msg(data: bytearray, scaled: bool = False, sensitivity=None):
                                         ...]
 
     '''
-    if sensitivity is None:
-        sensitivity = [0, 0, 0]
-
-    finger_acc_scales = [31.25, 3.91, 7.81, 15.62, 31.25]
-    gyro_scales = [17.5, 4.375, 8.75, 17.5, 35, 70]
-    imu_acc_scales = [0.122, 0.061, 0.122, 0.244, 0.488]
-
     L = len(data)
     ptr = 0
     messages = []
@@ -68,16 +61,12 @@ def raw_data_msg(data: bytearray, scaled: bool = False, sensitivity=None):
             ptr += 2
             payload.append(val)
 
-        if scaled:
-            if msg == "imu":
-                g_scale = gyro_scales[sensitivity[1]] / 1000.0
-                xl_scale = imu_acc_scales[sensitivity[2]] / 1000.0
-                payload = [payload[j] * g_scale if j < 3 else payload[j] * xl_scale
+        if scale_factors:
+            if msg == "accl":
+                payload = [v * scale_factors[0] for v in payload]
+            elif msg == "imu":
+                payload = [payload[j] * scale_factors[1] if j < 3 else payload[j] * scale_factors[2]
                            for j in range(num_of_samples)]
-            else:  # accl message
-                acc_scale = finger_acc_scales[sensitivity[0]] / 1000.0
-                payload = [v * acc_scale for v in payload]
-
         messages.append({"type": msg, "ts": ts, "payload": payload})
     return messages
 

@@ -2,7 +2,9 @@ import asyncio
 import logging
 import time
 
-from tapsdk import AirGestures, InputType, TapInputMode, TapSDK
+from tapsdk import AirGestures, InputType, TapSDK
+from tapsdk import inputmodes as im
+from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("tapsdk").setLevel(logging.DEBUG)
@@ -52,7 +54,7 @@ async def run():
     logger.info("Connected: %s", client.client.is_connected)
 
     logger.info("Set Controller Mode for 5 seconds")
-    await client.set_input_mode(TapInputMode("controller"))
+    await client.set_input_mode(im.InputModeController())
     await asyncio.sleep(5)
 
     logger.info("Force Mouse Mode for 5 seconds")
@@ -68,7 +70,7 @@ async def run():
     await asyncio.sleep(10)
 
     logger.info("Set Text Mode for 10 seconds")
-    await client.set_input_mode(TapInputMode("text"))
+    await client.set_input_mode(im.InputModeText())
     await asyncio.sleep(10)
 
     logger.info("Send Haptics")
@@ -77,7 +79,10 @@ async def run():
 
     logger.info("Set Raw Mode for 5 seconds")
     await asyncio.sleep(2)
-    await client.set_input_mode(TapInputMode("raw", sensitivity=[0, 0, 0], scaled=True))
+    await client.set_input_mode(im.InputModeRaw(finger_accl_sens=FingerAcclSensitivity.G16,
+                                                imu_gyro_sens=ImuGyroSensitivity.G500,
+                                                imu_accl_sens=ImuAcclSensitivity.G4,
+                                                scaled=True))
     await asyncio.sleep(5)
 
 

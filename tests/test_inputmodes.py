@@ -1,22 +1,32 @@
-from tapsdk.inputmodes import TapInputMode, input_type_command
-from tapsdk.enumerations import InputType
+from tapsdk.enumerations import InputType, FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity
+from tapsdk.inputmodes import (InputModeController, InputModeControllerText,
+                               InputModeRaw, InputModeText, input_type_command)
 
 
 def test_input_mode_basic():
-    assert TapInputMode("text").get_command() == bytearray([0x3, 0xc, 0x0, 0x0])
-    assert TapInputMode("controller").get_command() == bytearray([0x3, 0xc, 0x0, 0x1])
-    assert TapInputMode("controller_text").get_command() == bytearray([0x3, 0xc, 0x0, 0x3])
+    assert InputModeText().get_command() == bytearray([0x3, 0xc, 0x0, 0x0])
+    assert InputModeController().get_command() == bytearray([0x3, 0xc, 0x0, 0x1])
+    assert InputModeControllerText().get_command() == bytearray([0x3, 0xc, 0x0, 0x3])
 
 
 def test_input_mode_raw_with_sensitivity():
-    mode = TapInputMode("raw", sensitivity=[1, 2, 3])
+    mode = InputModeRaw(
+        finger_accl_sensitivity=FingerAcclSensitivity.G2,
+        imu_gyro_sensitivity=ImuGyroSensitivity.G250,
+        imu_accl_sensitivity=ImuAcclSensitivity.G8
+    )
     assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 1, 2, 3])
 
 
+def test_input_mode_raw_with_partial_sensitivity():
+    mode = InputModeRaw(finger_accl_sensitivity=FingerAcclSensitivity.G16)
+    assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 4, 1, 1])
+
+
 def test_input_mode_raw_scaled():
-    mode = TapInputMode("raw", scaled=True)
+    mode = InputModeRaw(scaled=True)
     assert mode.scaled is True
-    assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 0, 0, 0])
+    assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 1, 1, 1])
 
 
 def test_input_type_command():

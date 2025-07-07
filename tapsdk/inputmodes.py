@@ -1,40 +1,69 @@
+from enum import Enum
 import logging
-from .enumerations import InputType
+from .enumerations import InputType, FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity
 
 logger = logging.getLogger(__name__)
 
 
-class TapInputMode:
-    def __init__(self, mode, sensitivity=None, scaled=False):
-        self._modes = {
-                "text": {"name": "Text Mode", "code": bytearray([0x3, 0xc, 0x0, 0x0])},
-                "controller": {"name": "Controller Mode", "code": bytearray([0x3, 0xc, 0x0, 0x1])},
-                "controller_text": {"name": "Controller and Text Mode", "code": bytearray([0x3, 0xc, 0x0, 0x3])},
-                "raw": {"name": "Raw sensors Mode", "code": bytearray([0x3, 0xc, 0x0, 0xa])}
-                }
-        self.sensitivity = sensitivity or [0, 0, 0]
-        self.scaled = scaled
-        if mode in self._modes.keys():
-            self.mode = mode
-            if mode == "raw":
-                self._register_sensitivity(self.sensitivity)
-        else:
-            logger.warning("Invalid mode \"%s\". Set to \"text\"", mode)
-            self.mode = "text"
+class RawSensorsSensitivity():
+    finger_acc_scales = [None, 3.91, 7.81, 15.62, 31.25]  # mg/lsb
+    imu_gyro_scales = [None, 4.375, 8.75, 17.5, 35, 70]  # mdps/lsb
+    imu_acc_scales = [None, 0.061, 0.122, 0.244, 0.488]  # mg/lsb
 
-    def _register_sensitivity(self, sensitivity):
-        if isinstance(sensitivity, list) and len(sensitivity) == 3:
-            sensitivity[0] = max(0, min(4, sensitivity[0]))  # fingers accelerometers
-            sensitivity[1] = max(0, min(5, sensitivity[1]))  # imu gyro
-            sensitivity[2] = max(0, min(4, sensitivity[2]))  # imu accelerometer
-            self.sensitivity = sensitivity
-            self._modes["raw"]["code"] = self._modes["raw"]["code"][:4] + bytearray(sensitivity)
+    def __init__(self, finger_accl_sens, imu_gyro_sens, imu_accl_sens):
+        assert all(isinstance(s, Enum) for s in [finger_accl_sens, imu_gyro_sens, imu_accl_sens]), \
+            "sensitivity values must be of type Enum"
+        self.sens_values = [finger_accl_sens.value, imu_gyro_sens.value, imu_accl_sens.value]
+        self.scale_factors = [      # in g, dps, g
+            self.finger_acc_scales[self.sens_values[0]]/1000.0,
+            self.imu_gyro_scales[self.sens_values[1]]/1000.0,
+            self.imu_acc_scales[self.sens_values[2]]/1000.0
+        ]
+
+    def tolist(self):
+        return self.sens_values
+
+    def scale_values(self):
+        return self.scale_factors
+
+
+class InputMode:
+    COMMAND_PREFIX = bytearray([0x3, 0xc, 0x0])
 
     def get_command(self):
-        return self._modes[self.mode]["code"]
+        return self.COMMAND_PREFIX + self.code
 
-    def get_name(self):
-        return self._modes[self.mode]["name"]
+    def __repr__(self):
+        return self.name
+
+
+class InputModeController(InputMode):
+    def __init__(self):
+        self.name = "Controller Mode"
+        self.code = bytearray([0x1])
+
+
+class InputModeText(InputMode):
+    def __init__(self):
+        self.name = "Text Mode"
+        self.code = bytearray([0x0])
+
+
+class InputModeControllerText(InputMode):
+    def __init__(self):
+        self.name = "Controller and Text Mode"
+        self.code = bytearray([0x3])
+
+
+class InputModeRaw(InputMode):
+    def __init__(self, scaled=False, finger_accl_sensitivity=None,
+                 imu_gyro_sensitivity=None, imu_accl_sensitivity=None):
+        self.name = "Raw sensors Mode"
+        self.scaled = scaled
+        self.sensitivity = RawSensorsSensitivity(finger_accl_sensitivity or FingerAcclSensitivity.G2,
+                                                 imu_gyro_sensitivity or ImuGyroSensitivity.G125,
+                                                 imu_accl_sensitivity or ImuAcclSensitivity.G2)
+        self.code = bytearray([0xa]) + bytearray(self.sensitivity.tolist())
 
 
 def input_type_command(input_type):

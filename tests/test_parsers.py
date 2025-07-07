@@ -55,7 +55,9 @@ def test_raw_data_msg():
     ]
 
 
-def test_raw_data_msg_scaled():
+def test_raw_data_imu_msg_scaled():
+    g_scale = 17.5 / 1000
+    a_scale = 0.122 / 1000
     ts = 123
     imu_ts = ts
     imu_bytes = imu_ts.to_bytes(4, 'little', signed=False)
@@ -64,13 +66,29 @@ def test_raw_data_msg_scaled():
     for v in imu_samples:
         payload += v.to_bytes(2, 'little', signed=True)
     packet = bytearray(imu_bytes + payload)
-    result = parsers.raw_data_msg(packet, scaled=True, sensitivity=[0, 0, 0])
-    g_scale = 17.5 / 1000
-    a_scale = 0.122 / 1000
+    result = parsers.raw_data_msg(packet, scale_factors=[0, g_scale, a_scale])
     expected = [imu_samples[i] * g_scale if i < 3 else imu_samples[i] * a_scale
                 for i in range(6)]
     assert result == [{
         'type': 'imu',
         'ts': 123,
+        'payload': expected
+    }]
+
+
+def test_raw_data_accl_msg_scaled():
+    a_scale = 0.061 / 1000
+    ts = (1 << 31) + 456  # set MSB for accl
+    accl_bytes = ts.to_bytes(4, 'little', signed=False)
+    accl_samples = list(range(1, 16))
+    payload = b''
+    for v in accl_samples:
+        payload += v.to_bytes(2, 'little', signed=True)
+    packet = bytearray(accl_bytes + payload)
+    result = parsers.raw_data_msg(packet, scale_factors=[a_scale, 0, 0])
+    expected = [v * a_scale for v in accl_samples]
+    assert result == [{
+        'type': 'accl',
+        'ts': 456,
         'payload': expected
     }]
