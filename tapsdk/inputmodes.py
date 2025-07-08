@@ -23,7 +23,7 @@ class RawSensorsSensitivity():
     def tolist(self):
         return self.sens_values
 
-    def scale_values(self):
+    def get_scale_factors(self):
         return self.scale_factors
 
 

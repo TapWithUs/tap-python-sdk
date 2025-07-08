@@ -181,7 +181,7 @@ class TapSDK():
             scale_factors = None
             if isinstance(self.input_mode, InputModeRaw):
                 if self.input_mode.scaled:
-                    scale_factors = self.input_mode.scale_values()
+                    scale_factors = self.input_mode.sensitivity.get_scale_factors()
             args = parsers.raw_data_msg(data, scale_factors=scale_factors)
             self.raw_data_event_cb(identifier, args)
 
@@ -204,7 +204,7 @@ class TapSDK():
         await self.client.write_gatt_char(ui_cmd_characteristic, write_value)
 
     async def set_input_mode(self, input_mode: InputMode, identifier=None):
-        if (input_mode.mode == "raw" and self.input_mode.mode == "raw" and
+        if (isinstance(input_mode, InputModeRaw) and isinstance(self.input_mode, InputModeRaw) and
            self.input_mode.get_command() != input_mode.get_command()):
             logger.warning("Can't change \"raw\" sensitivities while in \"raw\"")
             return
