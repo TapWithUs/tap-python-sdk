@@ -91,9 +91,9 @@ For example:
     from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity
     await tap_device.set_input_mode(InputModeRaw(
         scaled=True,
-        finger_accl_sensitivity=FingerAcclSensitivity.G4,
-        imu_gyro_sensitivity=ImuGyroSensitivity.DPS250,
-        imu_accl_sensitivity=ImuAcclSensitivity.G4
+        finger_accl_sens=FingerAcclSensitivity.G4,
+        imu_gyro_sens=ImuGyroSensitivity.DPS250,
+        imu_accl_sens=ImuAcclSensitivity.G4
     ))
     ```
 2. ```set_input_type(self, input_type:InputType, identifier=None):```   
@@ -217,9 +217,9 @@ from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAc
 
 await tap_device.set_input_mode(InputModeRaw(
     scaled=True,
-    finger_accl_sensitivity=FingerAcclSensitivity.G4,
-    imu_gyro_sensitivity=ImuGyroSensitivity.DPS250,
-    imu_accl_sensitivity=ImuAcclSensitivity.G4
+    finger_accl_sens=FingerAcclSensitivity.G4,
+    imu_gyro_sens=ImuGyroSensitivity.DPS250,
+    imu_accl_sens=ImuAcclSensitivity.G4
 ))
 ```
 Refer to the enums in [`tapsdk.enumerations`](tapsdk/enumerations.py#L36) for the available sensitivity values.

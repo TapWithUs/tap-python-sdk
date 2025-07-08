@@ -11,15 +11,15 @@ def test_input_mode_basic():
 
 def test_input_mode_raw_with_sensitivity():
     mode = InputModeRaw(
-        finger_accl_sensitivity=FingerAcclSensitivity.G2,
-        imu_gyro_sensitivity=ImuGyroSensitivity.DPS250,
-        imu_accl_sensitivity=ImuAcclSensitivity.G8
+        finger_accl_sens=FingerAcclSensitivity.G2,
+        imu_gyro_sens=ImuGyroSensitivity.DPS250,
+        imu_accl_sens=ImuAcclSensitivity.G8
     )
     assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 1, 2, 3])
 
 
 def test_input_mode_raw_with_partial_sensitivity():
-    mode = InputModeRaw(finger_accl_sensitivity=FingerAcclSensitivity.G16)
+    mode = InputModeRaw(finger_accl_sens=FingerAcclSensitivity.G16)
     assert mode.get_command() == bytearray([0x3, 0xc, 0x0, 0xa, 4, 1, 1])
 
 

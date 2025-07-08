@@ -56,13 +56,13 @@ class InputModeControllerText(InputMode):
 
 
 class InputModeRaw(InputMode):
-    def __init__(self, scaled=False, finger_accl_sensitivity=None,
-                 imu_gyro_sensitivity=None, imu_accl_sensitivity=None):
+    def __init__(self, scaled=False, finger_accl_sens=None,
+                 imu_gyro_sens=None, imu_accl_sens=None):
         self.name = "Raw sensors Mode"
         self.scaled = scaled
-        self.sensitivity = RawSensorsSensitivity(finger_accl_sensitivity or FingerAcclSensitivity.G2,
-                                                 imu_gyro_sensitivity or ImuGyroSensitivity.DPS125,
-                                                 imu_accl_sensitivity or ImuAcclSensitivity.G2)
+        self.sensitivity = RawSensorsSensitivity(finger_accl_sens or FingerAcclSensitivity.G2,
+                                                 imu_gyro_sens or ImuGyroSensitivity.DPS125,
+                                                 imu_accl_sens or ImuAcclSensitivity.G2)
         self.code = bytearray([0xa]) + bytearray(self.sensitivity.tolist())
 
 
