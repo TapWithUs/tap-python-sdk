@@ -210,7 +210,7 @@ The sensors measurements are given with respect to the reference system below.
 Each sample (of accelerometer or imu) is preambled with a millisecond timestamp, referenced to an internal Tap clock.
 
 
-The dynamic range of the sensors is determined with the ```set_input_mode``` method by passing an ```InputModeRaw``` instance with the desired sensitivity enums:
+The dynamic range of the sensors is determined with the ```set_input_mode``` method by passing an ```InputModeRaw``` instance with the desired sensitivity enums, and a boolean flag indicating if the data should be scaled to mg and mdps for the accelerometer and gyro respectively:
 ```python
 from tapsdk import InputModeRaw
 from tapsdk.enumerations import FingerAcclSensitivity, ImuGyroSensitivity, ImuAcclSensitivity

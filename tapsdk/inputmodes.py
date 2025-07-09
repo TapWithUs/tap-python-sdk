@@ -14,10 +14,10 @@ class RawSensorsSensitivity():
         assert all(isinstance(s, Enum) for s in [finger_accl_sens, imu_gyro_sens, imu_accl_sens]), \
             "sensitivity values must be of type Enum"
         self.sens_values = [finger_accl_sens.value, imu_gyro_sens.value, imu_accl_sens.value]
-        self.scale_factors = [      # in g, dps, g
-            self.finger_acc_scales[self.sens_values[0]]/1000.0,
-            self.imu_gyro_scales[self.sens_values[1]]/1000.0,
-            self.imu_acc_scales[self.sens_values[2]]/1000.0
+        self.scale_factors = [      # in mg, mdps, mg
+            self.finger_acc_scales[self.sens_values[0]],
+            self.imu_gyro_scales[self.sens_values[1]],
+            self.imu_acc_scales[self.sens_values[2]]
         ]
 
     def tolist(self):

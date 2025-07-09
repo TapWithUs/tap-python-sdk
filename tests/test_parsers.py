@@ -56,8 +56,8 @@ def test_raw_data_msg():
 
 
 def test_raw_data_imu_msg_scaled():
-    g_scale = 17.5 / 1000
-    a_scale = 0.122 / 1000
+    g_scale = 17.5
+    a_scale = 0.122
     ts = 123
     imu_ts = ts
     imu_bytes = imu_ts.to_bytes(4, 'little', signed=False)
@@ -77,7 +77,7 @@ def test_raw_data_imu_msg_scaled():
 
 
 def test_raw_data_accl_msg_scaled():
-    a_scale = 0.061 / 1000
+    a_scale = 0.061
     ts = (1 << 31) + 456  # set MSB for accl
     accl_bytes = ts.to_bytes(4, 'little', signed=False)
     accl_samples = list(range(1, 16))
