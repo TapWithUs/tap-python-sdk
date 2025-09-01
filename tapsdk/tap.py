@@ -229,7 +229,7 @@ class TapSDK():
 
     async def _refresh_input_mode(self):
         await self.set_input_mode(self.input_mode)
-        logger.debug(f"Input Mode Refreshed: {self.input_mode.get_name()}")
+        logger.debug(f"Input Mode Refreshed: {self.input_mode}")
         await self.set_input_type(self.input_type)
         logger.debug(f"Input Type Refreshed: {self.input_type}")
 
