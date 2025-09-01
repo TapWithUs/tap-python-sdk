@@ -31,3 +31,25 @@ class AirGestures(Enum):
     STATE_OPEN = 100
     STATE_THUMB_FINGER = 101
     STATE_THUMB_MIDDLE = 102
+
+
+class FingerAcclSensitivity(Enum):
+    G2 = 1
+    G4 = 2
+    G8 = 3
+    G16 = 4
+
+
+class ImuGyroSensitivity(Enum):
+    DPS125 = 1
+    DPS250 = 2
+    DPS500 = 3
+    DPS1000 = 4
+    DPS2000 = 5
+
+
+class ImuAcclSensitivity(Enum):
+    G2 = 1
+    G4 = 2
+    G8 = 3
+    G16 = 4
