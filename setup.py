@@ -24,7 +24,7 @@ REQUIRED = [
     # macOS reqs
     'bleak==0.12.1;platform_system=="Darwin"',
     # Windows reqs
-    'pythonnet;platform_system=="Windows"'
+    'bleak;platform_system=="Windows"'
 ]
 
 
