@@ -6,7 +6,7 @@ from tapsdk.inputmodes import (InputModeController, InputModeControllerText,
 def test_input_mode_basic():
     assert InputModeText().get_command() == bytearray([0x3, 0xc, 0x0, 0x0])
     assert InputModeController().get_command() == bytearray([0x3, 0xc, 0x0, 0x1])
-    assert InputModeControllerText().get_command() == bytearray([0x3, 0xc, 0x0, 0x3])
+    assert InputModeControllerText().get_command() == bytearray([0x3, 0xc, 0x0, 0x5])
 
 
 def test_input_mode_raw_with_sensitivity():

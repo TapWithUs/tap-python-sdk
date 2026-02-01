@@ -52,7 +52,7 @@ class InputModeText(InputMode):
 class InputModeControllerText(InputMode):
     def __init__(self):
         self.name = "Controller and Text Mode"
-        self.code = bytearray([0x3])
+        self.code = bytearray([0x5])
 
 
 class InputModeRaw(InputMode):
