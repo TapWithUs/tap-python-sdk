@@ -31,6 +31,9 @@ class AirGestures(Enum):
     STATE_OPEN = 100
     STATE_THUMB_FINGER = 101
     STATE_THUMB_MIDDLE = 102
+    STATE_THUMB_RING = 103
+    STATE_THUMB_PINKY = 104
+    STATE_FIST = 105
 
 
 class FingerAcclSensitivity(Enum):
