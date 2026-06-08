@@ -2,11 +2,17 @@ def tapcode_to_fingers(tapcode: int):
     return '{0:05b}'.format(1)[::-1]
 
 
-def mouse_data_msg(data: bytearray):
+def mouse_data_msg(data: bytearray, parse_euler_angles=False):
     vx = int.from_bytes(data[1:3], "little", signed=True)
     vy = int.from_bytes(data[3:5], "little", signed=True)
     prox = data[9] == 1
-    return vx, vy, prox
+    if not parse_euler_angles:
+        return vx, vy, prox
+    euler_angles = [
+        int.from_bytes(data[i:i + 2], "little", signed=True)
+        for i in range(10, 16, 2)
+    ]
+    return vx, vy, prox, euler_angles
 
 
 def air_gesture_data_msg(data: bytearray):
@@ -72,3 +78,57 @@ def raw_data_msg(data: bytearray, scale_factors=None):
 
 
 raw_data_msg.msg_type_value = 2**31
+
+
+CMD_BYTE_INDEX = 0
+SUBCMD1_BYTE_INDEX = 1
+SUBCMD2_BYTE_INDEX = 2
+SUBCMD3_BYTE_INDEX = 3
+PAYLOAD_START_INDEX = 4
+
+
+class IncCommandType:
+    IMU_DATA = 0
+    MODEL_DETECTION = 1
+    STANDBY_STATE = 2
+
+
+class IncSubCommandType1:
+    IMU_MOTION_DATA = 0
+    IMU_RAW_DATA = 1
+    TAP_GESTURE = 2
+    AIR_GESTURE = 3
+
+
+def tap_inc_msg(data: bytearray, scale_factors=None):
+    cmd_type = data[CMD_BYTE_INDEX]
+    if cmd_type == IncCommandType.IMU_DATA:
+        sub_cmd_type = data[SUBCMD1_BYTE_INDEX]
+        if sub_cmd_type == IncSubCommandType1.IMU_MOTION_DATA:
+            return {
+                "type": "imu_motion",
+                "data": mouse_data_msg(data[PAYLOAD_START_INDEX:], parse_euler_angles=True),
+            }
+        if sub_cmd_type == IncSubCommandType1.IMU_RAW_DATA:
+            return {
+                "type": "imu_raw",
+                "data": raw_data_msg(data[PAYLOAD_START_INDEX:], scale_factors),
+            }
+    elif cmd_type == IncCommandType.MODEL_DETECTION:
+        sub_cmd_type = data[SUBCMD1_BYTE_INDEX]
+        if sub_cmd_type == IncSubCommandType1.TAP_GESTURE:
+            return {
+                "type": "tap_gesture",
+                "data": tap_data_msg(data[PAYLOAD_START_INDEX:]),
+            }
+        if sub_cmd_type == IncSubCommandType1.AIR_GESTURE:
+            return {
+                "type": "air_gesture",
+                "data": air_gesture_data_msg(data[PAYLOAD_START_INDEX:]),
+            }
+    elif cmd_type == IncCommandType.STANDBY_STATE:
+        return {
+            "type": "standby_state",
+            "data": data[PAYLOAD_START_INDEX] == 1,
+        }
+    return None

@@ -6,6 +6,11 @@ def test_mouse_data_msg():
     assert parsers.mouse_data_msg(data) == (1, 2, True)
 
 
+def test_mouse_data_msg_with_euler_angles():
+    data = bytearray([0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 10, 0, 20, 0, 30, 0])
+    assert parsers.mouse_data_msg(data, parse_euler_angles=True) == (1, 2, True, [10, 20, 30])
+
+
 def test_tap_data_msg():
     data = bytearray([5])
     assert parsers.tap_data_msg(data) == [5]
@@ -92,3 +97,27 @@ def test_raw_data_accl_msg_scaled():
         'ts': 456,
         'payload': expected
     }]
+
+
+def test_tap_inc_msg_imu_raw_scaled():
+    g_scale = 8.75
+    a_scale = 0.244
+    ts = 50
+    imu_bytes = ts.to_bytes(4, 'little', signed=False)
+    imu_samples = [10, 20, 30, 40, 50, 60]
+    payload = b''
+    for v in imu_samples:
+        payload += v.to_bytes(2, 'little', signed=True)
+    data = bytearray([
+        parsers.IncCommandType.IMU_DATA,
+        parsers.IncSubCommandType1.IMU_RAW_DATA,
+        0,
+        0,
+    ]) + imu_bytes + payload
+    result = parsers.tap_inc_msg(data, scale_factors=[0, g_scale, a_scale])
+    expected = [imu_samples[i] * g_scale if i < 3 else imu_samples[i] * a_scale
+                for i in range(6)]
+    assert result == {
+        'type': 'imu_raw',
+        'data': [{'type': 'imu', 'ts': 50, 'payload': expected}],
+    }
