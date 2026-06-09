@@ -91,3 +91,5 @@ class DeviceFeatures(Enum):
     RAW_IMU_DATA = 0
     MODEL_DETECTION = 1
     IMU_MOTION_DATA = 2
+    TRIGGER_DETECTIONS = 3      # Not implemented yet
+    STANDBY_GESTURE_DETECTION = 4

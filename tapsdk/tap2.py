@@ -302,6 +302,10 @@ class TapSDK2:
         write_value = encoder.encode_standby_state_set(standby)
         await self._write_tap_gatt_char(write_value)
 
+    async def get_standby_state(self, identifier=None):
+        write_value = encoder.encode_standby_state_get()
+        await self._write_tap_gatt_char(write_value)
+
     async def run(self):
         stop_event = asyncio.Event()
         devices = []
