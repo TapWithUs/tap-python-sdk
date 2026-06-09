@@ -60,7 +60,7 @@ def on_standby_state_event(identifier, is_standby):
 
 
 def on_tap_event(identifier, tapcode):
-    logger.info("Tap:", str(tapcode))
+    logger.info("Tap:" + str(tapcode))
 
 
 air_first_packet_time = 0
