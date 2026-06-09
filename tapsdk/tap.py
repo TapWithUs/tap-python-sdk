@@ -54,9 +54,10 @@ if platform.system() == "Darwin":
             return paired_taps
 
 elif platform.system() == "Windows":
-    from bleak_winrt.windows.devices.bluetooth import BluetoothLEDevice, BluetoothConnectionStatus, BluetoothCacheMode
+    from bleak_winrt.windows.devices.bluetooth import (BluetoothLEDevice,  # noqa: F401
+                                                       BluetoothConnectionStatus, BluetoothCacheMode)
     from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import GattSession, GattSessionStatus
-    from bleak_winrt.windows.devices.enumeration import DeviceInformation, DeviceClass, DeviceInformationKind
+    from bleak_winrt.windows.devices.enumeration import DeviceInformation, DeviceInformationKind
 
     async def get_connected_taps():
         # use the following device properties: Paired, Connected, Device Address
@@ -65,7 +66,8 @@ elif platform.system() == "Windows":
             "System.Devices.Aep.IsConnected",
             "System.Devices.Aep.DeviceAddress",]
         aqs_filter = BluetoothLEDevice.get_device_selector_from_connection_status(BluetoothConnectionStatus.CONNECTED)
-        devices = await DeviceInformation.find_all_async(aqs_filter, request_properties, DeviceInformationKind.ASSOCIATION_ENDPOINT)
+        devices = await DeviceInformation.find_all_async(aqs_filter, request_properties,
+                                                         DeviceInformationKind.ASSOCIATION_ENDPOINT)
         taps = []
         for device in devices:
             try:
@@ -89,14 +91,13 @@ elif platform.system() == "Windows":
                 logger.error(f"Failed to retrieve services for device {device.name}: {e}")
         # taps = [device for device in devices if tap_service.lower() in [x.lower() for x in device.properties.keys()]]
         return taps
-    
+
     async def get_tap_device():
         taps = await get_connected_taps()
         if not taps:
             logger.info("No connected Tap devices found.")
             return None
         return taps[0].id  # Return the full WinRT device ID for BleakClient
-    
 
     class TapClient(BleakClient):
         def __init__(self, address="", **kwargs):
@@ -393,7 +394,7 @@ class TapSDK():
                         await self.client.pair(protection_level=2)
                         connected = self._client_connected(self.client)
 
-        else:   
+        else:
             async def detection_cb(device, adv_data):
                 logger.debug("detected %s %s", device, adv_data)
                 if tap_service.lower() in adv_data.service_uuids:
@@ -411,7 +412,7 @@ class TapSDK():
                 await self.client.connect()
                 if platform.system() != "Darwin":
                     await self.client.pair()
-        
+
         if self.client.is_connected:
             for ch, cb in [(tap_data_characteristic, self.on_tapped),
                            (mouse_data_characteristic, self.on_moused),
