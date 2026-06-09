@@ -1,4 +1,23 @@
 # History
+## 0.7.0 (2026-06-09)
+______________________
+### Main features
+
+* Unified cross-platform implementation in `tapsdk/tap.py` (removed separate posix/dotnet backends).
+* Windows rewritten to use Bleak/WinRT instead of TAPWin.dll.
+* `InputMode` API: `TapInputMode("…")` replaced by `InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`.
+* Raw mode: typed sensitivity enums and optional scaling to mg/mdps (`scaled=True`).
+* Connection and disconnection events implemented on all platforms.
+* Windows: BLE scan and reconnect polling for paired devices.
+* Python requirement raised to 3.9+.
+* CI: cross-platform pytest and flake8.
+* New `AirGestures` values (thumb and state gestures).
+
+### Breaking changes
+
+* Removed `TapInputMode`, `loop` constructor argument, `tapsdk.models`, and OS-specific examples.
+* Windows no longer uses bundled TAPWin.dll.
+
 ## 0.6.0 (2024-07-04)
 ______________________
 ### Main features
@@ -7,14 +26,14 @@ ______________________
 * Mac and Linux backends unified to posix backend.
 
 ### Known Issues
-* Windows backend -  
+* Windows backend -
     * Raw sensor data rate might be lower than expected.
-    * Sometimes a Tap strap wouldn't be detected upon connection. In this case try restarting your Tap and/or the Python application. In worst case scenario re-pair your Tap. 
+    * Sometimes a Tap strap wouldn't be detected upon connection. In this case try restarting your Tap and/or the Python application. In worst case scenario re-pair your Tap.
     * Spatial features are still not available for Windows backend.
-* MacOS & Linux backends - 
+* MacOS & Linux backends -
     * Doesn't support multiple Tap strap connections.
-    * OnConnect and OnDisconnect events are not implemented 
-    * Raw sensor data is given unscaled (i.e. unitless), thereforein order to scale to physical units need to multiply by the relevant scale factor
+    * OnConnect and OnDisconnect events are not implemented
+    * Raw sensor data is given unscaled (i.e. unitless), therefore in order to scale to physical units need to multiply by the relevant scale factor
 
 ## 0.5.1 (2024-01-01)
 ______________________
@@ -47,5 +66,4 @@ ______________________
 ### Main features
 
 * SDK created.
-
 
