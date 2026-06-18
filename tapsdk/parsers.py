@@ -91,6 +91,7 @@ class IncCommandType:
     IMU_DATA = 0
     MODEL_DETECTION = 1
     STANDBY_STATE = 2
+    CONFIG_STATE = 3
 
 
 class IncSubCommandType1:
@@ -98,6 +99,56 @@ class IncSubCommandType1:
     IMU_RAW_DATA = 1
     TAP_GESTURE = 2
     AIR_GESTURE = 3
+
+
+class IncConfigStateSubCommandType1:
+    FEATURE = 0
+    VISION_OP_MODE = 1
+    VISION_MODEL = 2
+    IMU_SENSITIVITY = 3
+    HAPTIC_PATTERN = 4
+
+
+def config_state_msg(data: bytearray):
+    sub_cmd_type = data[SUBCMD1_BYTE_INDEX]
+    payload = data[PAYLOAD_START_INDEX:]
+    if sub_cmd_type == IncConfigStateSubCommandType1.FEATURE:
+        if len(payload) < 2:
+            return None
+        return {
+            "type": "config_feature",
+            "data": {
+                "feature_number": payload[0],
+                "feature_value": payload[1] == 1,
+            },
+        }
+    if sub_cmd_type == IncConfigStateSubCommandType1.VISION_OP_MODE:
+        if len(payload) < 1:
+            return None
+        return {
+            "type": "config_vision_op_mode",
+            "data": payload[0],
+        }
+    if sub_cmd_type == IncConfigStateSubCommandType1.VISION_MODEL:
+        if len(payload) < 1:
+            return None
+        return {
+            "type": "config_vision_model",
+            "data": payload[0],
+        }
+    if sub_cmd_type == IncConfigStateSubCommandType1.IMU_SENSITIVITY:
+        if len(payload) < 2:
+            return None
+        return {
+            "type": "config_imu_sensitivity",
+            "data": (payload[0], payload[1]),
+        }
+    if sub_cmd_type == IncConfigStateSubCommandType1.HAPTIC_PATTERN:
+        return {
+            "type": "config_haptic_pattern",
+            "data": list(payload),
+        }
+    return None
 
 
 def tap_inc_msg(data: bytearray, scale_factors=None):
@@ -131,4 +182,6 @@ def tap_inc_msg(data: bytearray, scale_factors=None):
             "type": "standby_state",
             "data": data[PAYLOAD_START_INDEX] == 1,
         }
+    elif cmd_type == IncCommandType.CONFIG_STATE:
+        return config_state_msg(data)
     return None
