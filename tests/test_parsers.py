@@ -121,3 +121,60 @@ def test_tap_inc_msg_imu_raw_scaled():
         'type': 'imu_raw',
         'data': [{'type': 'imu', 'ts': 50, 'payload': expected}],
     }
+
+
+def _config_state_packet(subcmd1, payload):
+    return bytearray([
+        parsers.IncCommandType.CONFIG_STATE,
+        subcmd1,
+        0,
+        0,
+    ]) + bytearray(payload)
+
+
+def test_config_state_feature():
+    data = _config_state_packet(parsers.IncConfigStateSubCommandType1.FEATURE, [2, 1])
+    assert parsers.tap_inc_msg(data) == {
+        'type': 'config_feature',
+        'data': {'feature_number': 2, 'feature_value': True},
+    }
+
+
+def test_config_state_vision_op_mode():
+    data = _config_state_packet(parsers.IncConfigStateSubCommandType1.VISION_OP_MODE, [2])
+    assert parsers.tap_inc_msg(data) == {
+        'type': 'config_vision_op_mode',
+        'data': 2,
+    }
+
+
+def test_config_state_vision_model():
+    data = _config_state_packet(parsers.IncConfigStateSubCommandType1.VISION_MODEL, [1])
+    assert parsers.tap_inc_msg(data) == {
+        'type': 'config_vision_model',
+        'data': 1,
+    }
+
+
+def test_config_state_imu_sensitivity():
+    data = _config_state_packet(parsers.IncConfigStateSubCommandType1.IMU_SENSITIVITY, [3, 4])
+    assert parsers.tap_inc_msg(data) == {
+        'type': 'config_imu_sensitivity',
+        'data': (3, 4),
+    }
+
+
+def test_config_state_haptic_pattern():
+    data = _config_state_packet(
+        parsers.IncConfigStateSubCommandType1.HAPTIC_PATTERN,
+        [50, 20, 50],
+    )
+    assert parsers.tap_inc_msg(data) == {
+        'type': 'config_haptic_pattern',
+        'data': [50, 20, 50],
+    }
+
+
+def test_config_state_feature_short_payload():
+    data = _config_state_packet(parsers.IncConfigStateSubCommandType1.FEATURE, [2])
+    assert parsers.tap_inc_msg(data) is None
