@@ -10,7 +10,7 @@ PAYLOAD_FEATURE_VALUE_INDEX = 1
 
 
 class OutCommandType:
-    SET_FEATURE = 0
+    FEATURE_COMMAND = 0
     PERIPHERAL_COMMAND = 1
     KEEPALIVE_COMMAND = 2
     STANDBY_STATE_COMMAND = 3
@@ -61,7 +61,7 @@ def encode_set_feature(feature_number: int, feature_value: int):
     payload[PAYLOAD_FEATURE_NUMBER_INDEX] = feature_number
     payload[PAYLOAD_FEATURE_VALUE_INDEX] = feature_value
     return encode_msg(
-        OutCommandType.SET_FEATURE,
+        OutCommandType.FEATURE_COMMAND,
         OutSubCommandType1.SET_FEATURE,
         0,
         0,
@@ -73,7 +73,7 @@ def encode_get_feature(feature_number: int):
     payload = bytearray(1)
     payload[0] = feature_number
     return encode_msg(
-        OutCommandType.SET_FEATURE,
+        OutCommandType.FEATURE_COMMAND,
         OutSubCommandType1.GET_FEATURE,
         0,
         0,
