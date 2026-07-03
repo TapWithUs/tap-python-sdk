@@ -1,4 +1,22 @@
 # History
+
+## Releasing
+
+PyPI releases are published automatically when a version tag is pushed to GitHub.
+
+1. Bump `__version__` in `tapsdk/__version__.py` and update this file.
+2. Merge the release changes into `develop`, then into `master` as needed.
+3. Create and push an annotated tag whose name matches the package version (for example `v0.7.0`):
+
+   ```bash
+   git tag -a v0.7.0 -m "Release 0.7.0"
+   git push origin v0.7.0
+   ```
+
+The `Publish to PyPI` workflow runs the same lint and test matrix as CI, verifies that the tag (without the `v` prefix) matches `tapsdk.__version__`, builds the package with `python -m build`, and uploads it to PyPI using Trusted Publishing.
+
+Maintainers must configure PyPI Trusted Publishing for the `TapWithUs/tap-python-sdk` repository and create a GitHub `pypi` environment before the first automated release.
+
 ## 0.7.0 (2026-06-09)
 ______________________
 ### Main features
