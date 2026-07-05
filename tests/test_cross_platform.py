@@ -85,13 +85,23 @@ def _clear_tapsdk_modules():
             del sys.modules[name]
 
 
+def _winrt_stubs_needed(platform_name: str) -> bool:
+    if platform_name != "Windows":
+        return False
+    try:
+        import bleak_winrt  # noqa: F401
+    except ImportError:
+        return True
+    return False
+
+
 def _load_tap(platform_name: str):
     bleak_stub, core_stub = _make_bleak_stub()
     module_stubs = {
         "bleak": bleak_stub,
         "bleak.backends.corebluetooth.CentralManagerDelegate": core_stub,
     }
-    if platform_name == "Windows":
+    if _winrt_stubs_needed(platform_name):
         module_stubs.update(_make_winrt_stubs())
 
     _clear_tapsdk_modules()
@@ -102,6 +112,9 @@ def _load_tap(platform_name: str):
 
 
 def test_tapclient_defined_for_all_platforms():
-    for name in ["Linux", "Windows", "Darwin"]:
-        module = _load_tap(name)
-        assert hasattr(module, "TapClient")
+    try:
+        for name in ["Linux", "Windows", "Darwin"]:
+            module = _load_tap(name)
+            assert hasattr(module, "TapClient")
+    finally:
+        _clear_tapsdk_modules()
