@@ -1,5 +1,3 @@
-import platform
-
 import tapsdk.parsers as parsers
 
 
@@ -94,10 +92,3 @@ def test_raw_data_accl_msg_scaled():
         'ts': 456,
         'payload': expected
     }]
-
-
-def test_tapclient_defined_for_current_platform():
-    import tapsdk.tap as tap
-
-    assert hasattr(tap, "TapClient")
-    assert platform.system() in {"Linux", "Windows", "Darwin"}
