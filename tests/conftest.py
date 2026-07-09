@@ -1,8 +1,13 @@
+import platform
 import sys
 import types
 
 
 def pytest_configure(config):
+    # macOS CI lacks usable CoreBluetooth; other runners use real bleak/winrt.
+    if platform.system() != "Darwin":
+        return
+
     bleak_stub = types.ModuleType("bleak")
 
     class Dummy:
