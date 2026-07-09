@@ -22,8 +22,13 @@ raw_sensors_characteristic = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'     # nus tx
 
 
 if platform.system() == "Darwin":
-    from bleak.backends.corebluetooth.CentralManagerDelegate import (
-        CBUUID, CentralManagerDelegate)
+    try:
+        from bleak.backends.corebluetooth.CentralManagerDelegate import (
+            CBUUID, CentralManagerDelegate)
+    except ImportError:
+        # The CoreBluetooth backend internals moved across bleak versions. Keep the
+        # module importable (e.g. for tests/tooling) and defer the failure to runtime.
+        CBUUID = CentralManagerDelegate = None
 
     def string2uuid(uuid_str: str) -> CBUUID:
         """Convert a string to a uuid"""
@@ -54,10 +59,18 @@ if platform.system() == "Darwin":
             return paired_taps
 
 elif platform.system() == "Windows":
-    from bleak_winrt.windows.devices.bluetooth import (BluetoothLEDevice,  # noqa: F401
-                                                       BluetoothConnectionStatus, BluetoothCacheMode)
-    from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import GattSession, GattSessionStatus
-    from bleak_winrt.windows.devices.enumeration import DeviceInformation, DeviceInformationKind
+    try:
+        from bleak_winrt.windows.devices.bluetooth import (BluetoothLEDevice,  # noqa: F401
+                                                           BluetoothConnectionStatus, BluetoothCacheMode)
+        from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import GattSession, GattSessionStatus
+        from bleak_winrt.windows.devices.enumeration import DeviceInformation, DeviceInformationKind
+    except ImportError:
+        # bleak_winrt ships only with bleak < 1.0; it is unavailable with bleak 3.x
+        # (see #21). Defer the failure to runtime so the module stays importable for
+        # tooling/tests on Windows while the Windows BLE path is still broken.
+        BluetoothLEDevice = BluetoothConnectionStatus = BluetoothCacheMode = None
+        GattSession = GattSessionStatus = None
+        DeviceInformation = DeviceInformationKind = None
 
     async def get_connected_taps():
         # use the following device properties: Paired, Connected, Device Address
