@@ -19,7 +19,11 @@ REQUIRED = [
     # macOS reqs
     'bleak==0.12.1;platform_system=="Darwin"',
     # Windows reqs
-    'bleak;platform_system=="Windows"'
+    # bleak>=0.22.0 switched its Windows backend to PyWinRT and no longer
+    # depends on bleak-winrt, but tapsdk's Windows code still targets the
+    # bleak-winrt API (see #21), so it must be installed explicitly here.
+    'bleak==0.22.3;platform_system=="Windows"',
+    'bleak-winrt==1.2.0;platform_system=="Windows"',
 ]
 
 
@@ -40,6 +44,7 @@ setup(
     version=about["__version__"],
     description=DESCRIPTION,
     long_description=long_description,
+    long_description_content_type="text/markdown",
     author=AUTHOR,
     author_email=EMAIL,
     url=URL,
