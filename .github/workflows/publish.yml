@@ -1,0 +1,62 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 examples tapsdk tests
+      - name: Run tests
+        run: pytest -v
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Validate tag version matches package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION=$(python -c "from tapsdk.__version__ import __version__; print(__version__)")
+          if [ "$TAG" != "$PACKAGE_VERSION" ]; then
+            echo "Tag version ($TAG) does not match tapsdk.__version__ ($PACKAGE_VERSION)"
+            exit 1
+          fi
+          echo "Version validated: $PACKAGE_VERSION"
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
