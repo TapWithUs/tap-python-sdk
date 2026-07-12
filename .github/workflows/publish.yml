@@ -62,17 +62,18 @@ jobs:
         run: |
           pip install twine
           twine check dist/*
+      # Import package/version only — avoid TapSDK/bleak, which needs bluetoothctl on Linux.
       - name: Smoke test built wheel
         run: |
           python -m venv /tmp/wheel-venv
           /tmp/wheel-venv/bin/pip install --upgrade pip
           /tmp/wheel-venv/bin/pip install dist/*.whl
-          /tmp/wheel-venv/bin/python -c "from tapsdk import TapSDK; from tapsdk.__version__ import __version__; print(__version__)"
+          /tmp/wheel-venv/bin/python -c "import tapsdk; from tapsdk.__version__ import __version__; print(__version__)"
       - name: Smoke test built sdist
         run: |
           python -m venv /tmp/sdist-venv
           /tmp/sdist-venv/bin/pip install --upgrade pip
           /tmp/sdist-venv/bin/pip install dist/*.tar.gz
-          /tmp/sdist-venv/bin/python -c "from tapsdk import TapSDK"
+          /tmp/sdist-venv/bin/python -c "import tapsdk; from tapsdk.__version__ import __version__; print(__version__)"
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
