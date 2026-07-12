@@ -25,10 +25,12 @@ if platform.system() == "Darwin":
     try:
         from bleak.backends.corebluetooth.CentralManagerDelegate import (
             CBUUID, CentralManagerDelegate)
-    except ImportError:
-        # The CoreBluetooth backend internals moved across bleak versions. Keep the
-        # module importable (e.g. for tests/tooling) and defer the failure to runtime.
-        CBUUID = CentralManagerDelegate = None
+    except ImportError as e:
+        raise ImportError(
+            "tapsdk requires bleak==0.12.1 on macOS; the installed bleak version "
+            "no longer exposes bleak.backends.corebluetooth.CentralManagerDelegate "
+            "at this import path. Reinstall with the pinned dependency from setup.py."
+        ) from e
 
     def string2uuid(uuid_str: str) -> CBUUID:
         """Convert a string to a uuid"""
@@ -64,13 +66,16 @@ elif platform.system() == "Windows":
                                                            BluetoothConnectionStatus, BluetoothCacheMode)
         from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import GattSession, GattSessionStatus
         from bleak_winrt.windows.devices.enumeration import DeviceInformation, DeviceInformationKind
-    except ImportError:
-        # bleak_winrt ships only with bleak < 1.0; it is unavailable with bleak 3.x
-        # (see #21). Defer the failure to runtime so the module stays importable for
-        # tooling/tests on Windows while the Windows BLE path is still broken.
-        BluetoothLEDevice = BluetoothConnectionStatus = BluetoothCacheMode = None
-        GattSession = GattSessionStatus = None
-        DeviceInformation = DeviceInformationKind = None
+    except ImportError as e:
+        # bleak>=0.22.0 no longer depends on bleak_winrt (see #21), so it must be
+        # installed explicitly; setup.py pins bleak==0.22.3 + bleak-winrt==1.2.0
+        # for Windows. Fail fast if that pin was not honored, rather than
+        # silently disabling the Windows BLE backend at runtime.
+        raise ImportError(
+            "tapsdk requires bleak==0.22.3 and bleak-winrt==1.2.0 on Windows. "
+            "Reinstall with the pinned dependencies from setup.py, or see "
+            "https://github.com/TapWithUs/tap-python-sdk/issues/21."
+        ) from e
 
     async def get_connected_taps():
         # use the following device properties: Paired, Connected, Device Address
