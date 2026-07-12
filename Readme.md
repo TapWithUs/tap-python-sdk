@@ -22,8 +22,14 @@ This package supports the following platforms:
     ```
 
 
-### Installation  
-Clone this repo and install the package.
+### Installation
+
+Install the package from PyPI:
+```console
+pip install tap-python-sdk
+```
+
+Or clone this repo and install the package locally:
 ```console
 git clone https://github.com/TapWithUs/tap-python-sdk
 cd tap-python-sdk

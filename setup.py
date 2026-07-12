@@ -7,7 +7,8 @@ import os
 from setuptools import find_packages, setup
 
 # Package meta-data.
-NAME = "tapsdk"
+DISTRIBUTION_NAME = "tap-python-sdk"
+PACKAGE_NAME = "tapsdk"
 DESCRIPTION = "Tap strap python sdk"
 URL = "https://github.com/TapWithUs/tap-python-sdk"
 EMAIL = "support@tapwithus.com"
@@ -35,12 +36,12 @@ with io.open(os.path.join(here, "History.md"), encoding="utf-8") as f:
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
-with open(os.path.join(here, NAME, "__version__.py")) as f:
+with open(os.path.join(here, PACKAGE_NAME, "__version__.py")) as f:
     exec(f.read(), about)
 
 
 setup(
-    name=NAME,
+    name=DISTRIBUTION_NAME,
     version=about["__version__"],
     description=DESCRIPTION,
     long_description=long_description,

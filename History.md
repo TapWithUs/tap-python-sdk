@@ -15,7 +15,7 @@ PyPI releases are published automatically when a version tag is pushed to GitHub
 
 The `Publish to PyPI` workflow runs the same lint and test matrix as CI, verifies that the tag (without the `v` prefix) matches `tapsdk.__version__`, builds the package with `python -m build`, and uploads it to PyPI using Trusted Publishing.
 
-Maintainers must configure PyPI Trusted Publishing for the `TapWithUs/tap-python-sdk` repository and create a GitHub `pypi` environment before the first automated release.
+Maintainers must configure PyPI Trusted Publishing for the `tap-python-sdk` project name, the `TapWithUs/tap-python-sdk` repository, and a GitHub `pypi` environment before the first automated release.
 
 ## 0.7.0 (2026-06-09)
 ______________________
