@@ -1,5 +1,7 @@
 ## TapStrap Python SDK (beta)
 
+[![PyPI version](https://img.shields.io/pypi/v/tap-python-sdk.svg)](https://pypi.org/project/tap-python-sdk/)
+
 ### What Is This ?
 
 TAP python SDK allows you to build python app that can establish BLE connection with Tap Strap and TapXR, send commands and receive events and data - Thus allowing TAP to act as a controller for your app!  
