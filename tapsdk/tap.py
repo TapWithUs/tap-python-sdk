@@ -11,9 +11,10 @@ from .inputmodes import InputModeText, InputMode, InputModeRaw, input_type_comma
 
 logger = logging.getLogger(__name__)
 
-# BLE GATT UUIDs used by Tap Strap / TapXR.
-# Required for this SDK: Tap service (scan/filter), Tap data (notify), NUS service,
-# and NUS RX (write input mode). See README "BLE GATT reference".
+# BLE GATT UUIDs — verified against tap_rd/ble-mcu-hw-v3-sdk-14.0 @ TAP_XR_develop
+# (ble_tap_service.c / Nordic ble_nus). Required for this SDK: Tap service (scan
+# response filter), Tap data (notify), NUS service, NUS RX (write input mode).
+# See README "BLE GATT reference".
 tap_service = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370'
 nus_service = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 tap_data_characteristic = 'c3ff0005-1d8b-40fd-a56f-c7bd5d0f3370'
