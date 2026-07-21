@@ -1,24 +1,35 @@
 name: Deploy docs
 
+# Test on this PR: the build job runs automatically on pull_request.
+# Test full Pages deploy before merge: Actions → Deploy docs → Run workflow
+# (select this branch). Requires Pages source = GitHub Actions in repo settings.
 on:
   push:
     branches: [master]
     paths:
       - "docs/**"
+      - "docs/assets/**"
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - ".github/workflows/docs.yml"
       - "TAP-axis-alpha.png"
       - "TAPXR-axis.png"
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "docs/**"
+      - "docs/assets/**"
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - ".github/workflows/docs.yml"
       - "TAP-axis-alpha.png"
       - "TAPXR-axis.png"
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Upload artifact and deploy to GitHub Pages"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -59,13 +70,17 @@ jobs:
         run: mkdocs build --strict --clean
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
+        if: >
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && inputs.deploy)
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.deploy)
     needs: build
     runs-on: ubuntu-latest
     environment:

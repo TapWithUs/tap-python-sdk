@@ -21,6 +21,8 @@ Source follows [Diátaxis](https://diataxis.fr/) — pick the path that matches 
 
 Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requirements-docs.txt && mkdocs serve`.
 
+CI: `Deploy docs` builds MkDocs on PRs and deploys on `master` (or manual `workflow_dispatch`). `Verify docs` runs a Cursor agent Diátaxis check on relevant PRs (requires `CURSOR_API_KEY` repository secret).
+
 ### Install
 
 ```console

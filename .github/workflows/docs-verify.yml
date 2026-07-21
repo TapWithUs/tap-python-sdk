@@ -1,0 +1,132 @@
+name: Verify docs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "tapsdk/**"
+      - "examples/**"
+      - "docs/**"
+      - "Readme.md"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - ".cursor/**"
+      - ".github/workflows/docs-verify.yml"
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to verify (required for manual runs)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: docs-verify-${{ github.event.pull_request.number || inputs.pr_number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  verify-docs:
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'docs/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve PR number
+        id: pr
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "base_ref=${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+            echo "head_ref=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+            data=$(gh api "repos/${{ github.repository }}/pulls/${{ inputs.pr_number }}")
+            echo "base_ref=$(echo "$data" | jq -r .base.ref)" >> "$GITHUB_OUTPUT"
+            echo "head_ref=$(echo "$data" | jq -r .head.ref)" >> "$GITHUB_OUTPUT"
+            echo "sha=$(echo "$data" | jq -r .head.sha)" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.sha }}
+
+      - name: Require CURSOR_API_KEY
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          if [ -z "$CURSOR_API_KEY" ]; then
+            echo "::error::Set repository secret CURSOR_API_KEY (Cursor Dashboard → API Keys) to run docs verification."
+            exit 1
+          fi
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Diátaxis docs
+        id: verify
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          set -euo pipefail
+          agent -p --mode ask --output-format text \
+            "You are verifying documentation for TapWithUs/tap-python-sdk PR #${{ steps.pr.outputs.number }}.
+
+             Context:
+             - Base branch: ${{ steps.pr.outputs.base_ref }}
+             - Head branch: ${{ steps.pr.outputs.head_ref }}
+             - Guidelines: read .cursor/rules/diataxis-docs.mdc and docs/index.md
+             - Site config: mkdocs.yml
+
+             Steps:
+             1. Inspect the PR diff (git diff origin/${{ steps.pr.outputs.base_ref }}...HEAD).
+             2. Decide which Diátaxis quadrants (if any) are affected.
+             3. Check that docs/, Readme.md, and mkdocs.yml still match the guidelines and the code change.
+             4. Do not invent features. If the PR is docs-only and consistent, status is OK.
+
+             Output markdown ONLY (no preamble), using exactly this template:
+
+             ## Docs check
+             - Status: OK
+             - Affected quadrants: none | tutorial | how-to | reference | explanation (comma-separated)
+             - Gaps: none
+             - Suggested edits: none
+
+             If updates are required, use Status: NEEDS UPDATES and replace Gaps / Suggested edits
+             with concrete file paths and what to change.
+
+             Do NOT modify files, commit, push, or call gh." \
+            | tee /tmp/docs-check.md
+
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          MARKER="<!-- cursor-docs-verify -->"
+          BODY="${MARKER}"$'\n'"$(cat /tmp/docs-check.md)"
+          PR="${{ steps.pr.outputs.number }}"
+          existing=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
+            --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n1)
+          if [ -n "${existing}" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${existing}" -f body="$BODY"
+          else
+            gh pr comment "$PR" --body "$BODY"
+          fi
+
+      - name: Fail when docs need updates
+        run: |
+          if grep -qiE 'Status:[[:space:]]*NEEDS UPDATES' /tmp/docs-check.md; then
+            echo "::error::Documentation updates required (see PR comment)."
+            exit 1
+          fi
+          if ! grep -qiE 'Status:[[:space:]]*OK' /tmp/docs-check.md; then
+            echo "::error::Docs check output missing Status: OK or NEEDS UPDATES"
+            exit 1
+          fi
