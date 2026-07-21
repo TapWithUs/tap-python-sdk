@@ -57,6 +57,43 @@ If no Tap is already connected at the OS level, `run()` will scan and wait for a
 
 Also make sure that you have updated your Tap device to the latest version.
 
+### BLE GATT reference
+
+Tap devices expose a GATT server. This SDK discovers Tap by the proprietary Tap service UUID and then uses the Nordic UART Service (NUS) for mode commands. UUIDs below match the other official Tap SDKs (iOS / Android / Windows / Web) and the internal [Tap BLE API Documentation](https://tapwithus.atlassian.net/wiki/spaces/FIR/pages/426803201/Tap+BLE+API+Documentation).
+
+#### Required for this SDK
+
+These services/characteristics are required for a usable connection (device discovery, mode control, and tap events). The Windows SDK treats Tap Data + NUS RX as the minimum pair that identifies a Tap; this Python SDK additionally needs the Tap service UUID for scan/filter.
+
+| Role | UUID | Properties | Purpose |
+| --- | --- | --- | --- |
+| **Tap service** | `c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370` | (service) | Advertised UUID used to find / filter Tap devices |
+| Tap data | `c3ff0005-1d8b-40fd-a56f-c7bd5d0f3370` | Notify | Finger tap codes (`register_tap_events`) |
+| **NUS service** | `6e400001-b5a3-f393-e0a9-e50e24dcca9e` | (service) | Nordic UART Service used for mode / input-type commands |
+| NUS RX (mode) | `6e400002-b5a3-f393-e0a9-e50e24dcca9e` | Write | Write input-mode and input-type magic packets (`set_input_mode`, `set_input_type`); must be refreshed about every 10s while in controller/raw modes |
+
+#### Optional (feature-dependent)
+
+Notification setup is best-effort: missing characteristics are logged and skipped so older firmware still connects.
+
+| Characteristic | UUID | Properties | Purpose |
+| --- | --- | --- | --- |
+| Mouse data | `c3ff0006-1d8b-40fd-a56f-c7bd5d0f3370` | Notify | Optical / surface mouse motion (`register_mouse_events`) |
+| UI / haptic | `c3ff0009-1d8b-40fd-a56f-c7bd5d0f3370` | Write | Vibration sequences (`send_vibration_sequence`) |
+| Air gesture | `c3ff000a-1d8b-40fd-a56f-c7bd5d0f3370` | Notify / Write | Air gestures and mouse-mode state (`register_air_gesture_*`); TapXR |
+| NUS TX (raw) | `6e400003-b5a3-f393-e0a9-e50e24dcca9e` | Notify | Raw sensor stream in raw mode (`register_raw_data_events`); requires Developer mode in TapManager |
+
+#### Standard services (present on device; not used by this SDK)
+
+| Service | UUID | Notes |
+| --- | --- | --- |
+| Device Information | `0000180a-0000-1000-8000-00805f9b34fb` | Firmware / hardware revision strings (other SDKs read `2a26` / `2a27`) |
+| Battery Service | `0000180f-0000-1000-8000-00805f9b34fb` | Battery Level `2a19` |
+
+Other Tap-service characteristics exist on some firmware/SDK combinations (for example device name `c3ff0003-…` and data-request `c3ff000b-…` in the Android SDK) but are unused here.
+
+Constants live in [`tapsdk/tap.py`](tapsdk/tap.py).
+
 ### Features
 
 This SDK implements two basic interfaces with a Tap device.
