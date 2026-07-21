@@ -55,21 +55,43 @@ jobs:
           fetch-depth: 0
           ref: ${{ steps.pr.outputs.sha }}
 
-      - name: Require CURSOR_API_KEY
+      - name: Check CURSOR_API_KEY
+        id: cursor_key
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
           if [ -z "$CURSOR_API_KEY" ]; then
-            echo "::error::Set repository secret CURSOR_API_KEY (Cursor Dashboard → API Keys) to run docs verification."
-            exit 1
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CURSOR_API_KEY is not set. Skipping agent verification. Add it under Settings → Secrets → Actions to enable this check."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Notice when verification is skipped
+        if: steps.cursor_key.outputs.present != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          MARKER="<!-- cursor-docs-verify -->"
+          BODY="${MARKER}"$'\n'"## Docs check"$'\n'$'\n'"Verification skipped: repository secret \`CURSOR_API_KEY\` is not configured."$'\n'$'\n'"Add it from [Cursor API Keys](https://cursor.com/dashboard/api), then re-run **Verify docs**."
+          PR="${{ steps.pr.outputs.number }}"
+          existing=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
+            --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n1)
+          if [ -n "${existing}" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${existing}" -f body="$BODY"
+          else
+            gh pr comment "$PR" --body "$BODY"
           fi
 
       - name: Install Cursor CLI
+        if: steps.cursor_key.outputs.present == 'true'
         run: |
           curl https://cursor.com/install -fsS | bash
           echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
 
       - name: Verify Diátaxis docs
+        if: steps.cursor_key.outputs.present == 'true'
         id: verify
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
@@ -105,6 +127,7 @@ jobs:
             | tee /tmp/docs-check.md
 
       - name: Comment on PR
+        if: steps.cursor_key.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -121,6 +144,7 @@ jobs:
           fi
 
       - name: Fail when docs need updates
+        if: steps.cursor_key.outputs.present == 'true'
         run: |
           if grep -qiE 'Status:[[:space:]]*NEEDS UPDATES' /tmp/docs-check.md; then
             echo "::error::Documentation updates required (see PR comment)."
