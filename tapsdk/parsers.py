@@ -3,6 +3,7 @@ def tapcode_to_fingers(tapcode: int):
 
 
 def mouse_data_msg(data: bytearray):
+    """Parse a mouse notification into ``(vx, vy, proximity)``."""
     vx = int.from_bytes(data[1:3], "little", signed=True)
     vy = int.from_bytes(data[3:5], "little", signed=True)
     prox = data[9] == 1
@@ -10,31 +11,40 @@ def mouse_data_msg(data: bytearray):
 
 
 def air_gesture_data_msg(data: bytearray):
+    """Parse an air-gesture notification into ``[gesture_code]``."""
     return [data[0]]
 
 
 def tap_data_msg(data: bytearray):
+    """Parse a tap notification into ``[tapcode]``."""
     return [data[0]]
 
 
 def raw_data_msg(data: bytearray, scale_factors=None):
-    '''
-    Parses raw data messages into structured data with optional scaling.
-    Raw data is packed into messages with the following structure:
+    """Parse raw sensor notifications into structured packets.
+
+    Raw data is packed into messages with the following structure::
+
          [msg_type (1 bit)][timestamp (31 bit)][payload (12 - 30 bytes)]
              * msg type     - '0' for imu message
-                        - '1' for accelerometers message
-            * timestamp - unsigned int, given in milliseconds
-            * payload     - for imu message is 12 bytes
-                          composed by a series of 6 uint16 numbers
-                          representing [g_x, g_y, g_z, xl_x, xl_y, xl_z]
-                        - for accelerometers message is 30 bytes
-                          composed by a series of 15 uint16 numbers
-                          representing [xl_x_thumb , xl_y_thumb,  xl_z_thumb,
-                                          xl_x_finger, xl_y_finger, xl_z_finger,
-                                        ...]
+                            - '1' for accelerometers message
+             * timestamp    - unsigned int, given in milliseconds
+             * payload      - for imu message is 12 bytes
+                              composed by a series of 6 uint16 numbers
+                              representing [g_x, g_y, g_z, xl_x, xl_y, xl_z]
+                            - for accelerometers message is 30 bytes
+                              composed by a series of 15 uint16 numbers
+                              representing [xl_x_thumb , xl_y_thumb,  xl_z_thumb,
+                                              xl_x_finger, xl_y_finger, xl_z_finger,
+                                            ...]
 
-    '''
+    Args:
+        data: GATT notification payload.
+        scale_factors: Optional ``[finger_mg, gyro_mdps, imu_mg]`` multipliers.
+
+    Returns:
+        List of dicts with keys ``type``, ``ts``, and ``payload``.
+    """
     L = len(data)
     ptr = 0
     messages = []
