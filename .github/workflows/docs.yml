@@ -1,0 +1,77 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - ".github/workflows/docs.yml"
+      - "TAP-axis-alpha.png"
+      - "TAPXR-axis.png"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - ".github/workflows/docs.yml"
+      - "TAP-axis-alpha.png"
+      - "TAPXR-axis.png"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache MkDocs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache
+          key: mkdocs-material-${{ hashFiles('requirements-docs.txt') }}
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install docs dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Sync reference images into docs
+        run: |
+          mkdir -p docs/assets
+          cp -f TAP-axis-alpha.png TAPXR-axis.png docs/assets/
+
+      - name: Build site
+        run: mkdocs build --strict --clean
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

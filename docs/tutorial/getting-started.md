@@ -85,4 +85,4 @@ In Text mode (the default), the Tap behaves like a normal keyboard/mouse for the
 - Switch modes, stream sensors, or send haptics: [How-to guides](../how-to/index.md)
 - Full callback and command signatures: [API reference](../reference/index.md)
 - Why modes and sensors are designed this way: [Explanation](../explanation/index.md)
-- Runnable sample covering more events: [`examples/basic.py`](../../examples/basic.py)
+- Runnable sample covering more events: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py)

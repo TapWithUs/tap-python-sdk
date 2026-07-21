@@ -1,0 +1,91 @@
+site_name: Tap Python SDK
+site_description: BLE SDK documentation for Tap Strap and TapXR
+site_url: https://tapwithus.github.io/tap-python-sdk/
+site_author: Tap Systems Inc.
+
+repo_name: TapWithUs/tap-python-sdk
+repo_url: https://github.com/TapWithUs/tap-python-sdk
+edit_uri: edit/master/docs/
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Tutorial:
+      - Getting started: tutorial/getting-started.md
+  - How-to guides:
+      - Overview: how-to/index.md
+      - Install the SDK: how-to/install.md
+      - Connect and listen: how-to/connect-and-listen.md
+      - Switch input modes: how-to/switch-input-modes.md
+      - Stream raw sensors: how-to/stream-raw-sensors.md
+      - Send haptics: how-to/send-haptics.md
+      - Use Spatial Control: how-to/use-spatial-control.md
+      - Migrate from 0.6: how-to/migrate-from-0.6.md
+  - Reference:
+      - Overview: reference/index.md
+      - TapSDK: reference/tapsdk.md
+      - Input modes: reference/input-modes.md
+      - Enumerations: reference/enumerations.md
+      - Events: reference/events.md
+      - Package: reference/package.md
+  - Explanation:
+      - Overview: explanation/index.md
+      - Connection model: explanation/connection-model.md
+      - Input modes: explanation/input-modes.md
+      - Raw sensors: explanation/raw-sensors.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/TapWithUs/tap-python-sdk
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/tap-python-sdk/

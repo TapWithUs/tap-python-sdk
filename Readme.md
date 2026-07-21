@@ -8,7 +8,9 @@ BLE SDK for building Python apps that connect to **Tap Strap** and **TapXR**, se
 
 ### Documentation
 
-Docs follow [Diátaxis](https://diataxis.fr/) — pick the path that matches your goal:
+Published docs (MkDocs Material): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
+
+Source follows [Diátaxis](https://diataxis.fr/) — pick the path that matches your goal:
 
 | I want to… | Go to |
 |------------|--------|
@@ -17,7 +19,7 @@ Docs follow [Diátaxis](https://diataxis.fr/) — pick the path that matches you
 | Look up APIs and types | [Reference](docs/reference/index.md) |
 | Understand modes and sensors | [Explanation](docs/explanation/index.md) |
 
-Full index: [docs/index.md](docs/index.md)
+Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requirements-docs.txt && mkdocs serve`.
 
 ### Install
 

@@ -37,6 +37,6 @@ from tapsdk import AirGestures
 
 ## Examples and backends
 
-- Use [`examples/basic.py`](../../examples/basic.py) instead of `example_unix.py` / `example_win.py`.
+- Use [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py) instead of `example_unix.py` / `example_win.py`.
 - Windows no longer uses `TAPWin.dll`; Bleak/WinRT is required.
 - Python 3.9+ is required.

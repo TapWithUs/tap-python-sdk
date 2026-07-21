@@ -63,4 +63,4 @@ await tap.run()
 await asyncio.Event().wait()
 ```
 
-Or follow the pattern in [`examples/basic.py`](../../examples/basic.py), which sleeps between mode changes.
+Or follow the pattern in [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py), which sleeps between mode changes.

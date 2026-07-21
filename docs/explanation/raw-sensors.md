@@ -17,10 +17,11 @@ You cannot change sensitivity while remaining in raw mode with a different comma
 
 ## Reference frames
 
-Axes are defined relative to the hardware. See the diagrams in the repository root:
+Axes are defined relative to the hardware:
 
-- `TAP-axis-alpha.png` — Tap Strap
-- `TAPXR-axis.png` — TapXR
+![Tap Strap reference frame](../assets/TAP-axis-alpha.png)
+
+![TapXR reference frame](../assets/TAPXR-axis.png)
 
 Additional protocol notes: [Tap Strap Raw Sensors Mode](https://tapwithus.atlassian.net/wiki/spaces/TD/pages/792002574/Tap+Strap+Raw+Sensors+Mode) (internal Confluence).
 

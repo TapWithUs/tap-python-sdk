@@ -15,6 +15,7 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) structure. Pick
 - **Import name:** `tapsdk`
 - **Python:** 3.9+
 - **Status:** beta
+- **Source:** [TapWithUs/tap-python-sdk](https://github.com/TapWithUs/tap-python-sdk)
 
 ## Platforms
 
