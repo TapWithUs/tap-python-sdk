@@ -10,7 +10,7 @@ on:
       - "Readme.md"
       - "mkdocs.yml"
       - "requirements-docs.txt"
-      - ".cursor/**"
+      - ".github/docs-verify-cli.json"
       - ".github/workflows/docs-verify.yml"
   workflow_dispatch:
     inputs:
@@ -89,6 +89,12 @@ jobs:
         run: |
           curl https://cursor.com/install -fsS | bash
           echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+
+      - name: Apply verify-only CLI permissions
+        if: steps.cursor_key.outputs.present == 'true'
+        run: |
+          mkdir -p .cursor
+          cp .github/docs-verify-cli.json .cursor/cli.json
 
       - name: Verify docs
         if: steps.cursor_key.outputs.present == 'true'
