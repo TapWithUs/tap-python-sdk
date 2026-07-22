@@ -29,7 +29,6 @@ concurrency:
 
 jobs:
   verify-docs:
-    if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'docs/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Resolve PR number
@@ -139,14 +138,18 @@ jobs:
         run: |
           set -euo pipefail
           MARKER="<!-- cursor-docs-verify -->"
-          BODY="${MARKER}"$'\n'"$(cat /tmp/docs-check.md)"
+          {
+            printf '%s\n' "$MARKER"
+            cat /tmp/docs-check.md
+          } > /tmp/docs-comment.md
           PR="${{ steps.pr.outputs.number }}"
           existing=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
             --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n1)
           if [ -n "${existing}" ]; then
-            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${existing}" -f body="$BODY"
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${existing}" \
+              -F "body=@/tmp/docs-comment.md"
           else
-            gh pr comment "$PR" --body "$BODY"
+            gh pr comment "$PR" --body-file /tmp/docs-comment.md
           fi
 
       - name: Fail when docs need updates

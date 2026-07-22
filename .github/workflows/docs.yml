@@ -12,8 +12,6 @@ on:
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - ".github/workflows/docs.yml"
-      - "TAP-axis-alpha.png"
-      - "TAPXR-axis.png"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -22,8 +20,6 @@ on:
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - ".github/workflows/docs.yml"
-      - "TAP-axis-alpha.png"
-      - "TAPXR-axis.png"
   workflow_dispatch:
     inputs:
       deploy:
@@ -60,11 +56,6 @@ jobs:
 
       - name: Install docs dependencies
         run: pip install -r requirements-docs.txt
-
-      - name: Sync reference images into docs
-        run: |
-          mkdir -p docs/assets
-          cp -f TAP-axis-alpha.png TAPXR-axis.png docs/assets/
 
       - name: Build site
         run: mkdocs build --strict --clean
