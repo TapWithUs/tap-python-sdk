@@ -143,6 +143,13 @@ For example:
     ```  
     will trigger a 1s haptic, followed by 300ms delay, followed by 200ms haptic.
 
+4. ```get_device_info(self) -> DeviceInfo:```  
+Reads public device information (bonded connection required). Returns a ```DeviceInfo``` with ```name```, ```fw_version```, ```fw_version2```, ```model_version``` (hex, e.g. ```0x2A```), ```hardware_revision```, ```serial_number```, ```manufacturer```, ```software_revision``` (bootloader on Tap), and ```battery_level``` (0–100). Missing fields are ```None``` (e.g. ```fw_version2``` / ```model_version``` on devices that do not expose them).  
+    ```python
+    info = await tap_device.get_device_info()
+    print(info.name, info.fw_version, info.fw_version2, info.model_version, info.battery_level)
+    ```
+
 
 #### Events list
 1. ```register_connection_events(self, listener:Callable):```  

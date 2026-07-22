@@ -53,6 +53,20 @@ async def run():
     await client.run()
     logger.info("Connected: %s", client.client.is_connected)
 
+    info = await client.get_device_info()
+    logger.info(
+        "Device info: name=%s fw=%s fw2=%s model=%s hw=%s serial=%s mfg=%s bl=%s batt=%s",
+        info.name,
+        info.fw_version,
+        info.fw_version2,
+        info.model_version,
+        info.hardware_revision,
+        info.serial_number,
+        info.manufacturer,
+        info.software_revision,
+        info.battery_level,
+    )
+
     logger.info("Set Controller Mode for 5 seconds")
     await client.set_input_mode(im.InputModeController())
     await asyncio.sleep(5)

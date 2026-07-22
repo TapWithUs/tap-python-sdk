@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import platform
-from typing import Callable
+from dataclasses import dataclass
+from typing import Callable, Optional
 
 from bleak import BleakClient, BleakScanner
 
@@ -17,8 +18,37 @@ tap_data_characteristic = 'c3ff0005-1d8b-40fd-a56f-c7bd5d0f3370'
 mouse_data_characteristic = 'c3ff0006-1d8b-40fd-a56f-c7bd5d0f3370'
 ui_cmd_characteristic = 'c3ff0009-1d8b-40fd-a56f-c7bd5d0f3370'
 air_gesture_data_characteristic = 'c3ff000a-1d8b-40fd-a56f-c7bd5d0f3370'
+device_name_characteristic = 'c3ff0003-1d8b-40fd-a56f-c7bd5d0f3370'
+model_version_characteristic = 'c3ff000c-1d8b-40fd-a56f-c7bd5d0f3370'
+fw_version2_characteristic = 'c3ff000d-1d8b-40fd-a56f-c7bd5d0f3370'
 tap_mode_characteristic = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'        # nus rx
 raw_sensors_characteristic = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'     # nus tx
+
+# Standard BLE services exposed by Tap firmware (DIS + BAS).
+# See Tap BLE API docs / TAP_XR_develop tap_dis_manager / tap_bas_manager.
+device_information_service = '0000180a-0000-1000-8000-00805f9b34fb'
+battery_service = '0000180f-0000-1000-8000-00805f9b34fb'
+manufacturer_name_characteristic = '00002a29-0000-1000-8000-00805f9b34fb'
+serial_number_characteristic = '00002a25-0000-1000-8000-00805f9b34fb'
+hardware_revision_characteristic = '00002a27-0000-1000-8000-00805f9b34fb'
+firmware_revision_characteristic = '00002a26-0000-1000-8000-00805f9b34fb'
+software_revision_characteristic = '00002a28-0000-1000-8000-00805f9b34fb'  # bootloader on Tap
+battery_level_characteristic = '00002a19-0000-1000-8000-00805f9b34fb'
+gap_device_name_characteristic = '00002a00-0000-1000-8000-00805f9b34fb'
+
+
+@dataclass(frozen=True)
+class DeviceInfo:
+    """Public device information from BLE DIS/BAS and Tap service fields."""
+    name: Optional[str] = None
+    fw_version: Optional[str] = None
+    fw_version2: Optional[str] = None
+    model_version: Optional[str] = None
+    hardware_revision: Optional[str] = None
+    serial_number: Optional[str] = None
+    manufacturer: Optional[str] = None
+    software_revision: Optional[str] = None
+    battery_level: Optional[int] = None
 
 
 if platform.system() == "Darwin":
@@ -236,6 +266,15 @@ elif platform.system() == "Linux":
             raise e
 
 
+def _format_model_version_hex(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    try:
+        return f"0x{int(value):X}"
+    except ValueError:
+        return value
+
+
 class TapSDK():
     def __init__(self, **kwargs):
         self.client = TapClient(address=kwargs.get("address"))
@@ -307,6 +346,56 @@ class TapSDK():
         elif self.air_gesture_event_cb:
             args = parsers.air_gesture_data_msg(data)
             self.air_gesture_event_cb(identifier, *args)
+
+    async def _read_gatt_string(self, uuid: str) -> Optional[str]:
+        try:
+            raw = await self.client.read_gatt_char(uuid)
+        except Exception as e:
+            logger.debug("Failed to read %s: %s", uuid, e)
+            return None
+        if not raw:
+            return None
+        return bytes(raw).decode("utf-8", errors="replace").rstrip("\x00").strip() or None
+
+    async def _read_gatt_uint8(self, uuid: str) -> Optional[int]:
+        try:
+            raw = await self.client.read_gatt_char(uuid)
+        except Exception as e:
+            logger.debug("Failed to read %s: %s", uuid, e)
+            return None
+        if not raw:
+            return None
+        return int(raw[0])
+
+    async def _resolve_device_name(self) -> Optional[str]:
+        name = getattr(self.client, "name", None) or None
+        if name:
+            return name
+        # Tap stores the user-visible name on the proprietary readable char (not GAP 0x2a00).
+        name = await self._read_gatt_string(device_name_characteristic)
+        if name:
+            return name
+        return await self._read_gatt_string(gap_device_name_characteristic)
+
+    async def get_device_info(self) -> DeviceInfo:
+        """Read device name, FW versions, battery, and other public device fields.
+
+        Requires a bonded connection (these characteristics are encrypted on Tap
+        firmware). Missing characteristics yield None for that field.
+        """
+        model_version_raw = await self._read_gatt_string(model_version_characteristic)
+
+        return DeviceInfo(
+            name=await self._resolve_device_name(),
+            fw_version=await self._read_gatt_string(firmware_revision_characteristic),
+            fw_version2=await self._read_gatt_string(fw_version2_characteristic),
+            model_version=_format_model_version_hex(model_version_raw),
+            hardware_revision=await self._read_gatt_string(hardware_revision_characteristic),
+            serial_number=await self._read_gatt_string(serial_number_characteristic),
+            manufacturer=await self._read_gatt_string(manufacturer_name_characteristic),
+            software_revision=await self._read_gatt_string(software_revision_characteristic),
+            battery_level=await self._read_gatt_uint8(battery_level_characteristic),
+        )
 
     async def send_vibration_sequence(self, sequence, identifier=None):
         if len(sequence) > 18:
