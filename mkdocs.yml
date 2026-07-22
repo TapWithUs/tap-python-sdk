@@ -41,6 +41,15 @@ theme:
 plugins:
   - search
 
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/TapWithUs/tap-python-sdk
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/tap-python-sdk/
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -82,10 +91,4 @@ nav:
       - Connection model: explanation/connection-model.md
       - Input modes: explanation/input-modes.md
       - Raw sensors: explanation/raw-sensors.md
-
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/TapWithUs/tap-python-sdk
-    - icon: fontawesome/brands/python
-      link: https://pypi.org/project/tap-python-sdk/
+  - Release notes: release-notes.md

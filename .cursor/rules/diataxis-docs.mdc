@@ -37,4 +37,6 @@ This repository's docs follow [Diátaxis](https://diataxis.fr/). Keep them consi
 
 ## Published site
 
-Configured by `mkdocs.yml` (Material). GitHub Pages workflow: `.github/workflows/docs.yml`.
+Configured by `mkdocs.yml` (Material + mike version picker). Changelog: `docs/release-notes.md`.
+
+GitHub Pages is the `gh-pages` branch (mike). The Deploy docs workflow builds on docs PRs and deploys a versioned site only after a successful Publish to PyPI run (`workflow_run`), not on every `master` docs push.
