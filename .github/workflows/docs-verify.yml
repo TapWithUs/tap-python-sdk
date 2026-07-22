@@ -115,7 +115,12 @@ jobs:
              1. Inspect the PR diff (git diff origin/${{ steps.pr.outputs.base_ref }}...HEAD).
              2. Decide which Diátaxis quadrants (if any) are affected.
              3. Check that docs/, Readme.md, and mkdocs.yml still match the guidelines and the code change.
-             4. Do not invent features. If the PR is docs-only and consistent, status is OK.
+             4. Before claiming any file or asset is missing, verify in the checked-out tree:
+                - git ls-files -- <path> (required for tracked files, including binaries under docs/assets/)
+                - test -f <path>
+                Report a path as missing only when both checks show it is absent.
+             5. Do not infer absence from the diff alone; binary assets may be added without appearing in text diffs.
+             6. Do not invent features. If the PR is docs-only and consistent, status is OK.
 
              Output markdown ONLY (no preamble), using exactly this template:
 
@@ -138,28 +143,41 @@ jobs:
         run: |
           set -euo pipefail
           MARKER="<!-- cursor-docs-verify -->"
-          {
-            printf '%s\n' "$MARKER"
-            cat /tmp/docs-check.md
-          } > /tmp/docs-comment.md
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           PR="${{ steps.pr.outputs.number }}"
-          existing=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
-            --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n1)
-          if [ -n "${existing}" ]; then
-            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${existing}" \
-              -F "body=@/tmp/docs-comment.md"
-          else
+
+          if grep -qiE 'Status:[[:space:]]*NEEDS UPDATES' /tmp/docs-check.md || \
+             ! grep -qiE 'Status:[[:space:]]*OK' /tmp/docs-check.md; then
+            {
+              printf '%s\n' "$MARKER"
+              printf 'Workflow run: %s\n\n' "$RUN_URL"
+              cat /tmp/docs-check.md
+            } > /tmp/docs-comment.md
             gh pr comment "$PR" --body-file /tmp/docs-comment.md
+          else
+            {
+              printf '%s\n' "$MARKER"
+              cat /tmp/docs-check.md
+            } > /tmp/docs-comment.md
+            existing=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" \
+              --jq ".[] | select(.body | contains(\"${MARKER}\")) | .id" | head -n1)
+            if [ -n "${existing}" ]; then
+              gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${existing}" \
+                -F "body=@/tmp/docs-comment.md"
+            else
+              gh pr comment "$PR" --body-file /tmp/docs-comment.md
+            fi
           fi
 
       - name: Fail when docs need updates
         if: steps.cursor_key.outputs.present == 'true'
         run: |
           if grep -qiE 'Status:[[:space:]]*NEEDS UPDATES' /tmp/docs-check.md; then
-            echo "::error::Documentation updates required (see PR comment)."
+            gaps=$(sed -n 's/^- Gaps:[[:space:]]*//p' /tmp/docs-check.md | head -n1)
+            echo "::error::Documentation updates required (see latest PR comment). ${gaps}"
             exit 1
           fi
           if ! grep -qiE 'Status:[[:space:]]*OK' /tmp/docs-check.md; then
-            echo "::error::Docs check output missing Status: OK or NEEDS UPDATES"
+            echo "::error::Docs check output missing Status: OK or NEEDS UPDATES (see latest PR comment)."
             exit 1
           fi

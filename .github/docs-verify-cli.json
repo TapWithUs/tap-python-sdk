@@ -7,8 +7,10 @@
       "Shell(ls)",
       "Shell(git diff)",
       "Shell(git log)",
+      "Shell(git ls-files)",
       "Shell(git show)",
-      "Shell(git status)"
+      "Shell(git status)",
+      "Shell(test)"
     ],
     "deny": [
       "Write(**/*)",
