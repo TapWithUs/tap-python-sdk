@@ -7,4 +7,8 @@ def __getattr__(name):
         from tapsdk.tap import TapSDK
 
         return TapSDK
+    if name == "DeviceInfo":
+        from tapsdk.tap import DeviceInfo
+
+        return DeviceInfo
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
