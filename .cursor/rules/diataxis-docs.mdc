@@ -1,0 +1,40 @@
+---
+description: Diátaxis documentation standards for the Tap Python SDK
+globs: docs/**/*.md,Readme.md,mkdocs.yml
+alwaysApply: false
+---
+
+# Diátaxis docs guidelines
+
+This repository's docs follow [Diátaxis](https://diataxis.fr/). Keep them consistent with that model.
+
+## Quadrants
+
+| Quadrant | Path | Purpose |
+|----------|------|---------|
+| Tutorial | `docs/tutorial/` | Learning-oriented; one successful first path |
+| How-to | `docs/how-to/` | Problem-oriented recipes for a specific goal |
+| Reference | `docs/reference/` | Information-oriented API / type / event facts |
+| Explanation | `docs/explanation/` | Understanding-oriented background |
+
+`Readme.md` stays a short overview that links into `docs/` and the published MkDocs site. Do not re-inflate it into a full API manual.
+
+## When a code change requires doc updates
+
+- Public API, callbacks, command semantics, or example behavior → **Reference** (and How-to / Tutorial if the happy path changed)
+- New supported task or platform install step → **How-to**
+- Conceptual behavior (modes, connection, sensors) → **Explanation**
+- First-run experience changes → **Tutorial**
+- Docs-only PRs that already match the change → no further edits
+
+## Style
+
+- Prefer clear, unambiguous language; one job per page
+- Do not invent features or UUIDs not present in the code
+- Keep MkDocs links valid (`mkdocs build --strict` must pass)
+- Example file links should point at GitHub `blob` URLs, not `../../examples/...`
+- Axis diagrams live under `docs/assets/`
+
+## Published site
+
+Configured by `mkdocs.yml` (Material). GitHub Pages workflow: `.github/workflows/docs.yml`.
