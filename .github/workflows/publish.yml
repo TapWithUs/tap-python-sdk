@@ -1,12 +1,31 @@
 name: Publish to PyPI
 
+# Releasing
+# ---------
+# 1. Bump `__version__` in tapsdk/__version__.py.
+#    Optionally pre-write the matching section in docs/release-notes.md
+#    (if omitted, this workflow inserts one from PRs merged into master).
+# 2. Merge the release commit into master.
+# 3. Create and push an annotated tag matching the package version:
+#
+#      git tag -a v0.7.0 -m "Release 0.7.0"
+#      git push origin v0.7.0
+#
+# This workflow runs lint/tests, ensures release notes, builds the sdist/wheel,
+# and uploads to PyPI via Trusted Publishing. Versioned docs deploy separately
+# in "Deploy docs" after this workflow succeeds (so a docs failure cannot fail
+# the PyPI publish).
+#
+# Maintainers must configure PyPI Trusted Publishing for project tap-python-sdk,
+# repository TapWithUs/tap-python-sdk, and a GitHub `pypi` environment.
+
 on:
   push:
     tags:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -17,9 +36,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -38,11 +57,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Validate tag version matches package version
         run: |
           TAG="${GITHUB_REF_NAME#v}"
@@ -52,16 +75,27 @@ jobs:
             exit 1
           fi
           echo "Version validated: $PACKAGE_VERSION"
+
+      - name: Ensure release notes section
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: python scripts/update_release_notes_from_prs.py
+
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
+
       - name: Build package
         run: python -m build
+
       - name: Check package metadata
         run: |
           pip install twine
           twine check dist/*
+
       # Import package/version only — avoid TapSDK/bleak, which needs bluetoothctl on Linux.
       - name: Smoke test built wheel
         run: |
@@ -69,11 +103,35 @@ jobs:
           /tmp/wheel-venv/bin/pip install --upgrade pip
           /tmp/wheel-venv/bin/pip install dist/*.whl
           /tmp/wheel-venv/bin/python -c "import tapsdk; from tapsdk.__version__ import __version__; print(__version__)"
+
       - name: Smoke test built sdist
         run: |
           python -m venv /tmp/sdist-venv
           /tmp/sdist-venv/bin/pip install --upgrade pip
           /tmp/sdist-venv/bin/pip install dist/*.tar.gz
           /tmp/sdist-venv/bin/python -c "import tapsdk; from tapsdk.__version__ import __version__; print(__version__)"
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Commit release notes to master if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/release-notes.md; then
+            echo "No release notes changes to commit"
+            exit 0
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          cp docs/release-notes.md /tmp/release-notes.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin master
+          git checkout -B _release_notes origin/master
+          cp /tmp/release-notes.md docs/release-notes.md
+          git add docs/release-notes.md
+          if git diff --cached --quiet; then
+            echo "master already has the updated release notes"
+            exit 0
+          fi
+          git commit -m "docs: add release notes for ${VERSION}"
+          git push origin HEAD:master

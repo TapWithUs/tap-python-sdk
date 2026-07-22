@@ -8,7 +8,7 @@ BLE SDK for building Python apps that connect to **Tap Strap** and **TapXR**, se
 
 ### Documentation
 
-Published docs (MkDocs Material): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
+Published docs (MkDocs Material, versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
 
 Pick the path that matches your goal:
 
@@ -18,6 +18,7 @@ Pick the path that matches your goal:
 | Solve a specific task | [How-to guides](docs/how-to/index.md) |
 | Look up APIs and types | [Reference](docs/reference/index.md) |
 | Understand modes and sensors | [Explanation](docs/explanation/index.md) |
+| Read the changelog | [Release notes](docs/release-notes.md) |
 
 Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requirements-docs.txt && mkdocs serve`.
 
@@ -56,7 +57,11 @@ Pair the Tap with the OS first. Update firmware with Tap Manager. More complete 
 
 ### Migrating from 0.6.x
 
-Breaking API changes are listed in [Migrate from 0.6](docs/how-to/migrate-from-0.6.md) and [History.md](History.md).
+Breaking API changes are listed in [Migrate from 0.6](docs/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
+
+### Releasing
+
+PyPI releases publish on annotated `v*` tags. Docs deploy separately after a successful publish. See the header comments in [`.github/workflows/publish.yml`](.github/workflows/publish.yml).
 
 ### Testing
 

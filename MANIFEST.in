@@ -1,6 +1,6 @@
-include History.md
 include LICENSE
 include Readme.md
+include docs/release-notes.md
 
 recursive-include tests *
 recursive-exclude * __pycache__
