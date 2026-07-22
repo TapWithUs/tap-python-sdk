@@ -90,14 +90,14 @@ jobs:
           curl https://cursor.com/install -fsS | bash
           echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
 
-      - name: Verify Diátaxis docs
+      - name: Verify docs
         if: steps.cursor_key.outputs.present == 'true'
         id: verify
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
         run: |
           set -euo pipefail
-          agent -p --mode ask --output-format text \
+          agent -p --mode ask --trust --output-format text \
             "You are verifying documentation for TapWithUs/tap-python-sdk PR #${{ steps.pr.outputs.number }}.
 
              Context:

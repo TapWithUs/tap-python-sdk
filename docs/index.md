@@ -1,6 +1,6 @@
 # Tap Python SDK documentation
 
-This documentation follows the [Diátaxis](https://diataxis.fr/) structure. Pick the section that matches what you need:
+Pick the section that matches what you need:
 
 | Goal | Section |
 |------|---------|
