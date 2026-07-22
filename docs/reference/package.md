@@ -11,6 +11,7 @@
 | `InputModeRaw` | Class |
 | `InputType` | Enum |
 | `AirGestures` | Enum |
+| `DeviceInfo` | Dataclass (lazy import from `tapsdk.tap`) |
 
 Version string: `tapsdk.__version__`.
 

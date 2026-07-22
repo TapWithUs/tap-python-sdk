@@ -58,6 +58,31 @@ Send haptic on/off periods.
 | `sequence` | List of integers (ms). Each value is clamped to 0–2550 and stored as `value // 10`. Max length 18. |
 | `identifier` | Reserved; currently unused |
 
+### `async get_device_info() -> DeviceInfo`
+
+Read public device information. Requires a bonded connection (DIS/BAS characteristics are encrypted on Tap firmware). Missing characteristics yield `None` for that field.
+
+Returns a `DeviceInfo` dataclass:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Device name |
+| `fw_version` | Firmware revision |
+| `fw_version2` | Secondary firmware version (`None` if absent) |
+| `model_version` | Model version as hex (e.g. `0x2A`; `None` if absent) |
+| `hardware_revision` | Hardware revision |
+| `serial_number` | Serial number |
+| `manufacturer` | Manufacturer name |
+| `software_revision` | Bootloader revision on Tap |
+| `battery_level` | 0–100 |
+
+```python
+from tapsdk import DeviceInfo
+
+info = await tap_device.get_device_info()
+print(info.name, info.fw_version, info.model_version, info.battery_level)
+```
+
 ## Event registration
 
 All `register_*` methods are synchronous. Pass a callable; pass `None` is not required to clear (re-assign by registering again). See [Events](events.md).
