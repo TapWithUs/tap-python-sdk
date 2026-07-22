@@ -1,3 +1,9 @@
+"""Tap Strap / TapXR Python BLE SDK.
+
+Public exports: ``TapSDK``, input-mode classes, ``InputType``, and ``AirGestures``.
+See the ``docs/`` directory for tutorials, how-to guides, reference, and explanation.
+"""
+
 from tapsdk.enumerations import InputType, AirGestures  # noqa: F401
 from tapsdk.inputmodes import InputModeRaw, InputModeController, InputModeText, InputModeControllerText  # noqa: F401
 

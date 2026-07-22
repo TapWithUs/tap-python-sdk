@@ -276,7 +276,21 @@ def _format_model_version_hex(value: Optional[str]) -> Optional[str]:
 
 
 class TapSDK():
+    """High-level async API for one Tap Strap / TapXR over BLE.
+
+    Register event callbacks, then ``await run()`` to connect and subscribe to
+    notifications. Issue commands with ``set_input_mode``, ``set_input_type``,
+    and ``send_vibration_sequence``.
+    """
+
     def __init__(self, **kwargs):
+        """Create an SDK instance.
+
+        Args:
+            address: Optional BLE address or platform device id. On Linux, if
+                omitted, a connected device whose name starts with ``Tap`` is
+                selected.
+        """
         self.client = TapClient(address=kwargs.get("address"))
         self.mouse_event_cb = None
         self.tap_event_cb = None
@@ -295,24 +309,31 @@ class TapSDK():
         return is_connected() if callable(is_connected) else is_connected
 
     def register_tap_events(self, cb: Callable):
+        """Register ``cb(identifier, tapcode)`` for tap events."""
         self.tap_event_cb = cb
 
     def register_mouse_events(self, cb: Callable):
+        """Register ``cb(identifier, vx, vy, proximity)`` for mouse motion."""
         self.mouse_event_cb = cb
 
     def register_air_gesture_events(self, cb: Callable):
+        """Register ``cb(identifier, gesture)`` for air-gesture codes."""
         self.air_gesture_event_cb = cb
 
     def register_air_gesture_state_events(self, cb: Callable):
+        """Register ``cb(identifier, mouse_mode)`` for mouse-mode changes."""
         self.air_gesture_state_event_cb = cb
 
     def register_raw_data_events(self, cb: Callable):
+        """Register ``cb(identifier, packets)`` for raw sensor batches."""
         self.raw_data_event_cb = cb
 
     def register_connection_events(self, cb: Callable):
+        """Register ``cb(tap_sdk)`` called after notifications are started."""
         self.connection_cb = cb
 
     def register_disconnection_events(self, cb: Callable):
+        """Register Bleak's disconnected callback ``cb(client)``."""
         self.client.set_disconnected_callback(cb)
 
     def on_moused(self, identifier, data):
@@ -398,6 +419,13 @@ class TapSDK():
         )
 
     async def send_vibration_sequence(self, sequence, identifier=None):
+        """Send a haptic on/off sequence.
+
+        Args:
+            sequence: Periods in milliseconds (10–2550, 10 ms steps). Alternating
+                on/off durations. At most 18 values; longer lists are truncated.
+            identifier: Reserved for multi-device use; currently unused.
+        """
         if len(sequence) > 18:
             sequence = sequence[:18]
         for i, d in enumerate(sequence):
@@ -407,6 +435,12 @@ class TapSDK():
         await self.client.write_gatt_char(ui_cmd_characteristic, write_value)
 
     async def set_input_mode(self, input_mode: InputMode, identifier=None):
+        """Set Text, Controller, Controller+Text, or Raw input mode.
+
+        Args:
+            input_mode: An ``InputMode`` instance from ``tapsdk``.
+            identifier: Reserved for multi-device use; currently unused.
+        """
         if (isinstance(input_mode, InputModeRaw) and isinstance(self.input_mode, InputModeRaw) and
            self.input_mode.get_command() != input_mode.get_command()):
             logger.warning("Can't change \"raw\" sensitivities while in \"raw\"")
@@ -421,6 +455,12 @@ class TapSDK():
         await self._write_input_mode(write_value)
 
     async def set_input_type(self, input_type: InputType, identifier=None):
+        """Force Spatial Control input type on TapXR (experimental firmware).
+
+        Args:
+            input_type: ``InputType.MOUSE``, ``KEYBOARD``, or ``AUTO``.
+            identifier: Reserved for multi-device use; currently unused.
+        """
         assert isinstance(input_type, InputType), "input_type must be of type InputType"
         self.input_type = input_type
         write_value = input_type_command(self.input_type)
@@ -440,6 +480,13 @@ class TapSDK():
         await self.client.write_gatt_char(tap_mode_characteristic, value)
 
     async def run(self):
+        """Connect to a Tap and start GATT notifications.
+
+        Attaches to an already-connected device when possible; otherwise scans
+        (and on Windows polls for paired reconnects). Invokes the connection
+        callback when notifications are armed. Returns after setup — keep the
+        asyncio event loop alive to continue receiving events.
+        """
         stop_event = asyncio.Event()
         devices = []
         connected = False
