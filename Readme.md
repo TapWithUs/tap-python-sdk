@@ -59,9 +59,29 @@ Pair the Tap with the OS first. Update firmware with Tap Manager. More complete 
 
 Breaking API changes are listed in [Migrate from 0.6](docs/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
 
+### Contributing
+
+Every pull request should add a user-facing entry under the **Unreleased**
+heading in [Release notes](docs/release-notes.md). PRs with no user-facing change
+(CI, refactors, typo fixes) can skip this by adding the `skip-changelog` label.
+
 ### Releasing
 
-PyPI releases publish on annotated `v*` tags. Docs deploy separately after a successful publish. See the header comments in [`.github/workflows/publish.yml`](.github/workflows/publish.yml).
+Releases use a prep-commit-then-tag flow so the tag, PyPI artifact, and docs all
+match:
+
+```bash
+python scripts/prepare_release.py X.Y.Z   # bumps version, cuts Unreleased -> X.Y.Z
+git add tapsdk/__version__.py docs/release-notes.md
+git commit -m "Release X.Y.Z"
+git tag -a vX.Y.Z -m "Release X.Y.Z"
+git push origin HEAD vX.Y.Z
+```
+
+Pushing the tag runs [`.github/workflows/publish.yml`](.github/workflows/publish.yml),
+which re-runs tests, verifies the version and release notes, and publishes to
+PyPI. Versioned docs deploy separately after a successful publish. See the header
+comments in that workflow for details.
 
 ### Testing
 

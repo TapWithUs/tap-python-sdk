@@ -1,20 +1,22 @@
 name: Publish to PyPI
 
-# Releasing
-# ---------
-# 1. Bump `__version__` in tapsdk/__version__.py.
-#    Optionally pre-write the matching section in docs/release-notes.md
-#    (if omitted, this workflow inserts one from PRs merged into master).
-# 2. Merge the release commit into master.
-# 3. Create and push an annotated tag matching the package version:
+# Releasing (prep-commit-then-tag; this pipeline only verifies, never mutates)
+# ---------------------------------------------------------------------------
+# 1. Land PRs on master. Each PR adds its entry under "## Unreleased" in
+#    docs/release-notes.md (enforced by the Changelog workflow).
+# 2. Cut the release locally:
 #
-#      git tag -a v0.7.0 -m "Release 0.7.0"
-#      git push origin v0.7.0
+#      python scripts/prepare_release.py X.Y.Z
+#      # review the diff, then:
+#      git add tapsdk/__version__.py docs/release-notes.md
+#      git commit -m "Release X.Y.Z"
+#      git tag -a vX.Y.Z -m "Release X.Y.Z"
+#      git push origin HEAD vX.Y.Z
 #
-# This workflow runs lint/tests, ensures release notes, builds the sdist/wheel,
-# and uploads to PyPI via Trusted Publishing. Versioned docs deploy separately
-# in "Deploy docs" after this workflow succeeds (so a docs failure cannot fail
-# the PyPI publish).
+# This workflow re-runs the reusable test matrix on the tagged commit, verifies
+# the tag matches tapsdk.__version__ and that release notes were prepared, then
+# builds and uploads to PyPI via Trusted Publishing. Versioned docs deploy
+# separately in "Deploy docs" after this workflow succeeds.
 #
 # Maintainers must configure PyPI Trusted Publishing for project tap-python-sdk,
 # repository TapWithUs/tap-python-sdk, and a GitHub `pypi` environment.
@@ -25,32 +27,12 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11"]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-      - name: Lint with flake8
-        run: |
-          pip install flake8
-          flake8 examples tapsdk tests
-      - name: Run tests
-        run: pytest -v
+    uses: ./.github/workflows/tests.yml
 
   publish:
     needs: test
@@ -76,12 +58,33 @@ jobs:
           fi
           echo "Version validated: $PACKAGE_VERSION"
 
-      - name: Ensure release notes section
+      - name: Verify release notes were prepared
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: python scripts/update_release_notes_from_prs.py
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          FILE="docs/release-notes.md"
+          VER="${VERSION#v}"
+
+          if ! grep -qE "^## ${VER//./\\.} \(" "$FILE"; then
+            echo "::error file=${FILE}::No '## ${VER} (<date>)' section found. Run scripts/prepare_release.py ${VER} before tagging."
+            exit 1
+          fi
+
+          # The Unreleased section must be empty (entries moved into the version).
+          UNRELEASED_BULLETS=$(awk '
+            /^## / {
+              in_block = ($0 ~ /^## Unreleased([[:space:]]|$)/) ? 1 : 0
+              next
+            }
+            in_block && /^[[:space:]]*[*-][[:space:]]+/ { n++ }
+            END { print n + 0 }
+          ' "$FILE")
+          if [ "$UNRELEASED_BULLETS" -ne 0 ]; then
+            echo "::error file=${FILE}::'## Unreleased' still has ${UNRELEASED_BULLETS} entrie(s); run scripts/prepare_release.py to move them into ${VER}."
+            exit 1
+          fi
+          echo "Release notes verified for ${VER}."
 
       - name: Install build dependencies
         run: |
@@ -113,25 +116,3 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
-      - name: Commit release notes to master if changed
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- docs/release-notes.md; then
-            echo "No release notes changes to commit"
-            exit 0
-          fi
-          VERSION="${GITHUB_REF_NAME#v}"
-          cp docs/release-notes.md /tmp/release-notes.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin master
-          git checkout -B _release_notes origin/master
-          cp /tmp/release-notes.md docs/release-notes.md
-          git add docs/release-notes.md
-          if git diff --cached --quiet; then
-            echo "master already has the updated release notes"
-            exit 0
-          fi
-          git commit -m "docs: add release notes for ${VERSION}"
-          git push origin HEAD:master

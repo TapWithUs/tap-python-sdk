@@ -2,6 +2,16 @@
 
 Changelog for published `tap-python-sdk` releases on PyPI.
 
+Add user-facing changes for the next release under **Unreleased** in your pull
+request. At release time `scripts/prepare_release.py` renames this section to the
+new version and opens a fresh empty one.
+
+## Unreleased
+______________________
+### Main features
+
+### Bug fixes
+
 ## 0.7.0 (2026-06-09)
 ______________________
 ### Main features

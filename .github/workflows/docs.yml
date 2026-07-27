@@ -69,10 +69,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout master (includes post-publish release notes)
+      - name: Checkout the tagged release commit
         uses: actions/checkout@v4
         with:
-          ref: master
+          # workflow_run: the commit Publish ran on (the tagged release commit).
+          # workflow_dispatch: the vX.Y.Z tag for the requested version.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || format('v{0}', inputs.version) }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
