@@ -10,6 +10,10 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* Versioned docs site (mike) deployed after successful PyPI publish, with a release notes page derived from `docs/release-notes.md` (#47) (#48)
+* Prep-commit-then-tag release flow: author-written `Unreleased` entries, `scripts/prepare_release.py`, and a verify-only publish pipeline (#47) (#48)
+* Shared reusable test workflow used by CI and Publish (#39) (#48)
+
 ### Bug fixes
 
 ## 0.7.0 (2026-06-09)
