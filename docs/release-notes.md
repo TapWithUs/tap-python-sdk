@@ -1,21 +1,20 @@
-# History
+# Release notes
 
-## Releasing
+Changelog for published `tap-python-sdk` releases on PyPI.
 
-PyPI releases are published automatically when a version tag is pushed to GitHub.
+Add user-facing changes for the next release under **Unreleased** in your pull
+request. At release time `scripts/prepare_release.py` renames this section to the
+new version and opens a fresh empty one.
 
-1. Bump `__version__` in `tapsdk/__version__.py` and update this file.
-2. Merge the release changes into `develop`, then into `master` as needed.
-3. Create and push an annotated tag whose name matches the package version (for example `v0.7.0`):
+## Unreleased
+______________________
+### Main features
 
-   ```bash
-   git tag -a v0.7.0 -m "Release 0.7.0"
-   git push origin v0.7.0
-   ```
+* Versioned docs site (mike) deployed after successful PyPI publish, with a release notes page derived from `docs/release-notes.md` (#47) (#48)
+* Prep-commit-then-tag release flow: author-written `Unreleased` entries, `scripts/prepare_release.py`, and a verify-only publish pipeline (#47) (#48)
+* Shared reusable test workflow used by CI and Publish (#39) (#48)
 
-The `Publish to PyPI` workflow runs the same lint and test matrix as CI, verifies that the tag (without the `v` prefix) matches `tapsdk.__version__`, builds the package with `python -m build`, and uploads it to PyPI using Trusted Publishing.
-
-Maintainers must configure PyPI Trusted Publishing for the `tap-python-sdk` project name, the `TapWithUs/tap-python-sdk` repository, and a GitHub `pypi` environment before the first automated release.
+### Bug fixes
 
 ## 0.7.0 (2026-06-09)
 ______________________
@@ -84,4 +83,3 @@ ______________________
 ### Main features
 
 * SDK created.
-

@@ -8,6 +8,7 @@ Pick the section that matches what you need:
 | Solve a specific task | [How-to guides](how-to/index.md) |
 | Look up an API, type, or event | [Reference](reference/index.md) |
 | Understand how modes and sensors work | [Explanation](explanation/index.md) |
+| Read the changelog for a PyPI release | [Release notes](release-notes.md) |
 
 ## Package
 
