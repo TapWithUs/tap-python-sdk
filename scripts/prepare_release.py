@@ -5,9 +5,10 @@ This keeps the release pipeline read-only. Run it locally, review the diff,
 then commit and tag the result (the script prints the exact commands).
 
 What it does:
-  1. Sets tapsdk/__version__.py to X.Y.Z.
-  2. Renames the "## Unreleased" section in docs/release-notes.md to
-     "## X.Y.Z (YYYY-MM-DD)" and inserts a fresh, empty "## Unreleased".
+  1. Validates the Unreleased section and builds the cut changelog in memory.
+  2. Sets tapsdk/__version__.py to X.Y.Z.
+  3. Writes docs/release-notes.md with Unreleased renamed to
+     "## X.Y.Z (YYYY-MM-DD)" and a fresh empty "## Unreleased".
 
 It refuses to run if the current Unreleased section has no bullet entries.
 
@@ -75,7 +76,8 @@ def bump_version(version: str) -> None:
     print(f"Set {VERSION_FILE.relative_to(ROOT)} to {version}")
 
 
-def cut_changelog(version: str, release_date: str) -> None:
+def prepare_changelog(version: str, release_date: str) -> str:
+    """Validate and return the updated release-notes text (does not write)."""
     text = RELEASE_NOTES.read_text(encoding="utf-8")
 
     if re.search(rf"^## {re.escape(version)}(?:\s|\(|$)", text, re.MULTILINE):
@@ -93,17 +95,12 @@ def cut_changelog(version: str, release_date: str) -> None:
     versioned = [f"## {version} ({release_date})\n"] + block[1:]
     released_block = "".join(versioned).rstrip("\n") + "\n"
 
-    new_text = (
+    return (
         before
         + EMPTY_UNRELEASED
         + "\n"
         + released_block
         + ("\n" + after.lstrip("\n") if after.strip() else "")
-    )
-    RELEASE_NOTES.write_text(new_text, encoding="utf-8")
-    print(
-        f"Renamed Unreleased -> {version} ({release_date}) in "
-        f"{RELEASE_NOTES.relative_to(ROOT)} and opened a fresh Unreleased section"
     )
 
 
@@ -121,8 +118,15 @@ def main(argv: list[str] | None = None) -> int:
     if not VERSION_RE.match(version):
         fail(f"invalid version {args.version!r}; expected X.Y.Z")
 
+    # Validate and build the new changelog before writing anything, so a failed
+    # check cannot leave __version__.py bumped with notes uncut.
+    new_notes = prepare_changelog(version, args.date)
     bump_version(version)
-    cut_changelog(version, args.date)
+    RELEASE_NOTES.write_text(new_notes, encoding="utf-8")
+    print(
+        f"Renamed Unreleased -> {version} ({args.date}) in "
+        f"{RELEASE_NOTES.relative_to(ROOT)} and opened a fresh Unreleased section"
+    )
 
     tag = f"v{version}"
     print()
