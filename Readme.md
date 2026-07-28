@@ -1,4 +1,4 @@
-## TapStrap Python SDK (beta)
+## Tap Python SDK (beta)
 
 [![PyPI version](https://img.shields.io/pypi/v/tap-python-sdk.svg)](https://pypi.org/project/tap-python-sdk/)
 
