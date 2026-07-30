@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class MouseModes(Enum):
+    """Mouse / air-mouse state reported by air-gesture state events."""
+
     STDBY = 0
     AIR_MOUSE = 1
     OPTICAL1 = 2
@@ -9,12 +11,16 @@ class MouseModes(Enum):
 
 
 class InputType(Enum):
+    """Spatial Control input modality (TapXR experimental firmware)."""
+
     MOUSE = 1
     KEYBOARD = 2
     AUTO = 3
 
 
 class AirGestures(Enum):
+    """Air-gesture and spatial-state codes from gesture notifications."""
+
     NONE = 0
     GENERAL = 1
     UP_ONE_FINGER = 2
@@ -37,6 +43,8 @@ class AirGestures(Enum):
 
 
 class FingerAcclSensitivity(Enum):
+    """Dynamic range for per-finger accelerometers in raw mode."""
+
     G2 = 1
     G4 = 2
     G8 = 3
@@ -44,6 +52,8 @@ class FingerAcclSensitivity(Enum):
 
 
 class ImuGyroSensitivity(Enum):
+    """Dynamic range for the thumb IMU gyroscope in raw mode."""
+
     DPS125 = 1
     DPS250 = 2
     DPS500 = 3
@@ -52,6 +62,8 @@ class ImuGyroSensitivity(Enum):
 
 
 class ImuAcclSensitivity(Enum):
+    """Dynamic range for the thumb IMU accelerometer in raw mode."""
+
     G2 = 1
     G4 = 2
     G8 = 3

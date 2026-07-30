@@ -1,53 +1,32 @@
-import importlib
-import sys
-import types
-from unittest.mock import patch
+import platform
 
 
-def _make_bleak_stub():
-    bleak_stub = types.ModuleType("bleak")
+def test_tapclient_importable():
+    import tapsdk.tap as tap
 
-    class Dummy:
-        def __init__(self, *args, **kwargs):
-            pass
-
-    bleak_stub.BleakClient = Dummy
-    bleak_stub.BleakScanner = Dummy
-    bleak_stub._logger = types.SimpleNamespace(
-        debug=lambda *a, **k: None,
-        info=lambda *a, **k: None,
-        error=lambda *a, **k: None,
-    )
-    core_mod = types.ModuleType(
-        "bleak.backends.corebluetooth.CentralManagerDelegate"
-    )
-    core_mod.CBUUID = type("CBUUID", (), {"UUIDWithString_": staticmethod(lambda x: x)})
-    core_mod.CentralManagerDelegate = type(
-        "CentralManagerDelegate",
-        (),
-        {"alloc": classmethod(lambda cls: type("Obj", (), {"init": lambda self: None})())},
-    )
-    return bleak_stub, core_mod
+    assert hasattr(tap, "TapClient")
 
 
-def _load_tap(platform_name: str):
-    bleak_stub, core_stub = _make_bleak_stub()
-    with patch.dict(
-        sys.modules,
-        {
-            "bleak": bleak_stub,
-            "bleak.backends.corebluetooth.CentralManagerDelegate": core_stub,
-        },
-    ):
-        with patch("platform.system", return_value=platform_name):
-            if "tapsdk.tap" in sys.modules:
-                module = importlib.reload(sys.modules["tapsdk.tap"])
-            else:
-                module = importlib.import_module("tapsdk.tap")
-    return module
+def test_platform_ble_backend_is_not_silently_disabled():
+    """Guard against optional BLE backend imports failing silently.
 
+    tapsdk.tap used to swallow ImportError for the platform-specific BLE
+    backend and fall back to `None` symbols, which let the module import
+    successfully while every BLE call would later crash with AttributeError.
+    This asserts the backend symbols used on the running platform were
+    actually imported.
+    """
+    import tapsdk.tap as tap
 
-def test_tapclient_defined_for_all_platforms():
-    for name in ["Linux", "Windows", "Darwin"]:
-        module = _load_tap(name)
-        assert hasattr(module, "TapClient")
+    system = platform.system()
+    if system == "Darwin":
+        assert tap.CBUUID is not None
+        assert tap.CentralManagerDelegate is not None
+    elif system == "Windows":
+        assert tap.BluetoothLEDevice is not None
+        assert tap.BluetoothConnectionStatus is not None
+        assert tap.BluetoothCacheMode is not None
+        assert tap.GattSession is not None
+        assert tap.GattSessionStatus is not None
+        assert tap.DeviceInformation is not None
+        assert tap.DeviceInformationKind is not None

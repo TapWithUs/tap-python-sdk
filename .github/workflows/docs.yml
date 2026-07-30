@@ -1,0 +1,137 @@
+name: Deploy docs
+
+# PR / path changes: build-only (mkdocs --strict).
+# Versioned deploy (mike → gh-pages) runs after a successful "Publish to PyPI"
+# workflow, or via workflow_dispatch for manual recovery.
+#
+# One-time repo setting: Pages source = Deploy from a branch → gh-pages / (root).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "requirements-docs.txt"
+      - ".github/workflows/docs.yml"
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Docs version to deploy (e.g. 0.7.0, without v prefix)"
+        required: true
+        type: string
+      update_latest:
+        description: "Also update the latest alias and set it as default"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache MkDocs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache
+          key: mkdocs-material-${{ hashFiles('requirements-docs.txt') }}
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install docs dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Build site
+        run: mkdocs build --strict --clean
+
+  deploy:
+    if: >
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout the tagged release commit
+        uses: actions/checkout@v4
+        with:
+          # workflow_run: the commit Publish ran on (the tagged release commit).
+          # workflow_dispatch: the vX.Y.Z tag for the requested version.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || format('v{0}', inputs.version) }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Resolve version
+        id: ver
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_VERSION: ${{ inputs.version }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          UPDATE_LATEST_INPUT: ${{ inputs.update_latest }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="${DISPATCH_VERSION#v}"
+            UPDATE_LATEST="${UPDATE_LATEST_INPUT:-true}"
+          else
+            git fetch --tags origin
+            VERSION=""
+            if [[ "${HEAD_BRANCH:-}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              VERSION="${HEAD_BRANCH#v}"
+            elif [ -n "${HEAD_SHA:-}" ]; then
+              TAG=$(git tag --points-at "$HEAD_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)
+              if [ -n "$TAG" ]; then
+                VERSION="${TAG#v}"
+              fi
+            fi
+            if [ -z "$VERSION" ]; then
+              echo "Could not resolve release version from workflow_run (branch=$HEAD_BRANCH sha=$HEAD_SHA)"
+              exit 1
+            fi
+            UPDATE_LATEST=true
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "update_latest=$UPDATE_LATEST" >> "$GITHUB_OUTPUT"
+          echo "Deploying docs version $VERSION (update_latest=$UPDATE_LATEST)"
+
+      - name: Configure git for mike
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Deploy with mike
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          UPDATE_LATEST: ${{ steps.ver.outputs.update_latest }}
+        run: |
+          set -euo pipefail
+          if [ "$UPDATE_LATEST" = "true" ]; then
+            mike deploy --push --update-aliases "$VERSION" latest
+            mike set-default --push latest
+          else
+            mike deploy --push "$VERSION"
+          fi

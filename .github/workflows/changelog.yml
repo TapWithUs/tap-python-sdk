@@ -1,0 +1,62 @@
+name: Changelog
+
+# Every PR must add a user-facing entry under the "## Unreleased" section of
+# docs/release-notes.md. Trivial PRs (CI, refactors, typo fixes) can bypass this
+# by adding the "skip-changelog" label.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Require a new Unreleased entry
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          FILE="docs/release-notes.md"
+          git fetch origin "$BASE_REF" --depth=1
+
+          count_unreleased_bullets() {
+            # Reads a file on stdin, prints the number of bullet lines that live
+            # under the first "## Unreleased" heading (until the next "## ").
+            awk '
+              /^## / {
+                in_block = ($0 ~ /^## Unreleased([[:space:]]|$)/) ? 1 : 0
+                next
+              }
+              in_block && /^[[:space:]]*[*-][[:space:]]+/ { n++ }
+              END { print n + 0 }
+            '
+          }
+
+          HEAD_BULLETS=$(count_unreleased_bullets < "$FILE")
+          if git show "origin/${BASE_REF}:${FILE}" > /tmp/base-release-notes.md 2>/dev/null; then
+            BASE_BULLETS=$(count_unreleased_bullets < /tmp/base-release-notes.md)
+          else
+            BASE_BULLETS=0
+          fi
+
+          echo "Unreleased bullets: base=${BASE_BULLETS} head=${HEAD_BULLETS}"
+
+          if [ "$HEAD_BULLETS" -le "$BASE_BULLETS" ]; then
+            echo "::error file=${FILE}::Add a bullet under the '## Unreleased' section in ${FILE}, or label this PR 'skip-changelog'."
+            exit 1
+          fi
+          echo "Changelog entry found."
