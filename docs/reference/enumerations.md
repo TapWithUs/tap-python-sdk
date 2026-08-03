@@ -1,6 +1,6 @@
 # Enumerations
 
-All live in `tapsdk.enumerations`. `InputType`, `AirGestures`, `DeviceFeatures`, `UnifiedAirGestures`, `VisionSensorOpModes`, and `ModelTypes` are also re-exported from `tapsdk`.
+All live in `tapsdk.enumerations`. `InputType`, `AirGestures`, `ImuAcclSensitivity`, `DeviceFeatures`, `UnifiedAirGestures`, `VisionSensorOpModes`, and `ModelTypes` are also re-exported from `tapsdk`.
 
 ## `InputType`
 

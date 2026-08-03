@@ -13,6 +13,7 @@
 | `InputModeRaw` | Class |
 | `InputType` | Enum |
 | `AirGestures` | Enum |
+| `ImuAcclSensitivity` | Enum |
 | `DeviceFeatures` | Enum |
 | `UnifiedAirGestures` | Enum |
 | `VisionSensorOpModes` | Enum |

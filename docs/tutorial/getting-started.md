@@ -66,10 +66,14 @@ python hello_tap.py
 3. When you see `Connected: …`, tap with one or more fingers. You should see lines like:
 
 ```text
+# v1 (TapSDK) — tapcode is an int
 XX:XX:XX:XX:XX:XX tapped 5
+
+# v2 (TapSDK2) — tapcode is a one-element list
+b'SERIAL…' tapped [5]
 ```
 
-`tapcode` is a bitmask of fingers (bit 0 = thumb … bit 4 = pinky). `5` means thumb + middle.
+On both protocols the value is a finger bitmask (bit 0 = thumb … bit 4 = pinky); `5` / `[5]` means thumb + middle. On **v1**, `tapcode` is an `int`; on **v2**, it is `[tapcode]` (see [Events](../reference/events.md)).
 
 On a **v1** device, enable Controller (or Controller+Text) so taps reach the SDK instead of only the OS keyboard. See [Switch input modes](../how-to/switch-input-modes.md). On **v2**, tap events arrive through the framed protocol without `set_input_mode`.
 

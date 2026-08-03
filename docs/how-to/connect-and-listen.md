@@ -23,6 +23,9 @@ retrieve / scan / reconnect-poller path as before), detects v1 vs v2 from GATT
 characteristics, and returns `TapSDK` or `TapSDK2`. It does **not** start
 notifications — register callbacks, then `await sdk.start()`.
 
+Tap callback shape differs by protocol: v1 passes `tapcode` as an `int`; v2
+passes a one-element list (`[tapcode]`). Same finger bitmask either way.
+
 Register `connection` callbacks before `start()` so they fire. Event callbacks
 may also be added after `start()` for later events.
 
@@ -79,6 +82,7 @@ Tap and mouse events are only delivered when the device is in a controller-capab
 ```python
 from tapsdk import DeviceFeatures, UnifiedAirGestures
 
+# tapcode is [int], e.g. [5] for thumb + middle — not a bare int
 sdk.register_tap_events(lambda id, tapcode: print("tap", id, tapcode))
 sdk.register_air_gesture_events(
     lambda id, data: print("gesture", UnifiedAirGestures(int(data[0])))
@@ -97,6 +101,7 @@ await sdk.set_feature(DeviceFeatures.IMU_MOTION_DATA, True)
 ```
 
 v2 has no `set_input_mode` — toggle streams with `DeviceFeatures`. Full walkthrough: [Use v2 features](use-v2-features.md).
+
 ## Keep the process alive
 
 `start()` / `run()` return after notifications are set up. Keep the event loop running, for example:
