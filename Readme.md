@@ -34,25 +34,27 @@ Platform notes (BlueZ on Linux, Bleak pins, pairing): [Install the SDK](docs/how
 
 ```python
 import asyncio
-from tapsdk import TapSDK, InputModeController
+from tapsdk import TapSDK2, connect
 
 async def main():
-    tap = TapSDK()
-    tap.register_tap_events(lambda identifier, tapcode: print(identifier, tapcode))
-    await tap.run()
-    await tap.set_input_mode(InputModeController())
+    sdk = await connect()  # auto-detects v1 / v2
+    sdk.register_tap_events(lambda identifier, tapcode: print(identifier, tapcode))
+    await sdk.start()
+    print("Protocol:", "v2" if isinstance(sdk, TapSDK2) else "v1")
     await asyncio.Event().wait()
 
 asyncio.run(main())
 ```
 
-Pair the Tap with the OS first. Update firmware with Tap Manager. More complete flow: [`examples/basic.py`](examples/basic.py).
+Pair the Tap with the OS first. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v1) or `TapSDK2` (v2) from GATT. More: [`examples/connect.py`](examples/connect.py).
 
 ### Features (summary)
 
-- **Modes:** Text, Controller, Controller+Text, Raw sensors
-- **Events:** tap, mouse, air gesture, air-gesture state, raw packets, connect/disconnect
-- **Commands:** set mode, set Spatial Control input type (TapXR), haptic sequences
+- **Protocols:** v1 (`TapSDK`) and v2 framed (`TapSDK2`); `connect()` auto-detects
+- **Modes (v1):** Text, Controller, Controller+Text, Raw sensors
+- **Features (v2):** `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby
+- **Events:** tap, mouse, air gesture, raw / IMU packets, connect/disconnect
+- **Commands:** set mode / features, Spatial Control input type (TapXR), haptic sequences
 - **Spatial Control** (authorized TapXR builds): see [Use Spatial Control](docs/how-to/use-spatial-control.md)
 
 ### Migrating from 0.6.x

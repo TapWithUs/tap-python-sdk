@@ -1,5 +1,8 @@
 # Switch input modes
 
+!!! note "v1 protocol"
+    This guide uses `TapSDK.set_input_mode` (NUS). For v2 framed devices, use [`DeviceFeatures`](use-v2-features.md) instead — there is no Text / Controller mode write.
+
 Input mode controls whether the Tap talks to the OS as a keyboard/mouse, streams events to your app, or both.
 
 ## Choose a mode
@@ -23,7 +26,7 @@ await tap.set_input_mode(InputModeRaw(...))            # raw sensor stream
 | Mode | Use when |
 |------|----------|
 | Text | You want normal Tap typing; your app does not need tap events |
-| Controller | Your app is the sole consumer (games, custom UI) |
+| Controller | Your app is the sole consumer (game, custom UI) |
 | Controller + Text | Users still type while your app also listens |
 | Raw | You need accelerometer / IMU samples |
 

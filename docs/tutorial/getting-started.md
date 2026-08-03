@@ -28,24 +28,24 @@ Create `hello_tap.py`:
 
 ```python
 import asyncio
-from tapsdk import TapSDK, InputModeController
+from tapsdk import TapSDK2, connect
 
 
 def on_tap(identifier, tapcode):
     print(f"{identifier} tapped {tapcode}")
 
 
-def on_connect(sdk):
-    print("Connected to Tap")
+def on_connect(identifier):
+    print("Connected:", identifier)
 
 
 async def main():
-    tap = TapSDK()
-    tap.register_connection_events(on_connect)
-    tap.register_tap_events(on_tap)
+    sdk = await connect()
+    sdk.register_connection_events(on_connect)
+    sdk.register_tap_events(on_tap)
 
-    await tap.run()
-    await tap.set_input_mode(InputModeController())
+    await sdk.start()
+    print("Protocol:", "v2" if isinstance(sdk, TapSDK2) else "v1")
 
     # Keep receiving events
     await asyncio.Event().wait()
@@ -63,7 +63,7 @@ asyncio.run(main())
 python hello_tap.py
 ```
 
-3. When you see `Connected to Tap`, switch to Controller mode is already requested — tap with one or more fingers. You should see lines like:
+3. When you see `Connected: …`, tap with one or more fingers. You should see lines like:
 
 ```text
 XX:XX:XX:XX:XX:XX tapped 5
@@ -71,18 +71,21 @@ XX:XX:XX:XX:XX:XX tapped 5
 
 `tapcode` is a bitmask of fingers (bit 0 = thumb … bit 4 = pinky). `5` means thumb + middle.
 
+On a **v1** device, enable Controller (or Controller+Text) so taps reach the SDK instead of only the OS keyboard. See [Switch input modes](../how-to/switch-input-modes.md). On **v2**, tap events arrive through the framed protocol without `set_input_mode`.
+
 ## 4. What just happened
 
-1. `TapSDK()` creates a BLE client for your platform.
-2. `register_*` attaches callbacks (sync; call these before `run()`).
-3. `await tap.run()` connects to an already-paired Tap, or scans until one appears.
-4. `set_input_mode(InputModeController())` tells the device to send controller events to your app.
+1. `await connect()` attaches to an already-paired Tap (or scans), detects v1 vs v2 from GATT (`c3ff000e`), and returns `TapSDK` or `TapSDK2`. Notifications are **not** started yet.
+2. `register_*` attaches callbacks (sync; register connection callbacks before `start()`).
+3. `await sdk.start()` arms GATT notifications and fires the connection callback.
+4. On v1, `on_connect` receives the SDK instance; on v2, it receives the device serial number (bytes).
 
-In Text mode (the default), the Tap behaves like a normal keyboard/mouse for the OS and does not emit tap events to the SDK.
+In Text mode (v1 default), the Tap behaves like a normal keyboard/mouse for the OS and does not emit tap events to the SDK until you switch to Controller.
 
 ## Next steps
 
 - Switch modes, stream sensors, or send haptics: [How-to guides](../how-to/index.md)
 - Full callback and command signatures: [API reference](../reference/index.md)
 - Why modes and sensors are designed this way: [Explanation](../explanation/index.md)
-- Runnable sample covering more events: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py)
+- Auto-detect sample: [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/connect.py)
+- Explicit v1 sample: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/basic.py)

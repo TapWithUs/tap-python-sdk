@@ -76,12 +76,14 @@ nav:
       - Connect and listen: how-to/connect-and-listen.md
       - Switch input modes: how-to/switch-input-modes.md
       - Stream raw sensors: how-to/stream-raw-sensors.md
+      - Use v2 features: how-to/use-v2-features.md
       - Send haptics: how-to/send-haptics.md
       - Use Spatial Control: how-to/use-spatial-control.md
       - Migrate from 0.6: how-to/migrate-from-0.6.md
   - Reference:
       - Overview: reference/index.md
       - TapSDK: reference/tapsdk.md
+      - TapSDK2: reference/tapsdk2.md
       - Input modes: reference/input-modes.md
       - Enumerations: reference/enumerations.md
       - Events: reference/events.md

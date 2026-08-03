@@ -74,6 +74,29 @@ tap.register_raw_data_events(lambda id, packets: print("raw", packets))
 
 Tap and mouse events are only delivered when the device is in a controller-capable mode. See [Switch input modes](switch-input-modes.md).
 
+## Subscribe to input events (v2)
+
+```python
+from tapsdk import DeviceFeatures, UnifiedAirGestures
+
+sdk.register_tap_events(lambda id, tapcode: print("tap", id, tapcode))
+sdk.register_air_gesture_events(
+    lambda id, data: print("gesture", UnifiedAirGestures(int(data[0])))
+)
+sdk.register_imu_motion_data_events(
+    lambda id, motion: print("motion", motion)
+)
+sdk.register_raw_imu_data_events(lambda id, packets: print("raw imu", packets))
+sdk.register_standby_state_events(
+    lambda id, standby: print("standby" if standby else "active")
+)
+
+await sdk.start()
+await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+await sdk.set_feature(DeviceFeatures.IMU_MOTION_DATA, True)
+```
+
+v2 has no `set_input_mode` — toggle streams with `DeviceFeatures`. Full walkthrough: [Use v2 features](use-v2-features.md).
 ## Keep the process alive
 
 `start()` / `run()` return after notifications are set up. Keep the event loop running, for example:

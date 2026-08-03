@@ -1,29 +1,50 @@
 # TapSDK
 
-Primary entry point. Import with `from tapsdk import TapSDK`.
+v1 protocol entry point. Import with `from tapsdk import TapSDK`, or prefer [`connect()`](#connect) which returns `TapSDK` or [`TapSDK2`](tapsdk2.md).
 
 Construction imports a platform BLE backend (macOS, Windows, or Linux). Creating `TapSDK` on an unsupported platform, or with the wrong Bleak pin, raises `ImportError`.
+
+## `connect`
+
+```python
+from tapsdk import connect
+
+sdk = await connect(address=None, **kwargs)
+```
+
+Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
+
+| Parameter | Description |
+|-----------|-------------|
+| `address` | Optional BLE address / platform device id (same rules as the constructor) |
+| `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
+
+Does **not** start notifications. Register callbacks, then `await sdk.start()`.
 
 ## Constructor
 
 ```python
-TapSDK(address=None)
+TapSDK(client=None, address=None)
 ```
 
 | Parameter | Description |
 |-----------|-------------|
+| `client` | Optional already-connected `TapClient` (from `connect()`) |
 | `address` | Optional BLE address / platform device id. On Linux, if omitted, the SDK picks a connected device whose name starts with `Tap`. |
 
 ## Connection
 
+### `async start()`
+
+Start GATT notifications on an already-connected client (for example after `connect()`). Raises `ConnectionError` if the client is not connected. Invokes the connection callback with `self` when notifications are armed.
+
 ### `async run()`
 
-Connect to a Tap and start GATT notifications for tap, mouse, air-gesture, and raw characteristics.
+Connect to a Tap (via shared `connect_tap()`) if needed, then call `start()`.
 
 - Prefer an already OS-connected / paired device.
 - Otherwise scan until a Tap advertising the Tap service UUID is found.
 - On Windows, also polls for paired devices that reconnect without advertising.
-- Invokes the connection callback when notifications are armed.
 
 Returns when setup finishes; it does not block forever. Keep the asyncio loop alive yourself.
 
@@ -31,7 +52,7 @@ Returns when setup finishes; it does not block forever. Keep the asyncio loop al
 
 ### `async set_input_mode(input_mode, identifier=None)`
 
-Write an [input mode](input-modes.md) command to the device.
+Write an [input mode](input-modes.md) command to the device (NUS RX).
 
 | Parameter | Description |
 |-----------|-------------|
@@ -51,7 +72,7 @@ TapXR Spatial Control only. Force mouse, keyboard, or automatic input selection.
 
 ### `async send_vibration_sequence(sequence, identifier=None)`
 
-Send haptic on/off periods.
+Send haptic on/off periods via the v1 UI characteristic.
 
 | Parameter | Description |
 |-----------|-------------|
