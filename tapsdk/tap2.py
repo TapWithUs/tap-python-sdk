@@ -1,11 +1,10 @@
 import asyncio
 import logging
-import platform
 from typing import Callable
 
-from bleak import BleakClient, BleakScanner
-
 from . import encoder, parsers
+from ._transport import TapClient, client_connected, connect_tap
+from .device_info import DeviceInfo, read_device_info, serial_number_characteristic
 from .enumerations import (
     DeviceFeatures,
     FingerAcclSensitivity,
@@ -20,112 +19,8 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_GET_TIMEOUT_SEC = 2.0
 
-tap_service = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370'
 tap_data_read_characteristic = 'c3ff000e-1d8b-40fd-a56f-c7bd5d0f3370'
 tap_data_write_characteristic = 'c3ff000f-1d8b-40fd-a56f-c7bd5d0f3370'
-serial_number_characteristic = '00002a25-0000-1000-8000-00805f9b34fb'
-
-
-if platform.system() == "Darwin":
-    from bleak.backends.corebluetooth.CentralManagerDelegate import (
-        CBUUID, CentralManagerDelegate)
-
-    def string2uuid(uuid_str: str) -> CBUUID:
-        """Convert a string to a uuid"""
-        return CBUUID.UUIDWithString_(uuid_str)
-
-    class TapClient(BleakClient):
-        def __init__(self, address="", **kwargs):
-            super().__init__(address, **kwargs)
-
-        async def connect_retrieved(self, **kwargs) -> bool:
-            self._central_manager_delegate = CentralManagerDelegate.alloc().init()
-            paired_taps = self.get_paired_taps()
-            if len(paired_taps) == 0:
-                return False
-            self._peripheral = paired_taps[0]
-            logger.debug("Connecting to Tap device @ {}".format(self._peripheral))
-            await self.connect()
-            await self.get_services()
-            return True
-
-        def get_paired_taps(self):
-            paired_taps = self._central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
-                [string2uuid(tap_service)])
-            logger.debug("Found connected Taps @ {}".format(paired_taps))
-            return paired_taps
-
-elif platform.system() == "Windows":
-    class TapClient(BleakClient):
-        def __init__(self, address="", **kwargs):
-            super().__init__(address, **kwargs)
-
-        async def connect_retrieved(self, **kwargs) -> bool:
-            return False
-
-elif platform.system() == "Linux":
-    class TapClient(BleakClient):
-        def __init__(self, address=None, **kwargs):
-            address = address if address else get_mac_addr()
-            super().__init__(address, **kwargs)
-
-        async def connect_retrieved(self, **kwargs) -> bool:
-            await self.connect()
-            connected = self.is_connected()
-            if connected:
-                logger.info("Connected to {0}".format(self.address))
-                await self.__debug()
-            else:
-                logger.error("Failed to connect to {0}".format(self.address))
-            return connected
-
-        async def __debug(self):
-            for service in self.services:
-                logger.info("[service] {}: {}".format(service.uuid, service.description))
-                for char in service.characteristics:
-                    if "read" in char.properties:
-                        try:
-                            value = bytes(await self.read_gatt_char(char.uuid))
-                        except Exception as e:
-                            value = str(e).encode
-                    else:
-                        value = None
-                    logger.info(
-                        "\t[Characteristic] {0}: (Handle: {1}) ({2}) | Name: {3}, Value: {4} ".format(
-                            char.uuid,
-                            "<handle geos here>",
-                            ",".join(char.properties),
-                            char.description,
-                            value,
-                        )
-                    )
-
-    def get_mac_addr() -> str:
-        from subprocess import PIPE, Popen
-        try:
-            with Popen(["bt-device", "--list"], stdout=PIPE, text=True) as btdevice_process:
-                exit_code = btdevice_process.wait()
-                if exit_code:
-                    raise ConnectionError("Failed to find any TAP decive")
-                connected_bt_devices = btdevice_process.stdout.read().splitlines()
-                tap_devices = list(filter(lambda line: line.startswith("Tap"), connected_bt_devices))
-                for d in tap_devices:
-                    logger.info("Found tap device: %s", d)
-                if len(tap_devices) > 1:
-                    logger.info("Found more than 1 Tap device:")
-                    for i, d in enumerate(tap_devices):
-                        logger.info("%s. %s", i + 1, d)
-                    tap_devices = [tap_devices[int(input("Select the device number: ")) - 1]]
-                if len(tap_devices) == 0:
-                    raise ValueError(
-                        "No Tap device was found. Make sure the device is connected and its human readable name "
-                        "starts with Tap.")
-                device_decs = tap_devices[0]
-                tap_mac_address = device_decs[-18:-1]
-                return tap_mac_address
-        except Exception as e:
-            logger.error("Failed to find any TAP device: {}".format(e))
-            raise e
 
 
 class KeepAliveManager:
@@ -156,8 +51,15 @@ class KeepAliveManager:
 
 
 class TapSDK2:
-    def __init__(self, **kwargs):
-        self.client = TapClient(address=kwargs.get("address"))
+    def __init__(self, client=None, address=None, **kwargs):
+        if address is None:
+            address = kwargs.get("address")
+        self._address = address
+        if client is not None:
+            self.client = client
+        else:
+            # Darwin TapClient defaults to ""; Linux treats falsy address as auto-detect.
+            self.client = TapClient(address=address if address is not None else "")
         self._write_lock = asyncio.Lock()
         self.device_serial_number = None
         self._scale_factors = None
@@ -170,6 +72,7 @@ class TapSDK2:
         self.imu_motion_data_cb = None
         self.standby_state_event_cb = None
         self.connection_cb = None
+        self._disconnect_cb = None
 
         self.keep_alive_manager = KeepAliveManager(
             self.send_keepalive_message,
@@ -222,6 +125,7 @@ class TapSDK2:
         self.connection_cb = cb
 
     def register_disconnection_events(self, cb: Callable):
+        self._disconnect_cb = cb
         self.client.set_disconnected_callback(cb)
 
     def on_inc_msg(self, sender, data):
@@ -366,37 +270,33 @@ class TapSDK2:
         )
         return ImuGyroSensitivity(gyro_value), ImuAcclSensitivity(xl_value)
 
+    async def get_device_info(self) -> DeviceInfo:
+        """Read device name, FW versions, battery, and other public device fields.
+
+        Shared with TapSDK — DIS/BAS and Tap proprietary readable chars, not the
+        framed v2 command pipe. Missing characteristics yield None.
+        """
+        return await read_device_info(self.client)
+
+    async def start(self):
+        """Start GATT notifications on an already-connected client."""
+        if not client_connected(self.client):
+            raise ConnectionError("Tap client is not connected; call connect() or run() first")
+        if self._disconnect_cb:
+            self.client.set_disconnected_callback(self._disconnect_cb)
+        await self.client.start_notify(tap_data_read_characteristic, self.on_inc_msg)
+        self.device_serial_number = await self.client.read_gatt_char(
+            serial_number_characteristic,
+        )
+        logger.info(
+            "Device serial number: %s",
+            self.device_serial_number.decode('utf-8'),
+        )
+        await self.keep_alive_manager.start()
+        if self.connection_cb:
+            self.connection_cb(self.device_serial_number)
+
     async def run(self):
-        stop_event = asyncio.Event()
-        devices = []
-
-        async def detection_cb(device, adv_data):
-            logger.debug("detected %s %s", device, adv_data)
-            if tap_service.lower() in adv_data.service_uuids:
-                if device.address not in [d.address for d in devices]:
-                    devices.append(device)
-                    stop_event.set()
-
-        connected = await self.client.connect_retrieved()
-        if not connected:
-            logger.info("Couldn't find connected Tap device. Scanning for Tap devices...")
-            async with BleakScanner(detection_callback=detection_cb):
-                await stop_event.wait()
-
-            self.client = TapClient(devices[0])
-            await self.client.connect()
-            if platform.system() != "Darwin":
-                await self.client.pair()
-
-        if self.client.is_connected:
-            await self.client.start_notify(tap_data_read_characteristic, self.on_inc_msg)
-            self.device_serial_number = await self.client.read_gatt_char(
-                serial_number_characteristic,
-            )
-            logger.info(
-                "Device serial number: %s",
-                self.device_serial_number.decode('utf-8'),
-            )
-            await self.keep_alive_manager.start()
-            if self.connection_cb:
-                self.connection_cb(self.device_serial_number)
+        if not client_connected(self.client):
+            self.client = await connect_tap(address=self._address)
+        await self.start()

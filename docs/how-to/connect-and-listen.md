@@ -1,41 +1,61 @@
 # Connect and listen for events
 
-## Connect
+## Preferred: auto-detect protocol
 
 Pair the Tap with the OS first. Then:
 
 ```python
 import asyncio
-from tapsdk import TapSDK
+from tapsdk import connect
 
 async def main():
-    tap = TapSDK()
-    await tap.run()
+    sdk = await connect()
+    sdk.register_connection_events(lambda id: print("connected", id))
+    sdk.register_tap_events(lambda id, tapcode: print("tap", id, tapcode))
+    await sdk.start()
+    await asyncio.Event().wait()
 
 asyncio.run(main())
 ```
 
-`run()` attaches to an already-connected Tap when possible. If none is found, it scans (and on Windows also polls for paired devices that reconnect without advertising).
+`connect()` attaches to an already-connected Tap when possible (same Windows
+retrieve / scan / reconnect-poller path as before), detects v1 vs v2 from GATT
+characteristics, and returns `TapSDK` or `TapSDK2`. It does **not** start
+notifications — register callbacks, then `await sdk.start()`.
+
+Register `connection` callbacks before `start()` so they fire. Event callbacks
+may also be added after `start()` for later events.
+
+## Explicit protocol
+
+If you know the firmware protocol:
+
+```python
+from tapsdk import TapSDK  # or TapSDK2
+
+tap = TapSDK()
+tap.register_connection_events(on_connect)
+await tap.run()  # connect_tap + start
+```
 
 ## Connection and disconnection callbacks
 
-Register callbacks before `await run()`:
-
 ```python
-def on_connect(sdk):
-    print("connected", sdk)
+def on_connect(sdk_or_serial):
+    print("connected", sdk_or_serial)
 
 def on_disconnect(client):
     print("disconnected", client)
 
-tap = TapSDK()
-tap.register_connection_events(on_connect)
-tap.register_disconnection_events(on_disconnect)
+sdk.register_connection_events(on_connect)
+sdk.register_disconnection_events(on_disconnect)
 ```
 
-`on_connect` receives the `TapSDK` instance. `on_disconnect` receives the underlying Bleak client (platform-dependent).
+On v1 (`TapSDK`), `on_connect` receives the SDK instance. On v2 (`TapSDK2`), it
+receives the device serial number. `on_disconnect` receives the underlying Bleak
+client (platform-dependent).
 
-## Subscribe to input events
+## Subscribe to input events (v1)
 
 ```python
 from tapsdk import AirGestures
@@ -56,11 +76,11 @@ Tap and mouse events are only delivered when the device is in a controller-capab
 
 ## Keep the process alive
 
-`run()` returns after notifications are set up. Keep the event loop running, for example:
+`start()` / `run()` return after notifications are set up. Keep the event loop running, for example:
 
 ```python
-await tap.run()
+await sdk.start()
 await asyncio.Event().wait()
 ```
 
-Or follow the pattern in [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py), which sleeps between mode changes.
+See also [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/connect.py) and [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/basic.py).

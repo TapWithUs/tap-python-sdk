@@ -1,303 +1,81 @@
 import asyncio
 import logging
-import platform
-from dataclasses import dataclass
-from typing import Callable, Optional
-
-from bleak import BleakClient, BleakScanner
+from typing import Callable
 
 from . import parsers
+from ._transport import TapClient, client_connected, connect_tap, tap_service  # noqa: F401
+from .device_info import (  # noqa: F401
+    DeviceInfo,
+    battery_level_characteristic,
+    battery_service,
+    device_information_service,
+    device_name_characteristic,
+    firmware_revision_characteristic,
+    format_model_version_hex,
+    fw_version2_characteristic,
+    gap_device_name_characteristic,
+    hardware_revision_characteristic,
+    manufacturer_name_characteristic,
+    model_version_characteristic,
+    read_device_info,
+    serial_number_characteristic,
+    software_revision_characteristic,
+)
 from .enumerations import InputType, MouseModes
 from .inputmodes import InputModeText, InputMode, InputModeRaw, input_type_command
 
 logger = logging.getLogger(__name__)
 
-tap_service = 'c3ff0001-1d8b-40fd-a56f-c7bd5d0f3370'
+# Back-compat alias for tests/callers that imported the private helper name.
+_format_model_version_hex = format_model_version_hex
+
 nus_service = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 tap_data_characteristic = 'c3ff0005-1d8b-40fd-a56f-c7bd5d0f3370'
 mouse_data_characteristic = 'c3ff0006-1d8b-40fd-a56f-c7bd5d0f3370'
 ui_cmd_characteristic = 'c3ff0009-1d8b-40fd-a56f-c7bd5d0f3370'
 air_gesture_data_characteristic = 'c3ff000a-1d8b-40fd-a56f-c7bd5d0f3370'
-device_name_characteristic = 'c3ff0003-1d8b-40fd-a56f-c7bd5d0f3370'
-model_version_characteristic = 'c3ff000c-1d8b-40fd-a56f-c7bd5d0f3370'
-fw_version2_characteristic = 'c3ff000d-1d8b-40fd-a56f-c7bd5d0f3370'
 tap_mode_characteristic = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'        # nus rx
 raw_sensors_characteristic = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'     # nus tx
 
-# Standard BLE services exposed by Tap firmware (DIS + BAS).
-# See Tap BLE API docs / TAP_XR_develop tap_dis_manager / tap_bas_manager.
-device_information_service = '0000180a-0000-1000-8000-00805f9b34fb'
-battery_service = '0000180f-0000-1000-8000-00805f9b34fb'
-manufacturer_name_characteristic = '00002a29-0000-1000-8000-00805f9b34fb'
-serial_number_characteristic = '00002a25-0000-1000-8000-00805f9b34fb'
-hardware_revision_characteristic = '00002a27-0000-1000-8000-00805f9b34fb'
-firmware_revision_characteristic = '00002a26-0000-1000-8000-00805f9b34fb'
-software_revision_characteristic = '00002a28-0000-1000-8000-00805f9b34fb'  # bootloader on Tap
-battery_level_characteristic = '00002a19-0000-1000-8000-00805f9b34fb'
-gap_device_name_characteristic = '00002a00-0000-1000-8000-00805f9b34fb'
-
-
-@dataclass(frozen=True)
-class DeviceInfo:
-    """Public device information from BLE DIS/BAS and Tap service fields."""
-    name: Optional[str] = None
-    fw_version: Optional[str] = None
-    fw_version2: Optional[str] = None
-    model_version: Optional[str] = None
-    hardware_revision: Optional[str] = None
-    serial_number: Optional[str] = None
-    manufacturer: Optional[str] = None
-    software_revision: Optional[str] = None
-    battery_level: Optional[int] = None
-
-
-if platform.system() == "Darwin":
-    try:
-        from bleak.backends.corebluetooth.CentralManagerDelegate import (
-            CBUUID, CentralManagerDelegate)
-    except ImportError as e:
-        raise ImportError(
-            "tapsdk requires bleak==0.12.1 on macOS; the installed bleak version "
-            "no longer exposes bleak.backends.corebluetooth.CentralManagerDelegate "
-            "at this import path. Reinstall with the pinned dependency from setup.py."
-        ) from e
-
-    def string2uuid(uuid_str: str) -> CBUUID:
-        """Convert a string to a uuid"""
-        return CBUUID.UUIDWithString_(uuid_str)
-
-    class TapClient(BleakClient):
-        def __init__(self, address="", **kwargs):
-            super().__init__(address, **kwargs)
-
-        async def connect_retrieved(self, **kwargs) -> bool:
-            self._central_manager_delegate = CentralManagerDelegate.alloc().init()
-            paired_taps = self.get_paired_taps()
-            if len(paired_taps) == 0:
-                return False
-            self._peripheral = paired_taps[0]
-            logger.debug("Connecting to Tap device @ {}".format(self._peripheral))
-            await self.connect()
-
-            # Now get services
-            await self.get_services()
-
-            return True
-
-        def get_paired_taps(self):
-            paired_taps = self._central_manager_delegate.central_manager.retrieveConnectedPeripheralsWithServices_(
-                            [string2uuid(tap_service)])
-            logger.debug("Found connected Taps @ {}".format(paired_taps))
-            return paired_taps
-
-elif platform.system() == "Windows":
-    try:
-        from bleak_winrt.windows.devices.bluetooth import (BluetoothLEDevice,  # noqa: F401
-                                                           BluetoothConnectionStatus, BluetoothCacheMode)
-        from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import GattSession, GattSessionStatus
-        from bleak_winrt.windows.devices.enumeration import DeviceInformation, DeviceInformationKind
-    except ImportError as e:
-        # bleak>=0.22.0 no longer depends on bleak_winrt (see #21), so it must be
-        # installed explicitly; setup.py pins bleak==0.22.3 + bleak-winrt==1.2.0
-        # for Windows. Fail fast if that pin was not honored, rather than
-        # silently disabling the Windows BLE backend at runtime.
-        raise ImportError(
-            "tapsdk requires bleak==0.22.3 and bleak-winrt==1.2.0 on Windows. "
-            "Reinstall with the pinned dependencies from setup.py, or see "
-            "https://github.com/TapWithUs/tap-python-sdk/issues/21."
-        ) from e
-
-    async def get_connected_taps():
-        # use the following device properties: Paired, Connected, Device Address
-        request_properties = [
-            "System.Devices.Aep.IsPaired",
-            "System.Devices.Aep.IsConnected",
-            "System.Devices.Aep.DeviceAddress",]
-        aqs_filter = BluetoothLEDevice.get_device_selector_from_connection_status(BluetoothConnectionStatus.CONNECTED)
-        devices = await DeviceInformation.find_all_async(aqs_filter, request_properties,
-                                                         DeviceInformationKind.ASSOCIATION_ENDPOINT)
-        taps = []
-        for device in devices:
-            try:
-                # Extract the Bluetooth address from the device id
-                # device.id format: "BluetoothLE#BluetoothLExx:xx:xx:xx:xx:xx-yy:yy:yy:yy:yy:yy"
-                device_address_str = device.id.split("-")[-1].upper()
-                # Convert MAC address string (e.g. "AA:BB:CC:DD:EE:FF") to a uint64
-                address_int = int(device_address_str.replace(":", ""), 16)
-                ble_device = await BluetoothLEDevice.from_bluetooth_address_async(address_int)
-                if ble_device is None:
-                    logger.error(f"Could not create BLE device for {device.name}")
-                    continue
-                services = await ble_device.get_gatt_services_async()
-                logger.info(f"Device {device.name} has the following services:")
-                for service in services.services:
-                    logger.info(f"Service UUID: {service.uuid}")
-                    if str(service.uuid).lower() == tap_service.lower():
-                        taps.append(device)
-                        break
-            except Exception as e:
-                logger.error(f"Failed to retrieve services for device {device.name}: {e}")
-        # taps = [device for device in devices if tap_service.lower() in [x.lower() for x in device.properties.keys()]]
-        return taps
-
-    async def get_tap_device():
-        taps = await get_connected_taps()
-        if not taps:
-            logger.info("No connected Tap devices found.")
-            return None
-        return taps[0].id  # Return the full WinRT device ID for BleakClient
-
-    class TapClient(BleakClient):
-        def __init__(self, address="", **kwargs):
-            super().__init__(address, **kwargs)
-
-        async def connect_retrieved(self, **kwargs) -> bool:
-            if not self.address:
-                logger.info("No connected Tap devices found.")
-                return False
-            logger.info(f"Connecting to Tap device @ {self.address}")
-
-            # Bypass Bleak's connect() entirely because the device is already connected
-            # at the OS level. Bleak's connect() waits for a GattSessionStatus.ACTIVE event,
-            # but that event has already fired before the handler is attached — so it hangs.
-            # Instead, we manually set up _requester and _session on the backend.
-            try:
-                remote_mac = self.address.split("-")[-1]
-                address_int = int(remote_mac.replace(":", ""), 16)
-
-                backend = self._backend
-
-                # Get the BluetoothLEDevice for the already-connected device
-                backend._requester = await BluetoothLEDevice.from_bluetooth_address_async(address_int)
-                if backend._requester is None:
-                    logger.error(f"Could not get BluetoothLEDevice for {self.address}")
-                    return False
-
-                # Open the GATT session (already ACTIVE since device is connected)
-                backend._session = await GattSession.from_device_id_async(
-                    backend._requester.bluetooth_device_id
-                )
-                backend._session.maintain_connection = True
-
-                # Force uncached GATT discovery so Windows does not serve a
-                # stale cached table that may be missing characteristics.
-                backend.services = None
-                backend.services = await backend.get_services(
-                    service_cache_mode=BluetoothCacheMode.UNCACHED,
-                    cache_mode=BluetoothCacheMode.UNCACHED,
-                )
-                if backend.services:
-                    for svc in backend.services.services.values():
-                        char_uuids = [str(c.uuid) for c in svc.characteristics]
-                        logger.debug("Discovered service %s with characteristics: %s", svc.uuid, char_uuids)
-
-                is_active = backend._session.session_status == GattSessionStatus.ACTIVE
-                logger.info(f"Session status ACTIVE: {is_active}")
-                return is_active
-
-            except Exception as e:
-                logger.error(f"connect_retrieved failed: {e}")
-                return False
-
-
-elif platform.system() == "Linux":
-    class TapClient(BleakClient):
-        def __init__(self, address=None, **kwargs):
-            address = address if address else get_mac_addr()
-            super().__init__(address, **kwargs)
-
-        async def connect_retrieved(self, **kwargs) -> bool:
-            await self.connect()
-            connected = self.is_connected()
-            if connected:
-                logger.info("Connected to {0}".format(self.address))
-                await self.__debug()
-            else:
-                logger.error("Failed to connect to {0}".format(self.address))
-            return connected
-
-        async def __debug(self):
-            for service in self.services:
-                logger.info("[service] {}: {}".format(service.uuid, service.description))
-                for char in service.characteristics:
-                    if "read" in char.properties:
-                        try:
-                            value = bytes(await self.read_gatt_char(char.uuid))
-                        except Exception as e:
-                            value = str(e).encode
-                    else:
-                        value = None
-                    # if value:
-                    logger.info(
-                        "\t[Characteristic] {0}: (Handle: {1}) ({2}) | Name: {3}, Value: {4} ".format(
-                            char.uuid,
-                            "<handle geos here>",  # char.handle,
-                            ",".join(char.properties),
-                            char.description,
-                            value,
-                        )
-                    )
-
-    def get_mac_addr() -> str:
-        from subprocess import PIPE, Popen
-        try:
-            with Popen(["bt-device", "--list"], stdout=PIPE, text=True) as btdevice_process:
-                exit_code = btdevice_process.wait()
-                if exit_code:
-                    raise ConnectionError("Failed to find any TAP decive")
-                connected_bt_devices = btdevice_process.stdout.read().splitlines()
-                tap_devices = list(filter(lambda line: line.startswith("Tap"), connected_bt_devices))
-                for d in tap_devices:
-                    logger.info("Found tap device: %s", d)
-                if len(tap_devices) > 1:
-                    logger.info("Found more than 1 Tap device:")
-                    for i, d in enumerate(tap_devices):
-                        logger.info("%s. %s", i + 1, d)
-                    tap_devices = [tap_devices[int(input("Select the device number: ")) - 1]]
-                if len(tap_devices) == 0:
-                    raise ValueError(
-                        "No Tap device was found. Make sure the device is connected and its human readable name "
-                        "starts with Tap.")
-                device_decs = tap_devices[0]
-                tap_mac_address = device_decs[-18:-1]  # only the mac_address part of the description.
-                return tap_mac_address
-        except Exception as e:
-            logger.error("Failed to find any TAP device: {}".format(e))
-            raise e
-
-
-def _format_model_version_hex(value: Optional[str]) -> Optional[str]:
-    if value is None:
-        return None
-    try:
-        return f"0x{int(value):X}"
-    except ValueError:
-        return value
+# Firmware parks NUS commands in one shared 24-byte slot until low-priority
+# bt_task drains it. Under IMU load that drain can lag; 50 ms was too short
+# and the InputType write (AUTO) was getting overwritten by the mode write.
+MODE_COMMAND_SETTLE_SECONDS = 0.2
 
 
 class TapSDK():
-    """High-level async API for one Tap Strap / TapXR over BLE.
+    """High-level async API for one Tap Strap / TapXR over BLE (v1 protocol).
 
-    Register event callbacks, then ``await run()`` to connect and subscribe to
-    notifications. Issue commands with ``set_input_mode``, ``set_input_type``,
-    and ``send_vibration_sequence``.
+    Register event callbacks, then ``await run()`` (or ``await start()`` after
+    ``connect()``) to subscribe to notifications. Issue commands with
+    ``set_input_mode``, ``set_input_type``, and ``send_vibration_sequence``.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, client=None, address=None, **kwargs):
         """Create an SDK instance.
 
         Args:
+            client: Optional already-connected ``TapClient`` (from ``connect()``).
             address: Optional BLE address or platform device id. On Linux, if
                 omitted, a connected device whose name starts with ``Tap`` is
                 selected.
         """
-        self.client = TapClient(address=kwargs.get("address"))
+        if address is None:
+            address = kwargs.get("address")
+        self._address = address
+        if client is not None:
+            self.client = client
+        else:
+            # Darwin TapClient defaults to ""; Linux treats falsy address as auto-detect.
+            self.client = TapClient(address=address if address is not None else "")
         self.mouse_event_cb = None
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
         self.raw_data_event_cb = None
         self.air_gesture_state_event_cb = None
         self.connection_cb = None
+        self._disconnect_cb = None
+        self._mode_write_lock = asyncio.Lock()
         self.input_mode_refresh = InputModeAutoRefresh(self._refresh_input_mode, timeout=10)
         self.mouse_mode = MouseModes.STDBY
         self.input_mode = InputModeText()  # Default input mode is Text Mode
@@ -305,8 +83,7 @@ class TapSDK():
 
     @staticmethod
     def _client_connected(client) -> bool:
-        is_connected = getattr(client, "is_connected", False)
-        return is_connected() if callable(is_connected) else is_connected
+        return client_connected(client)
 
     def register_tap_events(self, cb: Callable):
         """Register ``cb(identifier, tapcode)`` for tap events."""
@@ -334,6 +111,7 @@ class TapSDK():
 
     def register_disconnection_events(self, cb: Callable):
         """Register Bleak's disconnected callback ``cb(client)``."""
+        self._disconnect_cb = cb
         self.client.set_disconnected_callback(cb)
 
     def on_moused(self, identifier, data):
@@ -343,11 +121,14 @@ class TapSDK():
 
     def on_tapped(self, identifier, data):
         args = parsers.tap_data_msg(data)
+        # In air-mouse, codes 2/4 are click-like gestures; other taps still
+        # deliver as tap events (do not drop them on the elif).
         if self.mouse_mode == MouseModes.AIR_MOUSE:
             tapcode = args[0]
             if tapcode in [2, 4]:
                 self.on_air_gesture(identifier, [tapcode + 10])
-        elif self.tap_event_cb:
+                return
+        if self.tap_event_cb:
             self.tap_event_cb(identifier, *args)
 
     def on_raw_data(self, identifier, data):
@@ -368,55 +149,13 @@ class TapSDK():
             args = parsers.air_gesture_data_msg(data)
             self.air_gesture_event_cb(identifier, *args)
 
-    async def _read_gatt_string(self, uuid: str) -> Optional[str]:
-        try:
-            raw = await self.client.read_gatt_char(uuid)
-        except Exception as e:
-            logger.debug("Failed to read %s: %s", uuid, e)
-            return None
-        if not raw:
-            return None
-        return bytes(raw).decode("utf-8", errors="replace").rstrip("\x00").strip() or None
-
-    async def _read_gatt_uint8(self, uuid: str) -> Optional[int]:
-        try:
-            raw = await self.client.read_gatt_char(uuid)
-        except Exception as e:
-            logger.debug("Failed to read %s: %s", uuid, e)
-            return None
-        if not raw:
-            return None
-        return int(raw[0])
-
-    async def _resolve_device_name(self) -> Optional[str]:
-        name = getattr(self.client, "name", None) or None
-        if name:
-            return name
-        # Tap stores the user-visible name on the proprietary readable char (not GAP 0x2a00).
-        name = await self._read_gatt_string(device_name_characteristic)
-        if name:
-            return name
-        return await self._read_gatt_string(gap_device_name_characteristic)
-
     async def get_device_info(self) -> DeviceInfo:
         """Read device name, FW versions, battery, and other public device fields.
 
         Requires a bonded connection (these characteristics are encrypted on Tap
         firmware). Missing characteristics yield None for that field.
         """
-        model_version_raw = await self._read_gatt_string(model_version_characteristic)
-
-        return DeviceInfo(
-            name=await self._resolve_device_name(),
-            fw_version=await self._read_gatt_string(firmware_revision_characteristic),
-            fw_version2=await self._read_gatt_string(fw_version2_characteristic),
-            model_version=_format_model_version_hex(model_version_raw),
-            hardware_revision=await self._read_gatt_string(hardware_revision_characteristic),
-            serial_number=await self._read_gatt_string(serial_number_characteristic),
-            manufacturer=await self._read_gatt_string(manufacturer_name_characteristic),
-            software_revision=await self._read_gatt_string(software_revision_characteristic),
-            battery_level=await self._read_gatt_uint8(battery_level_characteristic),
-        )
+        return await read_device_info(self.client)
 
     async def send_vibration_sequence(self, sequence, identifier=None):
         """Send a haptic on/off sequence.
@@ -447,12 +186,12 @@ class TapSDK():
             return
 
         self.input_mode = input_mode
-        write_value = input_mode.get_command()
-
+        await self._write_input_mode(input_mode.get_command())
+        # Re-assert type so Controller starts with AUTO (orientation), not a
+        # stale forced mouse/keyboard left on the device.
+        await self._write_input_mode(input_type_command(self.input_type))
         if not self.input_mode_refresh.is_running:
             await self.input_mode_refresh.start()
-
-        await self._write_input_mode(write_value)
 
     async def set_input_type(self, input_type: InputType, identifier=None):
         """Force Spatial Control input type on TapXR (experimental firmware).
@@ -463,21 +202,44 @@ class TapSDK():
         """
         assert isinstance(input_type, InputType), "input_type must be of type InputType"
         self.input_type = input_type
-        write_value = input_type_command(self.input_type)
-
+        await self._write_input_mode(input_type_command(self.input_type))
         if not self.input_mode_refresh.is_running:
             await self.input_mode_refresh.start()
 
-        await self._write_input_mode(write_value)
-
     async def _refresh_input_mode(self):
-        await self.set_input_mode(self.input_mode)
-        logger.debug(f"Input Mode Refreshed: {self.input_mode}")
-        await self.set_input_type(self.input_type)
-        logger.debug(f"Input Type Refreshed: {self.input_type}")
+        await self._write_input_mode(self.input_mode.get_command())
+        logger.debug("Input Mode Refreshed: %s", self.input_mode)
+        await self._write_input_mode(input_type_command(self.input_type))
+        logger.debug("Input Type Refreshed: %s", self.input_type)
 
     async def _write_input_mode(self, value):
-        await self.client.write_gatt_char(tap_mode_characteristic, value)
+        # Firmware forwards NUS commands through one shared packet slot before
+        # its low-priority BT task consumes them. Keep writes apart so a second
+        # command cannot replace the first before that task reads it.
+        async with self._mode_write_lock:
+            await self.client.write_gatt_char(
+                tap_mode_characteristic,
+                value,
+                response=True,
+            )
+            await asyncio.sleep(MODE_COMMAND_SETTLE_SECONDS)
+
+    async def start(self):
+        """Start GATT notifications on an already-connected client."""
+        if not client_connected(self.client):
+            raise ConnectionError("Tap client is not connected; call connect() or run() first")
+        if self._disconnect_cb:
+            self.client.set_disconnected_callback(self._disconnect_cb)
+        for ch, cb in [(tap_data_characteristic, self.on_tapped),
+                       (mouse_data_characteristic, self.on_moused),
+                       (air_gesture_data_characteristic, self.on_air_gesture),
+                       (raw_sensors_characteristic, self.on_raw_data)]:
+            try:
+                await self.client.start_notify(ch, cb)
+            except Exception as e:
+                logger.warning("Failed to start notify for %s: %s", ch, e)
+        if self.connection_cb:
+            self.connection_cb(self)
 
     async def run(self):
         """Connect to a Tap and start GATT notifications.
@@ -487,97 +249,9 @@ class TapSDK():
         callback when notifications are armed. Returns after setup — keep the
         asyncio event loop alive to continue receiving events.
         """
-        stop_event = asyncio.Event()
-        devices = []
-        connected = False
-
-        if platform.system() == "Windows":
-            # First, try to attach to an already-connected Tap device
-            tap_device = await get_tap_device()
-            if tap_device:
-                self.client = TapClient(tap_device)
-                connected = await self.client.connect_retrieved()
-
-            if not connected:
-                # Run BleakScanner and Windows reconnect-poller concurrently.
-                # - BleakScanner finds unpaired/advertising devices and pairs them.
-                # - The poller detects already-paired devices reconnecting (not advertising).
-                logger.info("No connected Tap found. Scanning and waiting for a Tap device...")
-                found_event = asyncio.Event()
-                found_device = {}  # shared mutable container
-
-                async def detection_cb(device, adv_data):
-                    if tap_service.lower() in adv_data.service_uuids:
-                        logger.info(f"Found advertising Tap via scan: {device.address}")
-                        found_device["scanned"] = device
-                        found_event.set()
-
-                async def windows_reconnect_poller():
-                    """Poll Windows for already-paired Tap devices reconnecting."""
-                    while not found_event.is_set():
-                        await asyncio.sleep(3)
-                        tap_id = await get_tap_device()
-                        if tap_id:
-                            logger.info(f"Found already-paired Tap reconnected: {tap_id}")
-                            found_device["winrt"] = tap_id
-                            found_event.set()
-
-                async with BleakScanner(detection_callback=detection_cb):
-                    poller_task = asyncio.create_task(windows_reconnect_poller())
-                    await found_event.wait()
-                    poller_task.cancel()
-
-                if "winrt" in found_device:
-                    # Already-paired device reconnected — attach via WinRT path
-                    self.client = TapClient(found_device["winrt"])
-                    connected = await self.client.connect_retrieved()
-                elif "scanned" in found_device:
-                    # Device was seen advertising. Windows may have already claimed the
-                    # connection by now, so try the WinRT path first, then fall back to
-                    # Bleak's connect()+pair() if the device is still advertising.
-                    await asyncio.sleep(1)  # brief wait for Windows to finish pairing
-                    tap_id = await get_tap_device()
-                    if tap_id:
-                        logger.info(f"Scanned device is now connected via Windows: {tap_id}")
-                        self.client = TapClient(tap_id)
-                        connected = await self.client.connect_retrieved()
-                    if not connected:
-                        logger.info("Falling back to Bleak connect+pair...")
-                        self.client = TapClient(found_device["scanned"])
-                        await self.client.connect()
-                        await self.client.pair(protection_level=2)
-                        connected = self._client_connected(self.client)
-
-        else:
-            async def detection_cb(device, adv_data):
-                logger.debug("detected %s %s", device, adv_data)
-                if tap_service.lower() in adv_data.service_uuids:
-                    if device.address not in [d.address for d in devices]:
-                        devices.append(device)
-                        stop_event.set()
-
-            connected = await self.client.connect_retrieved()
-            if not connected:
-                logger.info("Couldn't find connected Tap device. Scanning for Tap devices...")
-                async with BleakScanner(detection_callback=detection_cb):
-                    await stop_event.wait()
-
-                self.client = TapClient(devices[0])
-                await self.client.connect()
-                if platform.system() != "Darwin":
-                    await self.client.pair()
-
-        if self.client.is_connected:
-            for ch, cb in [(tap_data_characteristic, self.on_tapped),
-                           (mouse_data_characteristic, self.on_moused),
-                           (air_gesture_data_characteristic, self.on_air_gesture),
-                           (raw_sensors_characteristic, self.on_raw_data)]:
-                try:
-                    await self.client.start_notify(ch, cb)
-                except Exception as e:
-                    logger.warning("Failed to start notify for air gesture state: " + str(e))
-            if self.connection_cb:
-                self.connection_cb(self)
+        if not client_connected(self.client):
+            self.client = await connect_tap(address=self._address)
+        await self.start()
 
 
 class InputModeAutoRefresh:
@@ -601,5 +275,5 @@ class InputModeAutoRefresh:
 
     async def periodic(self):
         while True:
-            await self.set_function()
             await asyncio.sleep(self.timeout)
+            await self.set_function()
