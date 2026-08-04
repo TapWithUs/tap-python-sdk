@@ -10,6 +10,12 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+### Bug fixes
+
+## 0.8.0 (2026-08-04)
+______________________
+### Main features
+
 * Unified v1/v2 entry: `await connect()` auto-detects protocol from GATT (`c3ff000e`), returns `TapSDK` or `TapSDK2`; register callbacks then `await start()` (#36)
 * Shared BLE transport (`tapsdk._transport`) so TapSDK2 uses the same Windows retrieve/scan/reconnect path as TapSDK
 * Shared `get_device_info()` / `DeviceInfo` on both TapSDK and TapSDK2 via `tapsdk.device_info` (#36)
