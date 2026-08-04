@@ -183,17 +183,68 @@ elif platform.system() == "Windows":
 
 
 elif platform.system() == "Linux":
+    from bleak.backends.bluezdbus import defs
+    from bleak.backends.bluezdbus.utils import assert_reply, unpack_variants
+    from bleak.backends.device import BLEDevice
+    from dbus_next import BusType, Message, Variant
+    from dbus_next.aio import MessageBus
+
+    BLUEZ_RESOLVE_TIMEOUT_SEC = 30.0
+    BLUEZ_RESOLVE_POLL_SEC = 0.25
+
     class TapClient(BleakClient):
         def __init__(self, address=None, **kwargs):
-            address = address if address else get_mac_addr()
+            if not address:
+                address = "00:00:00:00:00:00"
+            kwargs.setdefault("timeout", BLUEZ_RESOLVE_TIMEOUT_SEC)
             super().__init__(address, **kwargs)
 
+        async def get_services(self, **kwargs):
+            if not self.is_connected:
+                from bleak.exc import BleakError
+                raise BleakError("Not connected")
+            if self._services_resolved:
+                return self.services
+            if not self._properties.get("ServicesResolved"):
+                logger.info(
+                    "Waiting for ServicesResolved on %s (up to %.0fs)",
+                    self.address,
+                    BLUEZ_RESOLVE_TIMEOUT_SEC,
+                )
+                self._services_resolved_event = asyncio.Event()
+                try:
+                    await asyncio.wait_for(
+                        self._services_resolved_event.wait(),
+                        BLUEZ_RESOLVE_TIMEOUT_SEC,
+                    )
+                finally:
+                    self._services_resolved_event = None
+            if not self._properties.get("ServicesResolved"):
+                from bleak.exc import BleakError
+                raise BleakError(
+                    "ServicesResolved did not become true for {}".format(self.address)
+                )
+            self._services_resolved = True
+            return self.services
+
         async def connect_retrieved(self, **kwargs) -> bool:
-            await self.connect()
+            try:
+                await self.connect(timeout=kwargs.get("timeout", BLUEZ_RESOLVE_TIMEOUT_SEC))
+            except Exception as e:
+                logger.error(
+                    "Failed to connect to %s: %s: %s",
+                    self.address,
+                    type(e).__name__,
+                    e or repr(e),
+                )
+                return False
             connected = client_connected(self)
             if connected:
                 logger.info("Connected to {0}".format(self.address))
                 await self.__debug()
+                connected = client_connected(self)
+                if not connected:
+                    logger.error("Lost connection to {0} during service dump".format(self.address))
             else:
                 logger.error("Failed to connect to {0}".format(self.address))
             return connected
@@ -202,49 +253,253 @@ elif platform.system() == "Linux":
             for service in self.services:
                 logger.info("[service] {}: {}".format(service.uuid, service.description))
                 for char in service.characteristics:
-                    if "read" in char.properties:
-                        try:
-                            value = bytes(await self.read_gatt_char(char.uuid))
-                        except Exception as e:
-                            value = str(e).encode
-                    else:
-                        value = None
                     logger.info(
-                        "\t[Characteristic] {0}: (Handle: {1}) ({2}) | Name: {3}, Value: {4} ".format(
+                        "\t[Characteristic] {0}: ({1}) | Name: {2}".format(
                             char.uuid,
-                            "<handle geos here>",  # char.handle,
                             ",".join(char.properties),
                             char.description,
-                            value,
                         )
                     )
 
-    def get_mac_addr() -> str:
-        from subprocess import PIPE, Popen
+    def _ble_device_from_props(path, props):
+        mac = props.get("Address")
+        name = props.get("Name") or props.get("Alias") or ""
+        return BLEDevice(
+            mac,
+            name,
+            {"path": path, "props": props},
+            rssi=props.get("RSSI", 0),
+        )
+
+    async def _bluez_managed_devices(bus):
+        reply = await bus.call(
+            Message(
+                destination=defs.BLUEZ_SERVICE,
+                path="/",
+                member="GetManagedObjects",
+                interface=defs.OBJECT_MANAGER_INTERFACE,
+            )
+        )
+        assert_reply(reply)
+        devices = {}
+        for path, interfaces in reply.body[0].items():
+            if defs.DEVICE_INTERFACE not in interfaces:
+                continue
+            devices[path] = unpack_variants(interfaces[defs.DEVICE_INTERFACE])
+        return devices
+
+    def _is_tap_props(props):
+        name = props.get("Name") or props.get("Alias") or ""
+        uuids = [u.lower() for u in props.get("UUIDs", [])]
+        return name.startswith("Tap") or tap_service.lower() in uuids
+
+    async def get_bluez_tap_devices(connected_only=False, services_resolved_only=False):
+        bus = await MessageBus(bus_type=BusType.SYSTEM, negotiate_unix_fd=True).connect()
         try:
-            with Popen(["bt-device", "--list"], stdout=PIPE, text=True) as btdevice_process:
-                exit_code = btdevice_process.wait()
-                if exit_code:
-                    raise ConnectionError("Failed to find any TAP decive")
-                connected_bt_devices = btdevice_process.stdout.read().splitlines()
-                tap_devices = list(filter(lambda line: line.startswith("Tap"), connected_bt_devices))
-                for d in tap_devices:
-                    logger.info("Found tap device: %s", d)
-                if len(tap_devices) > 1:
-                    logger.info("Found more than 1 Tap device:")
-                    for i, d in enumerate(tap_devices):
-                        logger.info("%s. %s", i + 1, d)
-                    tap_devices = [tap_devices[int(input("Select the device number: ")) - 1]]
-                if len(tap_devices) == 0:
-                    raise ValueError(
-                        "No Tap device was found. Make sure the device is connected and its human readable name "
-                        "starts with Tap.")
-                device_decs = tap_devices[0]
-                tap_mac_address = device_decs[-18:-1]  # only the mac_address part of the description.
-                return tap_mac_address
-        except Exception as e:
-            logger.error("Failed to find any TAP device: {}".format(e))
-            raise e
+            managed = await _bluez_managed_devices(bus)
+            taps = []
+            for path, props in managed.items():
+                is_connected = bool(props.get("Connected", False))
+                if connected_only and not is_connected:
+                    continue
+                if services_resolved_only and not props.get("ServicesResolved", False):
+                    continue
+                if not _is_tap_props(props):
+                    continue
+                if not props.get("Address"):
+                    continue
+                taps.append((is_connected, _ble_device_from_props(path, props)))
+            taps.sort(key=lambda item: not item[0])
+            return [device for _, device in taps]
+        finally:
+            bus.disconnect()
+
+    async def _bluez_set_trusted(bus, path):
+        reply = await bus.call(
+            Message(
+                destination=defs.BLUEZ_SERVICE,
+                path=path,
+                interface=defs.PROPERTIES_INTERFACE,
+                member="Set",
+                signature="ssv",
+                body=[defs.DEVICE_INTERFACE, "Trusted", Variant("b", True)],
+            )
+        )
+        assert_reply(reply)
+
+    async def _bluetoothctl_connect(address):
+        logger.info("Connecting via bluetoothctl: %s", address)
+        for args in (
+            ("trust", address),
+            ("pair", address),
+            ("connect", address),
+        ):
+            proc = await asyncio.create_subprocess_exec(
+                "bluetoothctl",
+                *args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            out, _ = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=BLUEZ_RESOLVE_TIMEOUT_SEC,
+            )
+            text = (out or b"").decode(errors="replace").strip()
+            if text:
+                logger.info("bluetoothctl %s: %s", args[0], text)
+        return True
+
+    async def bluez_connect_and_resolve(device, timeout=BLUEZ_RESOLVE_TIMEOUT_SEC):
+        path = device.details["path"]
+        address = device.address
+        bus = await MessageBus(bus_type=BusType.SYSTEM, negotiate_unix_fd=True).connect()
+        try:
+            managed = await _bluez_managed_devices(bus)
+            props = managed.get(path)
+            if props is None:
+                for p, candidate in managed.items():
+                    if (candidate.get("Address") or "").lower() == address.lower():
+                        path, props = p, candidate
+                        break
+            if props is None:
+                logger.error("BlueZ device not found for %s", address)
+                return None
+
+            if props.get("Connected", False) and props.get("ServicesResolved", False):
+                return _ble_device_from_props(path, props)
+
+            await _bluez_set_trusted(bus, path)
+
+            if not props.get("Connected", False):
+                await _bluetoothctl_connect(address)
+                managed = await _bluez_managed_devices(bus)
+                props = managed.get(path) or props
+                if not props.get("Connected", False):
+                    logger.info("bluetoothctl connect failed; trying BlueZ Connect")
+                    reply = await bus.call(
+                        Message(
+                            destination=defs.BLUEZ_SERVICE,
+                            path=path,
+                            interface=defs.DEVICE_INTERFACE,
+                            member="Connect",
+                        )
+                    )
+                    assert_reply(reply)
+
+            deadline = asyncio.get_running_loop().time() + timeout
+            last_log = 0.0
+            while asyncio.get_running_loop().time() < deadline:
+                managed = await _bluez_managed_devices(bus)
+                props = managed.get(path)
+                if props is None:
+                    for p, candidate in managed.items():
+                        if (candidate.get("Address") or "").lower() == address.lower():
+                            path, props = p, candidate
+                            break
+                if props is None:
+                    logger.error("BlueZ device path disappeared while resolving: %s", address)
+                    return None
+                connected = bool(props.get("Connected", False))
+                resolved = bool(props.get("ServicesResolved", False))
+                paired = bool(props.get("Paired", False))
+                now = asyncio.get_running_loop().time()
+                if now - last_log >= 2.0:
+                    logger.info(
+                        "BlueZ %s: Connected=%s Paired=%s ServicesResolved=%s",
+                        address,
+                        connected,
+                        paired,
+                        resolved,
+                    )
+                    last_log = now
+                if connected and resolved:
+                    logger.info("BlueZ ready for %s", address)
+                    return _ble_device_from_props(path, props)
+                await asyncio.sleep(BLUEZ_RESOLVE_POLL_SEC)
+
+            logger.error(
+                "Timed out waiting for BlueZ ServicesResolved on %s "
+                "(Connected=%s Paired=%s ServicesResolved=%s)",
+                address,
+                props.get("Connected", False),
+                props.get("Paired", False),
+                props.get("ServicesResolved", False),
+            )
+            return None
+        finally:
+            bus.disconnect()
+
+    def _filter_address(devices, address):
+        if not address:
+            return devices
+        return [d for d in devices if d.address.lower() == address.lower()]
+
+    async def _attach_resolved(device) -> TapClient:
+        resolved = await bluez_connect_and_resolve(device)
+        if resolved is None:
+            return None
+        client = TapClient(resolved)
+        if await client.connect_retrieved():
+            return client
+        return None
+
+    async def connect_tap_linux(address=None) -> TapClient:
+        if address is not None and not isinstance(address, str):
+            client = await _attach_resolved(address)
+            if client is not None:
+                return client
+
+        known = _filter_address(
+            await get_bluez_tap_devices(connected_only=True, services_resolved_only=True),
+            address if isinstance(address, str) else None,
+        )
+        if known:
+            logger.info("Attaching to already-connected Tap @ %s", known[0].address)
+            client = await _attach_resolved(known[0])
+            if client is not None:
+                return client
+
+        logger.info("No connected Tap found. Scanning and waiting for a Tap device...")
+        found_event = asyncio.Event()
+        found = {}
+        addr_filter = address if isinstance(address, str) else None
+
+        async def detection_cb(device, adv_data):
+            logger.debug("detected %s %s", device, adv_data)
+            uuids = [u.lower() for u in (adv_data.service_uuids or [])]
+            name = device.name or ""
+            if tap_service.lower() in uuids or name.startswith("Tap"):
+                if addr_filter and device.address.lower() != addr_filter.lower():
+                    return
+                logger.info("Found advertising Tap via scan: %s", device.address)
+                found["scanned"] = device
+                found_event.set()
+
+        async def bluez_reconnect_poller():
+            while not found_event.is_set():
+                await asyncio.sleep(1)
+                taps = _filter_address(
+                    await get_bluez_tap_devices(
+                        connected_only=True,
+                        services_resolved_only=True,
+                    ),
+                    addr_filter,
+                )
+                if taps:
+                    logger.info("Found Tap connected via BlueZ: %s", taps[0].address)
+                    found["bluez"] = taps[0]
+                    found_event.set()
+
+        async with BleakScanner(detection_callback=detection_cb):
+            poller_task = asyncio.create_task(bluez_reconnect_poller())
+            await found_event.wait()
+            poller_task.cancel()
+
+        device = found.get("bluez") or found.get("scanned")
+        client = await _attach_resolved(device)
+        if client is None:
+            raise ConnectionError("Failed to connect to a Tap device")
+        return client
 
 
 async def connect_tap(address=None) -> TapClient:
@@ -254,6 +509,9 @@ async def connect_tap(address=None) -> TapClient:
     retrieve already-connected devices when possible; otherwise scan (and on
     Windows poll for paired reconnects).
     """
+    if platform.system() == "Linux":
+        return await connect_tap_linux(address=address)
+
     if platform.system() == "Windows":
         # First, try to attach to an already-connected Tap device
         tap_device = address or await get_tap_device()
@@ -317,6 +575,7 @@ async def connect_tap(address=None) -> TapClient:
             raise ConnectionError("Failed to connect to a Tap device on Windows")
         return client
 
+    # Darwin
     stop_event = asyncio.Event()
     devices = []
 
@@ -327,10 +586,7 @@ async def connect_tap(address=None) -> TapClient:
                 devices.append(device)
                 stop_event.set()
 
-    if platform.system() == "Linux":
-        client = TapClient(address=address)
-    else:
-        client = TapClient(address=address if address is not None else "")
+    client = TapClient(address=address if address is not None else "")
 
     connected = await client.connect_retrieved()
     if not connected:
@@ -340,8 +596,6 @@ async def connect_tap(address=None) -> TapClient:
 
         client = TapClient(devices[0])
         await client.connect()
-        if platform.system() != "Darwin":
-            await client.pair()
 
     if not client_connected(client):
         raise ConnectionError("Failed to connect to a Tap device")
