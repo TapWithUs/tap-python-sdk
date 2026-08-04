@@ -10,11 +10,16 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* Unified v1/v2 entry: `await connect()` auto-detects protocol from GATT (`c3ff000e`), returns `TapSDK` or `TapSDK2`; register callbacks then `await start()` (#36)
+* Shared BLE transport (`tapsdk._transport`) so TapSDK2 uses the same Windows retrieve/scan/reconnect path as TapSDK
+* Shared `get_device_info()` / `DeviceInfo` on both TapSDK and TapSDK2 via `tapsdk.device_info` (#36)
 * Versioned docs site (mike) deployed after successful PyPI publish, with a release notes page derived from `docs/release-notes.md` (#47) (#48)
 * Prep-commit-then-tag release flow: author-written `Unreleased` entries, `scripts/prepare_release.py`, and a verify-only publish pipeline (#47) (#48)
 * Shared reusable test workflow used by CI and Publish (#39) (#48)
 
 ### Bug fixes
+
+* `connect()` now discovers GATT services before protocol detect so empty service caches cannot mis-classify v2 devices as v1
 
 ## 0.7.0 (2026-06-09)
 ______________________

@@ -2,6 +2,9 @@
 
 Tap hardware always has a “personality” toward the host: it can act as a keyboard/mouse for the operating system, stream structured controller events to an app, stream raw IMU data, or combine some of these.
 
+!!! note "v1 only"
+    Input modes (`set_input_mode` / NUS) apply to **v1** (`TapSDK`). **v2** (`TapSDK2`) has no Text / Controller / Raw mode write — enable streams with [`DeviceFeatures`](../reference/enumerations.md#devicefeatures). See [Use v2 features](../how-to/use-v2-features.md) and the [connection model](connection-model.md) v1 vs v2 table.
+
 The SDK models that personality as **input modes**:
 
 - **Text** — OS-facing HID behavior; your Python callbacks stay quiet for taps.

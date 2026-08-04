@@ -1,25 +1,30 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from tapsdk.tap import DeviceInfo, TapSDK, _format_model_version_hex
-from tapsdk.tap import (
+from tapsdk.device_info import (
+    DeviceInfo,
     battery_level_characteristic,
     device_name_characteristic,
     firmware_revision_characteristic,
+    format_model_version_hex,
     fw_version2_characteristic,
     gap_device_name_characteristic,
     hardware_revision_characteristic,
     manufacturer_name_characteristic,
     model_version_characteristic,
+    resolve_device_name,
     serial_number_characteristic,
     software_revision_characteristic,
 )
+from tapsdk.tap import TapSDK, _format_model_version_hex
+from tapsdk.tap2 import TapSDK2
 
 
 def test_format_model_version_hex():
+    assert format_model_version_hex("42") == "0x2A"
+    assert format_model_version_hex("0") == "0x0"
+    assert format_model_version_hex(None) is None
     assert _format_model_version_hex("42") == "0x2A"
-    assert _format_model_version_hex("0") == "0x0"
-    assert _format_model_version_hex(None) is None
 
 
 def test_get_device_info_reads_dis_and_bas():
@@ -38,14 +43,11 @@ def test_get_device_info_reads_dis_and_bas():
     async def read_gatt_char(uuid):
         return values[uuid]
 
-    sdk = TapSDK.__new__(TapSDK)
-    sdk.client = MagicMock()
-    sdk.client.name = None
-    sdk.client.read_gatt_char = AsyncMock(side_effect=read_gatt_char)
+    client = MagicMock()
+    client.name = None
+    client.read_gatt_char = AsyncMock(side_effect=read_gatt_char)
 
-    info = asyncio.run(sdk.get_device_info())
-
-    assert info == DeviceInfo(
+    expected = DeviceInfo(
         name="Tap_XR42",
         fw_version="3.5.24",
         fw_version2="1.5.24",
@@ -56,6 +58,12 @@ def test_get_device_info_reads_dis_and_bas():
         software_revision="012",
         battery_level=87,
     )
+
+    for cls in (TapSDK, TapSDK2):
+        sdk = cls.__new__(cls)
+        sdk.client = client
+        info = asyncio.run(sdk.get_device_info())
+        assert info == expected
 
 
 def test_get_device_info_prefers_client_name_and_tolerates_missing_chars():
@@ -87,10 +95,9 @@ def test_resolve_device_name_falls_back_to_tap_characteristic():
             return b"ShouldNotUse"
         return None
 
-    sdk = TapSDK.__new__(TapSDK)
-    sdk.client = MagicMock()
-    sdk.client.name = None
-    sdk.client.read_gatt_char = AsyncMock(side_effect=read_gatt_char)
+    client = MagicMock()
+    client.name = None
+    client.read_gatt_char = AsyncMock(side_effect=read_gatt_char)
 
-    name = asyncio.run(sdk._resolve_device_name())
+    name = asyncio.run(resolve_device_name(client))
     assert name == "Tap_FromGatt"

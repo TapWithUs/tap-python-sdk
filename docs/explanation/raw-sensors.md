@@ -1,5 +1,8 @@
 # Raw sensors
 
+!!! note "v1 raw mode"
+    This page describes v1 `InputModeRaw` / NUS streaming. For v2 framed IMU, see [`DeviceFeatures.RAW_IMU_DATA`](../how-to/use-v2-features.md) and [`set_imu_sensitivity`](../reference/tapsdk2.md).
+
 Raw mode exposes the motion sensors behind Tap’s gesture pipeline. That is useful for research, custom gesture models, and XR prototypes — not for everyday typing.
 
 ## What is streamed

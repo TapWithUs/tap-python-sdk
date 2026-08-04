@@ -16,7 +16,7 @@ AUTHOR = "Tap systems Inc."
 
 REQUIRED = [
     # linux reqs
-    'bleak==0.6.4;platform_system=="Linux"',
+    'bleak==0.12.1;platform_system=="Linux"',
     # macOS reqs
     'bleak==0.12.1;platform_system=="Darwin"',
     # Windows reqs

@@ -1,5 +1,8 @@
 # Stream raw sensor data
 
+!!! note "v1 protocol"
+    This guide uses `InputModeRaw` and NUS raw notifications on `TapSDK`. For v2, enable `DeviceFeatures.RAW_IMU_DATA` and call `set_imu_sensitivity` — see [Use v2 features](use-v2-features.md).
+
 Enable Developer mode in the Tap Manager app first. Raw mode is available on Tap Strap / Tap Strap 2 (finger accelerometers) and Tap Strap 2 / TapXR (thumb IMU).
 
 ## Enter raw mode
