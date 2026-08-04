@@ -19,6 +19,8 @@ ______________________
 
 ### Bug fixes
 
+* `connect()` now discovers GATT services before protocol detect so empty service caches cannot mis-classify v2 devices as v1
+
 ## 0.7.0 (2026-06-09)
 ______________________
 ### Main features

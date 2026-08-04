@@ -40,7 +40,7 @@ sudo usermod -G bluetooth -a <username>
 su - $USER
 ```
 
-The device’s Bluetooth name must start with `Tap` for the Linux discovery path.
+The SDK pins `bleak==0.12.1` on Linux (same as Darwin). The device’s Bluetooth name must start with `Tap` for the Linux discovery path.
 
 ## Verify the import
 

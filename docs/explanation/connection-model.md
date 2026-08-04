@@ -8,7 +8,7 @@ The Tap is a Bluetooth Low Energy peripheral. This SDK does not use HID for app 
 await connect()  →  register callbacks  →  await sdk.start()
 ```
 
-1. `connect()` calls shared `connect_tap()` (attach / scan / Windows retrieve), then `detect_protocol()`: if characteristic `c3ff000e` is present, return `TapSDK2`; else `TapSDK`.
+1. `connect()` calls shared `connect_tap()` (attach / scan / Windows retrieve), ensures GATT services are populated (`ensure_gatt_services`), then `detect_protocol()`: if characteristic `c3ff000e` is present, return `TapSDK2`; else `TapSDK`. Empty service caches raise instead of defaulting to v1.
 2. Notifications are **not** started yet — register callbacks first.
 3. `start()` arms protocol-specific notifies and fires the connection callback.
 

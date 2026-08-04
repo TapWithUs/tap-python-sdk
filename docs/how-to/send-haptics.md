@@ -7,7 +7,7 @@
 await sdk.send_vibration_sequence([1000, 300, 200])
 ```
 
-Periods are in milliseconds, clamped to **10–2550** in **10 ms** steps. Values are stored as `period // 10` on the wire.
+Periods are in milliseconds, clamped to **0–2550** in **10 ms** steps. Values are stored as `period // 10` on the wire.
 
 The list alternates **on** and **off** durations. The example above vibrates for 1 s, pauses 300 ms, then vibrates 200 ms.
 

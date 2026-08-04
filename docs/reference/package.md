@@ -27,7 +27,7 @@ Version string: `tapsdk.__version__`.
 | Module | Role |
 |--------|------|
 | `tapsdk._transport` | Shared `TapClient`, `connect_tap()` scan/attach |
-| `tapsdk._detect` | `detect_protocol(client)` → `"v1"` / `"v2"` |
+| `tapsdk._detect` | `ensure_gatt_services`, `detect_protocol(client)` → `"v1"` / `"v2"` |
 | `tapsdk.device_info` | Shared `DeviceInfo` / `get_device_info` GATT reads (DIS/BAS) |
 | `tapsdk.tap` | `TapSDK` (v1), GATT UUIDs |
 | `tapsdk.tap2` | `TapSDK2` (v2), framed-protocol UUIDs |

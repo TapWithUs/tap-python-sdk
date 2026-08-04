@@ -17,12 +17,13 @@ async def connect(address=None, **kwargs):
 
     Does not start notifications. Register callbacks, then ``await sdk.start()``.
     """
-    from tapsdk._detect import detect_protocol
+    from tapsdk._detect import detect_protocol, ensure_gatt_services
     from tapsdk._transport import connect_tap
     from tapsdk.tap import TapSDK
     from tapsdk.tap2 import TapSDK2
 
     client = await connect_tap(address=address)
+    await ensure_gatt_services(client)
     if detect_protocol(client) == "v2":
         return TapSDK2(client=client, **kwargs)
     return TapSDK(client=client, **kwargs)

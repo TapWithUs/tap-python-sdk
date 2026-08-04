@@ -28,7 +28,12 @@ Create `hello_tap.py`:
 
 ```python
 import asyncio
-from tapsdk import TapSDK2, connect
+from tapsdk import (
+    DeviceFeatures,
+    InputModeController,
+    TapSDK2,
+    connect,
+)
 
 
 def on_tap(identifier, tapcode):
@@ -45,7 +50,12 @@ async def main():
     sdk.register_tap_events(on_tap)
 
     await sdk.start()
-    print("Protocol:", "v2" if isinstance(sdk, TapSDK2) else "v1")
+    if isinstance(sdk, TapSDK2):
+        print("Protocol: v2")
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+    else:
+        print("Protocol: v1")
+        await sdk.set_input_mode(InputModeController())
 
     # Keep receiving events
     await asyncio.Event().wait()
@@ -75,16 +85,15 @@ b'SERIAL…' tapped [5]
 
 On both protocols the value is a finger bitmask (bit 0 = thumb … bit 4 = pinky); `5` / `[5]` means thumb + middle. On **v1**, `tapcode` is an `int`; on **v2**, it is `[tapcode]` (see [Events](../reference/events.md)).
 
-On a **v1** device, enable Controller (or Controller+Text) so taps reach the SDK instead of only the OS keyboard. See [Switch input modes](../how-to/switch-input-modes.md). On **v2**, tap events arrive through the framed protocol without `set_input_mode`.
+The sample enables tap delivery after `start()`: Controller mode on v1, `DeviceFeatures.MODEL_DETECTION` on v2. Without those steps, Text-mode v1 stays silent and v2 model events stay off.
 
 ## 4. What just happened
 
-1. `await connect()` attaches to an already-paired Tap (or scans), detects v1 vs v2 from GATT (`c3ff000e`), and returns `TapSDK` or `TapSDK2`. Notifications are **not** started yet.
+1. `await connect()` attaches to an already-paired Tap (or scans), ensures GATT services are discovered, detects v1 vs v2 (`c3ff000e`), and returns `TapSDK` or `TapSDK2`. Notifications are **not** started yet.
 2. `register_*` attaches callbacks (sync; register connection callbacks before `start()`).
 3. `await sdk.start()` arms GATT notifications and fires the connection callback.
-4. On v1, `on_connect` receives the SDK instance; on v2, it receives the device serial number (bytes).
-
-In Text mode (v1 default), the Tap behaves like a normal keyboard/mouse for the OS and does not emit tap events to the SDK until you switch to Controller.
+4. The sample then enables taps for the detected protocol (`set_input_mode` / `set_feature`).
+5. On v1, `on_connect` receives the SDK instance; on v2, it receives the device serial number (bytes).
 
 ## Next steps
 
