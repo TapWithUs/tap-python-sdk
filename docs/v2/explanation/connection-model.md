@@ -8,7 +8,7 @@ The Tap is a Bluetooth Low Energy peripheral. This SDK does not use HID for app 
 await connect()  →  assert TapSDK2  →  register callbacks  →  await sdk.start()
 ```
 
-1. `connect()` calls shared `connect_tap()` (attach / scan / Windows retrieve), ensures GATT services are populated (`ensure_gatt_services`), then `detect_protocol()`: if characteristic `c3ff000e` is present, return `TapSDK2`. Empty service caches raise instead of guessing.
+1. `connect()` calls shared `connect_tap()` (attach if already connected, otherwise scan), ensures GATT services are populated (`ensure_gatt_services`), then `detect_protocol()`: if characteristic `c3ff000e` is present, return `TapSDK2`. Empty service caches raise instead of guessing.
 2. Notifications are **not** started yet — register callbacks first.
 3. `start()` arms framed notifications, reads serial, starts keepalive, and fires the connection callback with the serial number (`bytes`).
 
@@ -16,15 +16,9 @@ await connect()  →  assert TapSDK2  →  register callbacks  →  await sdk.st
 
 `TapSDK2` shares `tapsdk._transport` (`TapClient`, `connect_tap`) and `tapsdk.device_info` (`get_device_info`) with `TapSDK`.
 
-## Why pair with the OS first
+## How `connect()` finds a device
 
-On every platform the most reliable path is: pair in system Bluetooth settings, ensure the device is connected (or connectable), then call `connect()` (or `run()`). The SDK then attaches to that session instead of racing a cold advertisement scan.
-
-Platform differences matter:
-
-- **macOS** retrieves already-connected peripherals that expose the Tap service.
-- **Windows** uses WinRT to find connected Tap devices and opens a GATT session without Bleak’s normal connect wait (which can hang if the session is already active). If nothing is connected, it scans and also polls for paired reconnects that do not advertise.
-- **Linux** lists BlueZ devices with `bt-device` and connects to names starting with `Tap`.
+`connect()` attaches to an already-connected Tap when one is present. Otherwise it scans.
 
 ## v2 GATT path
 

@@ -2,7 +2,7 @@
 
 ## Preferred: auto-detect, then assert v2
 
-Pair the Tap with the OS first. Then:
+Turn the Tap on. Then:
 
 ```python
 import asyncio

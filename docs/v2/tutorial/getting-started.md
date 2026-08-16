@@ -5,8 +5,7 @@ This tutorial walks you through installing the SDK, connecting with `TapSDK2`, a
 ## What you need
 
 - Python 3.9 or newer
-- A Tap Strap or TapXR on **v2** framed firmware (GATT characteristic `c3ff000e` present)
-- The Tap already paired with your computer over Bluetooth
+- A TapBand or TapXR on **v2** framed firmware (GATT characteristic `c3ff000e` present)
 
 If `connect()` returns `TapSDK`, use the [v1 tutorial](../../v1/tutorial/getting-started.md) instead.
 
@@ -61,7 +60,7 @@ Or construct `TapSDK2()` and call `await sdk.run()` when you already know the fi
 
 ## 3. Run it
 
-1. Turn the Tap on and confirm it is connected in the OS Bluetooth settings.
+1. Turn the Tap on.
 2. Run:
 
 ```bash
@@ -80,7 +79,7 @@ Without `DeviceFeatures.MODEL_DETECTION`, model events stay off.
 
 ## 4. What just happened
 
-1. `await connect()` attaches to an already-paired Tap, detects protocol, and returns `TapSDK2` for v2. Notifications are **not** started yet.
+1. `await connect()` attaches to a Tap (already connected, or by scan), detects protocol, and returns `TapSDK2` for v2. Notifications are **not** started yet.
 2. `register_*` attaches callbacks (sync; register connection callbacks before `start()`).
 3. `await sdk.start()` arms framed notifications, starts keepalive, and fires the connection callback with the serial number (`bytes`).
 4. `set_feature(MODEL_DETECTION, True)` enables tap / model delivery. There is no `set_input_mode` on v2.

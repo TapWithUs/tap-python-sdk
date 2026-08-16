@@ -1,6 +1,6 @@
 # Tap Python SDK documentation
 
-This package talks to Tap Strap and TapXR over BLE. Firmware uses one of two protocols. Pick the tree that matches your device (or what `connect()` returns).
+This package talks to Tap Strap, Tap Strap 2, TapXR, and TapBand over BLE. Firmware uses one of two protocols. Pick the tree that matches your device (or what `connect()` returns).
 
 ## Pick a protocol
 
@@ -40,4 +40,4 @@ Both protocols stay first-class in the same package. Prefer `await connect()`: i
 
 ## Platforms
 
-macOS (CoreBluetooth), Windows 10+ (Bleak/WinRT), and Linux (BlueZ). Pair the Tap with the OS before running your app for the most reliable connection path.
+macOS (CoreBluetooth), Windows 10+ (Bleak/WinRT), and Linux (BlueZ). `connect()` attaches to an already-connected Tap when one is present; otherwise it scans.
