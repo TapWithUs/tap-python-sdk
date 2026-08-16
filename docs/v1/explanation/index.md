@@ -1,6 +1,6 @@
-# Explanation
+# Explanation (v1)
 
-Understanding-oriented background. For steps, use the [tutorial](../tutorial/getting-started.md) or [how-to guides](../how-to/index.md).
+Understanding-oriented background for the classic protocol.
 
 | Topic | Page |
 |-------|------|

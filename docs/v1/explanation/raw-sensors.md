@@ -1,9 +1,6 @@
 # Raw sensors
 
-!!! note "v1 raw mode"
-    This page describes v1 `InputModeRaw` / NUS streaming. For v2 framed IMU, see [`DeviceFeatures.RAW_IMU_DATA`](../how-to/use-v2-features.md) and [`set_imu_sensitivity`](../reference/tapsdk2.md).
-
-Raw mode exposes the motion sensors behind Tap’s gesture pipeline. That is useful for research, custom gesture models, and XR prototypes — not for everyday typing.
+Raw mode exposes the motion sensors behind Tap’s gesture pipeline. That is useful for research, custom gesture models, and XR prototypes — not for everyday typing. This page describes v1 `InputModeRaw` / NUS streaming.
 
 ## What is streamed
 
@@ -22,9 +19,9 @@ You cannot change sensitivity while remaining in raw mode with a different comma
 
 Axes are defined relative to the hardware:
 
-![Tap Strap reference frame](../assets/TAP-axis-alpha.png)
+![Tap Strap reference frame](../../assets/TAP-axis-alpha.png)
 
-![TapXR reference frame](../assets/TAPXR-axis.png)
+![TapXR reference frame](../../assets/TAPXR-axis.png)
 
 Additional protocol notes: [Tap Strap Raw Sensors Mode](https://tapwithus.atlassian.net/wiki/spaces/TD/pages/792002574/Tap+Strap+Raw+Sensors+Mode) (internal Confluence).
 

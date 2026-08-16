@@ -1,8 +1,8 @@
-# Use v2 features
+# Use features
 
 Recipes for `TapSDK2` (framed protocol). Prefer `await connect()` so protocol detection picks v2 automatically; or construct `TapSDK2()` when you know the firmware.
 
-There is no `set_input_mode`. Enable streams with [`DeviceFeatures`](../reference/enumerations.md#devicefeatures).
+There is no `set_input_mode`. Enable streams with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures).
 
 ## Connect and enable features
 
@@ -59,7 +59,7 @@ await sdk.set_imu_sensitivity(
 )
 ```
 
-Packet dicts match v1 raw shape (`type` / `ts` / `payload`). See [Events](../reference/events.md#raw-imu-v2).
+Packet dicts use `type` / `ts` / `payload`. See [Events](../reference/events.md#raw-imu).
 
 ## Standby
 

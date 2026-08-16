@@ -1,13 +1,11 @@
 # Send haptic (vibration) sequences
 
-!!! note "v1 and v2"
-    Both SDKs expose `send_vibration_sequence`. On v2 this aliases `set_haptic_pattern` (framed write). Same period encoding either way.
-
 ```python
 await sdk.send_vibration_sequence([1000, 300, 200])
+# same as await sdk.set_haptic_pattern([...])
 ```
 
-Periods are in milliseconds, clamped to **0–2550** in **10 ms** steps. Values are stored as `period // 10` on the wire.
+Periods are in milliseconds, clamped to **0–2550** in **10 ms** steps. Values are stored as `period // 10` on the wire (framed write on `c3ff000f`).
 
 The list alternates **on** and **off** durations. The example above vibrates for 1 s, pauses 300 ms, then vibrates 200 ms.
 

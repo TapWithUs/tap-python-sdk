@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/tap-python-sdk.svg)](https://pypi.org/project/tap-python-sdk/)
 
-BLE SDK for building Python apps that connect to **Tap Strap** and **TapXR**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
+BLE SDK for building Python apps that connect to **Tap Strap**, **Tap Strap 2**, **TapXR**, and **TapBand**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
 
 **Python ≥ 3.9** · **macOS / Windows / Linux** · **currently in beta**
 
@@ -10,14 +10,14 @@ BLE SDK for building Python apps that connect to **Tap Strap** and **TapXR**, se
 
 Published docs (MkDocs Material, versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
 
-Pick the path that matches your goal:
+Docs are split by BLE protocol. Pick the path that matches your device (or what `connect()` returns):
 
 | I want to… | Go to |
 |------------|--------|
-| Get a first working connection | [Tutorial: Getting started](docs/tutorial/getting-started.md) |
-| Solve a specific task | [How-to guides](docs/how-to/index.md) |
-| Look up APIs and types | [Reference](docs/reference/index.md) |
-| Understand modes and sensors | [Explanation](docs/explanation/index.md) |
+| Choose protocol / compare v1 vs v2 | [Docs home](docs/index.md) |
+| Start with classic `TapSDK` (v1) | [v1 Getting started](docs/v1/tutorial/getting-started.md) |
+| Start with framed `TapSDK2` (v2) | [v2 Getting started](docs/v2/tutorial/getting-started.md) |
+| Install the package | [Install the SDK](docs/how-to/install.md) |
 | Read the changelog | [Release notes](docs/release-notes.md) |
 
 Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requirements-docs.txt && mkdocs serve`.
@@ -46,20 +46,20 @@ async def main():
 asyncio.run(main())
 ```
 
-Pair the Tap with the OS first. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v1) or `TapSDK2` (v2) from GATT. More: [`examples/connect.py`](examples/connect.py).
+Turn the Tap on. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v1) or `TapSDK2` (v2) from GATT. More: [`examples/connect.py`](examples/connect.py).
 
 ### Features (summary)
 
 - **Protocols:** v1 (`TapSDK`) and v2 framed (`TapSDK2`); `connect()` auto-detects
-- **Modes (v1):** Text, Controller, Controller+Text, Raw sensors
-- **Features (v2):** `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby
+- **Modes (v1):** Text, Controller, Controller+Text, Raw sensors — [v1 how-tos](docs/v1/how-to/index.md)
+- **Features (v2):** `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby — [v2 how-tos](docs/v2/how-to/index.md)
 - **Events:** tap, mouse, air gesture, raw / IMU packets, connect/disconnect
 - **Commands:** set mode / features, Spatial Control input type (TapXR), haptic sequences
-- **Spatial Control** (authorized TapXR builds): see [Use Spatial Control](docs/how-to/use-spatial-control.md)
+- **Spatial Control** (authorized TapXR builds): [Use Spatial Control](docs/v1/how-to/use-spatial-control.md)
 
 ### Migrating from 0.6.x
 
-Breaking API changes are listed in [Migrate from 0.6](docs/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
+Breaking API changes for v1 (`TapSDK`) are listed in [Migrate from 0.6](docs/v1/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
 
 ### Contributing
 

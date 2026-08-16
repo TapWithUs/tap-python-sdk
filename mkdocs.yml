@@ -68,29 +68,49 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Tutorial:
-      - Getting started: tutorial/getting-started.md
-  - How-to guides:
-      - Overview: how-to/index.md
-      - Install the SDK: how-to/install.md
-      - Connect and listen: how-to/connect-and-listen.md
-      - Switch input modes: how-to/switch-input-modes.md
-      - Stream raw sensors: how-to/stream-raw-sensors.md
-      - Use v2 features: how-to/use-v2-features.md
-      - Send haptics: how-to/send-haptics.md
-      - Use Spatial Control: how-to/use-spatial-control.md
-      - Migrate from 0.6: how-to/migrate-from-0.6.md
-  - Reference:
-      - Overview: reference/index.md
-      - TapSDK: reference/tapsdk.md
-      - TapSDK2: reference/tapsdk2.md
-      - Input modes: reference/input-modes.md
-      - Enumerations: reference/enumerations.md
-      - Events: reference/events.md
-      - Package: reference/package.md
-  - Explanation:
-      - Overview: explanation/index.md
-      - Connection model: explanation/connection-model.md
-      - Input modes: explanation/input-modes.md
-      - Raw sensors: explanation/raw-sensors.md
+  - v1 (TapSDK):
+      - Overview: v1/index.md
+      - Tutorial:
+          - Getting started: v1/tutorial/getting-started.md
+      - How-to guides:
+          - Overview: v1/how-to/index.md
+          - Install the SDK: how-to/install.md
+          - Connect and listen: v1/how-to/connect-and-listen.md
+          - Switch input modes: v1/how-to/switch-input-modes.md
+          - Stream raw sensors: v1/how-to/stream-raw-sensors.md
+          - Send haptics: v1/how-to/send-haptics.md
+          - Use Spatial Control: v1/how-to/use-spatial-control.md
+          - Migrate from 0.6: v1/how-to/migrate-from-0.6.md
+      - Reference:
+          - Overview: v1/reference/index.md
+          - TapSDK: v1/reference/tapsdk.md
+          - Input modes: v1/reference/input-modes.md
+          - Events: v1/reference/events.md
+          - Enumerations: reference/enumerations.md
+          - Package: reference/package.md
+      - Explanation:
+          - Overview: v1/explanation/index.md
+          - Connection model: v1/explanation/connection-model.md
+          - Input modes: v1/explanation/input-modes.md
+          - Raw sensors: v1/explanation/raw-sensors.md
+  - v2 (TapSDK2):
+      - Overview: v2/index.md
+      - Tutorial:
+          - Getting started: v2/tutorial/getting-started.md
+      - How-to guides:
+          - Overview: v2/how-to/index.md
+          - Install the SDK: how-to/install.md
+          - Connect and listen: v2/how-to/connect-and-listen.md
+          - Use features: v2/how-to/use-features.md
+          - Send haptics: v2/how-to/send-haptics.md
+      - Reference:
+          - Overview: v2/reference/index.md
+          - TapSDK2: v2/reference/tapsdk2.md
+          - Events: v2/reference/events.md
+          - Enumerations: reference/enumerations.md
+          - Package: reference/package.md
+      - Explanation:
+          - Overview: v2/explanation/index.md
+          - Connection model: v2/explanation/connection-model.md
+          - Features model: v2/explanation/features.md
   - Release notes: release-notes.md

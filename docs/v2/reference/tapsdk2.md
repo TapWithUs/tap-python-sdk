@@ -1,8 +1,25 @@
 # TapSDK2
 
-v2 framed-protocol entry point. Import with `from tapsdk import TapSDK2`, or prefer [`connect()`](tapsdk.md#connect) which returns `TapSDK` or `TapSDK2`.
+v2 framed-protocol entry point. Import with `from tapsdk import TapSDK2`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [v1 docs](../../v1/index.md) when it returns `TapSDK`).
 
-Commands and events use framed messages on `c3ff000e` (notify) / `c3ff000f` (write). There is no NUS `set_input_mode` path — enable streams with [`DeviceFeatures`](enumerations.md#devicefeatures).
+Commands and events use framed messages on `c3ff000e` (notify) / `c3ff000f` (write). There is no NUS `set_input_mode` path — enable streams with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures).
+
+## `connect`
+
+```python
+from tapsdk import connect
+
+sdk = await connect(address=None, **kwargs)
+```
+
+Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
+
+| Parameter | Description |
+|-----------|-------------|
+| `address` | Optional BLE address / platform device id (same rules as the constructor) |
+| `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
+
+Does **not** start notifications. Register callbacks, then `await sdk.start()`.
 
 ## Constructor
 
@@ -38,7 +55,7 @@ enabled = await sdk.get_feature(DeviceFeatures.RAW_IMU_DATA)
 
 | Method | Description |
 |--------|-------------|
-| `async set_feature(feature, enable, identifier=None)` | Enable or disable a [`DeviceFeatures`](enumerations.md#devicefeatures) stream |
+| `async set_feature(feature, enable, identifier=None)` | Enable or disable a [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures) stream |
 | `async get_feature(feature, identifier=None) -> bool` | Read current feature enable state |
 
 ### Vision sensor
@@ -85,7 +102,7 @@ gyro, xl = await sdk.get_imu_sensitivity()
 
 ### Device info
 
-`async get_device_info() -> DeviceInfo` — same DIS/BAS reader as [`TapSDK`](tapsdk.md). Shared via `tapsdk.device_info`.
+`async get_device_info() -> DeviceInfo` — shared DIS/BAS reader via `tapsdk.device_info`.
 
 ## Event registration
 
