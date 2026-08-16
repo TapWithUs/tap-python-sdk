@@ -10,6 +10,8 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* Docs restructured protocol-first: separate v1 (`TapSDK`) and v2 (`TapSDK2`) trees with a Home compare table
+
 ### Bug fixes
 
 ## 0.8.0 (2026-08-04)

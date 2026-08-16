@@ -1,14 +1,34 @@
 # Tap Python SDK documentation
 
-Pick the section that matches what you need:
+This package talks to Tap Strap and TapXR over BLE. Firmware uses one of two protocols. Pick the tree that matches your device (or what `connect()` returns).
 
-| Goal | Section |
-|------|---------|
-| Learn by doing — first working connection | [Tutorial](tutorial/getting-started.md) |
-| Solve a specific task | [How-to guides](how-to/index.md) |
-| Look up an API, type, or event | [Reference](reference/index.md) |
-| Understand how modes and sensors work | [Explanation](explanation/index.md) |
-| Read the changelog for a PyPI release | [Release notes](release-notes.md) |
+## Pick a protocol
+
+What your app can do depends on firmware protocol. Pick the tree that matches your device (or what `connect()` returns).
+
+| Capability | [v1 (`TapSDK`)](v1/index.md) | [v2 (`TapSDK2`)](v2/index.md) |
+|------------|------------------------------|-------------------------------|
+| Hardware | Tap Strap, Tap Strap 2, TapXR | TapBand, TapXR |
+| Finger taps to your app | ✅ | ✅ |
+| HID keyboard / mouse | ✅ | ❌ |
+| Pointer / mouse motion | ✅ | ✅ |
+| Air gestures | Partial | Full |
+| Raw finger accelerometers | Tap Strap / Tap Strap 2 only | ❌ |
+| Raw IMU | ✅ | ✅ |
+| Vision model / stream control | ❌ | ✅ |
+| Standby state | ❌ | ✅ |
+| Haptic sequences | ✅ | ✅ |
+
+Both protocols stay first-class in the same package. Prefer `await connect()`: it detects the protocol and returns `TapSDK` or `TapSDK2`. Then follow that protocol’s section.
+
+## Shared
+
+| Goal | Page |
+|------|------|
+| Install on macOS, Windows, or Linux | [Install the SDK](how-to/install.md) |
+| Package exports and GATT map | [Package](reference/package.md) |
+| Enumerations | [Enumerations](reference/enumerations.md) |
+| Changelog | [Release notes](release-notes.md) |
 
 ## Package
 

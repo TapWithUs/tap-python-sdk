@@ -6,25 +6,25 @@ alwaysApply: false
 
 # Diátaxis docs guidelines
 
-This repository's docs follow [Diátaxis](https://diataxis.fr/). Keep them consistent with that model.
+This repository's docs follow [Diátaxis](https://diataxis.fr/) **inside each protocol tree**. Top-level nav is protocol-first (Stripe-style): **v1 (`TapSDK`)** and **v2 (`TapSDK2`)** are separate sections. Shared pages (`how-to/install`, `reference/enumerations`, `reference/package`, `release-notes`) are linked from both. Migrate from 0.6 is v1-only.
 
-## Quadrants
+## Quadrants (per protocol)
 
 | Quadrant | Path | Purpose |
 |----------|------|---------|
-| Tutorial | `docs/tutorial/` | Learning-oriented; one successful first path |
-| How-to | `docs/how-to/` | Problem-oriented recipes for a specific goal |
-| Reference | `docs/reference/` | Information-oriented API / type / event facts |
-| Explanation | `docs/explanation/` | Understanding-oriented background |
+| Tutorial | `docs/v1/tutorial/`, `docs/v2/tutorial/` | Learning-oriented; one successful first path per protocol |
+| How-to | `docs/v1/how-to/`, `docs/v2/how-to/` (+ shared `docs/how-to/`) | Problem-oriented recipes for a specific goal |
+| Reference | `docs/v1/reference/`, `docs/v2/reference/` (+ shared `docs/reference/`) | Information-oriented API / type / event facts |
+| Explanation | `docs/v1/explanation/`, `docs/v2/explanation/` | Understanding-oriented background |
 
-`Readme.md` stays a short overview that links into `docs/` and the published MkDocs site. Do not re-inflate it into a full API manual.
+`Readme.md` stays a short overview that links into `docs/` and the published MkDocs site. Do not re-inflate it into a full API manual. Home (`docs/index.md`) owns the v1 vs v2 compare table and CTAs.
 
 ## When a code change requires doc updates
 
-- Public API, callbacks, command semantics, or example behavior → **Reference** (and How-to / Tutorial if the happy path changed)
-- New supported task or platform install step → **How-to**
-- Conceptual behavior (modes, connection, sensors) → **Explanation**
-- First-run experience changes → **Tutorial**
+- Public API, callbacks, command semantics, or example behavior → **Reference** under the affected protocol (and How-to / Tutorial if the happy path changed)
+- New supported task or platform install step → **How-to** (shared install if cross-protocol; else under `v1/` / `v2/`)
+- Conceptual behavior (modes, features, connection, sensors) → **Explanation** under the matching protocol
+- First-run experience changes → **Tutorial** for that protocol
 - Docs-only PRs that already match the change → no further edits
 
 ## Style
@@ -34,6 +34,7 @@ This repository's docs follow [Diátaxis](https://diataxis.fr/). Keep them consi
 - Keep MkDocs links valid (`mkdocs build --strict` must pass)
 - Example file links should point at GitHub `blob` URLs, not `../../examples/...`
 - Axis diagrams live under `docs/assets/`
+- Do not mix v1 and v2 recipes on one page; put protocol differences on Home or in the matching tree
 
 ## Published site
 
