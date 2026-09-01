@@ -4,7 +4,7 @@
 
 BLE SDK for building Python apps that connect to **Tap Strap** and **TapXR**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
 
-**Python ≥ 3.9** · **macOS / Windows / Linux** · **currently in beta**
+**Python ≥ 3.10** · **macOS / Windows / Linux** · **currently in beta**
 
 ### Documentation
 

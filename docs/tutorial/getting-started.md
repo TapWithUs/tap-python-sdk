@@ -4,7 +4,7 @@ This tutorial walks you through installing the SDK, connecting to a Tap, and pri
 
 ## What you need
 
-- Python 3.9 or newer
+- Python 3.10 or newer
 - A Tap Strap or TapXR, updated with Tap Manager
 - The Tap already paired with your computer over Bluetooth
 

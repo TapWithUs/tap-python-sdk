@@ -3,7 +3,7 @@ import logging
 from typing import Callable
 
 from . import encoder, parsers
-from ._transport import TapClient, client_connected, connect_tap
+from ._transport import TapClient, client_connected, connect_tap, set_disconnected_callback
 from .device_info import DeviceInfo, read_device_info, serial_number_characteristic
 from .enumerations import (
     DeviceFeatures,
@@ -126,7 +126,7 @@ class TapSDK2:
 
     def register_disconnection_events(self, cb: Callable):
         self._disconnect_cb = cb
-        self.client.set_disconnected_callback(cb)
+        set_disconnected_callback(self.client, cb)
 
     def on_inc_msg(self, sender, data):
         if not data:
@@ -283,7 +283,7 @@ class TapSDK2:
         if not client_connected(self.client):
             raise ConnectionError("Tap client is not connected; call connect() or run() first")
         if self._disconnect_cb:
-            self.client.set_disconnected_callback(self._disconnect_cb)
+            set_disconnected_callback(self.client, self._disconnect_cb)
         await self.client.start_notify(tap_data_read_characteristic, self.on_inc_msg)
         self.device_serial_number = await self.client.read_gatt_char(
             serial_number_characteristic,

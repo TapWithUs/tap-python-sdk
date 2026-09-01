@@ -23,8 +23,8 @@ On every platform the most reliable path is: pair in system Bluetooth settings, 
 Platform differences matter:
 
 - **macOS** retrieves already-connected peripherals that expose the Tap service.
-- **Windows** uses WinRT to find connected Tap devices and opens a GATT session without Bleak’s normal connect wait (which can hang if the session is already active). If nothing is connected, it scans and also polls for paired reconnects that do not advertise.
-- **Linux** lists BlueZ devices with `bt-device` and connects to names starting with `Tap`.
+- **Windows** uses WinRT to find connected Tap devices, then attaches through Bleak `connect()`. If nothing is connected, it scans and also polls for paired reconnects that do not advertise.
+- **Linux** lists BlueZ devices and connects to names starting with `Tap`.
 
 ## v1 vs v2 GATT paths
 

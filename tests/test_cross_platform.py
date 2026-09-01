@@ -11,11 +11,7 @@ def test_tapclient_importable():
 
 
 def test_platform_ble_backend_is_not_silently_disabled():
-    """Guard against optional BLE backend imports failing silently.
-
-    Platform BLE backends used to be swallowed with ImportError; this asserts
-    the backend symbols for the running platform were actually imported.
-    """
+    """Guard against optional BLE backend imports failing silently."""
     import tapsdk._transport as transport
 
     system = platform.system()
@@ -26,7 +22,5 @@ def test_platform_ble_backend_is_not_silently_disabled():
         assert transport.BluetoothLEDevice is not None
         assert transport.BluetoothConnectionStatus is not None
         assert transport.BluetoothCacheMode is not None
-        assert transport.GattSession is not None
-        assert transport.GattSessionStatus is not None
         assert transport.DeviceInformation is not None
         assert transport.DeviceInformationKind is not None
