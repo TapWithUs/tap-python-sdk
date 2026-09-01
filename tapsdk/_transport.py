@@ -96,13 +96,14 @@ elif platform.system() == "Windows":
         aqs_filter = BluetoothLEDevice.get_device_selector_from_connection_status(
             BluetoothConnectionStatus.CONNECTED
         )
-        devices = await DeviceInformation.find_all_async(
+        devices = await DeviceInformation.find_all_async_with_kind_aqs_filter_and_additional_properties(
             aqs_filter,
             request_properties,
             DeviceInformationKind.ASSOCIATION_ENDPOINT,
         )
         taps = []
         for device in devices:
+            logger.debug("Candidate connected AEP device: name=%s id=%s", device.name, device.id)
             try:
                 device_address_str = device.id.split("-")[-1].upper()
                 address_int = int(device_address_str.replace(":", ""), 16)
@@ -110,7 +111,12 @@ elif platform.system() == "Windows":
                     address_int
                 )
                 if ble_device is None:
-                    logger.error("Could not create BLE device for %s", device.name)
+                    logger.error(
+                        "Could not create BLE device for %s (id=%s, parsed_address=%s)",
+                        device.name,
+                        device.id,
+                        device_address_str,
+                    )
                     continue
                 services = await ble_device.get_gatt_services_async()
                 logger.info("Device %s has the following services:", device.name)
@@ -133,6 +139,14 @@ elif platform.system() == "Windows":
         return taps[0].id
 
     class TapClient(BleakClient):
+        def __init__(self, *args, **kwargs):
+            # Windows caches the GATT service table per-address. A Tap that was
+            # previously paired while running v1 firmware (or before a firmware
+            # update) can otherwise report stale (v1-only) services, causing
+            # detect_protocol() to misidentify a v2 device as v1.
+            kwargs.setdefault("winrt", {}).setdefault("use_cached_services", False)
+            super().__init__(*args, **kwargs)
+
         async def connect_retrieved(self, **kwargs) -> bool:
             if not self.address:
                 logger.info("No connected Tap devices found.")
@@ -510,8 +524,8 @@ async def connect_tap(address=None) -> TapClient:
                     connected = await client.connect_retrieved()
                 if not connected:
                     logger.info("Falling back to Bleak connect+pair...")
-                    client = TapClient(found_device["scanned"])
-                    await client.connect(pair=True)
+                    client = TapClient(found_device["scanned"], pair=True)
+                    await client.connect()
                     connected = client_connected(client)
 
         if client is None or not client_connected(client):
