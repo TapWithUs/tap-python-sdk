@@ -1,6 +1,6 @@
 # Input modes
 
-Defined in `tapsdk.inputmodes`. Prefer importing the concrete classes from `tapsdk`. These classes build **v1** NUS mode commands for `TapSDK.set_input_mode` / `set_input_type`. They are not used by `TapSDK2` (see [`DeviceFeatures`](enumerations.md#devicefeatures)).
+Defined in `tapsdk.inputmodes`. Prefer importing the concrete classes from `tapsdk`. These classes build NUS mode commands for `TapSDK.set_input_mode` / `set_input_type`.
 
 ## Base: `InputMode`
 

@@ -1,9 +1,6 @@
 # Switch input modes
 
-!!! note "v1 protocol"
-    This guide uses `TapSDK.set_input_mode` (NUS). For v2 framed devices, use [`DeviceFeatures`](use-v2-features.md) instead — there is no Text / Controller mode write.
-
-Input mode controls whether the Tap talks to the OS as a keyboard/mouse, streams events to your app, or both.
+Input mode controls whether the Tap talks to the OS as a keyboard/mouse, streams events to your app, or both. Uses `TapSDK.set_input_mode` (NUS).
 
 ## Choose a mode
 

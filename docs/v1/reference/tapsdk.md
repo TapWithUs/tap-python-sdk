@@ -1,6 +1,6 @@
 # TapSDK
 
-v1 protocol entry point. Import with `from tapsdk import TapSDK`, or prefer [`connect()`](#connect) which returns `TapSDK` or [`TapSDK2`](tapsdk2.md).
+v1 protocol entry point. Import with `from tapsdk import TapSDK`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [v2 docs](../../v2/index.md) when it returns `TapSDK2`).
 
 Construction imports a platform BLE backend (macOS, Windows, or Linux). Creating `TapSDK` on an unsupported platform, or with the wrong Bleak pin, raises `ImportError`.
 
