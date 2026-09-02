@@ -20,16 +20,12 @@ def pytest_configure(config):
          _logger=types.SimpleNamespace(debug=noop, info=noop, error=noop))
     stub("bleak.backends")
     stub("bleak.backends.device", BLEDevice=Dummy)
-    stub("bleak.backends.bluezdbus", defs=types.SimpleNamespace(
-        BLUEZ_SERVICE="", DEVICE_INTERFACE="",
-        OBJECT_MANAGER_INTERFACE="", PROPERTIES_INTERFACE=""))
-    stub("bleak.backends.bluezdbus.utils",
-         assert_reply=lambda *a: None, unpack_variants=lambda v: v)
-    stub("dbus_next", BusType=types.SimpleNamespace(SYSTEM="system"),
-         Message=Dummy, Variant=Dummy)
-    stub("dbus_next.aio", MessageBus=Dummy)
+    stub("dbus_fast", BusType=types.SimpleNamespace(SYSTEM="system"))
+    stub("dbus_fast.aio", MessageBus=Dummy)
+    stub("dbus_fast.constants", BusType=types.SimpleNamespace(SYSTEM="system"),
+         MessageType=types.SimpleNamespace(ERROR="error", METHOD_RETURN="method_return"))
+    stub("dbus_fast.message", Message=Dummy)
+    stub("dbus_fast.signature", Variant=Dummy)
     stub("bleak.backends.corebluetooth.CentralManagerDelegate",
          CBUUID=type("CBUUID", (), {"UUIDWithString_": staticmethod(lambda x: x)}),
-         CentralManagerDelegate=type("CentralManagerDelegate", (), {
-             "alloc": classmethod(
-                 lambda cls: type("Obj", (), {"init": lambda self: None})())}))
+         CentralManagerDelegate=Dummy)

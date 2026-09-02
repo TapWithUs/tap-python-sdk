@@ -1,3 +1,2 @@
-# bleak version is platform-specific; see setup.py REQUIRED for exact pins.
-bleak
+bleak>=3.0.2,<4
 setuptools

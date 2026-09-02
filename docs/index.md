@@ -34,7 +34,7 @@ Both protocols stay first-class in the same package. Prefer `await connect()`: i
 
 - **PyPI:** [`tap-python-sdk`](https://pypi.org/project/tap-python-sdk/)
 - **Import name:** `tapsdk`
-- **Python:** 3.9+
+- **Python:** 3.10+
 - **Status:** beta
 - **Source:** [TapWithUs/tap-python-sdk](https://github.com/TapWithUs/tap-python-sdk)
 

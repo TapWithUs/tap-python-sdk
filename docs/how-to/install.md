@@ -24,11 +24,11 @@ pip install .[dev]
 
 ### macOS
 
-Uses Apple CoreBluetooth via Bleak. If you use a non-system Python, install PyObjC for that interpreter. The SDK pins `bleak==0.12.1` on Darwin.
+Uses Apple CoreBluetooth via Bleak 3.x. If you use a non-system Python, install PyObjC for that interpreter.
 
 ### Windows 10+
 
-Uses Bleak with WinRT (`bleak==0.22.3` and `bleak-winrt==1.2.0`). No external DLL is required.
+Uses Bleak 3.x with PyWinRT (installed via bleak). No external DLL is required.
 
 ### Linux
 
@@ -40,7 +40,7 @@ sudo usermod -G bluetooth -a <username>
 su - $USER
 ```
 
-The SDK pins `bleak==0.12.1` on Linux (same as Darwin). The device’s Bluetooth name must start with `Tap` for the Linux discovery path.
+Uses Bleak 3.x with BlueZ. The device’s Bluetooth name must start with `Tap` for the Linux discovery path.
 
 ## Verify the import
 

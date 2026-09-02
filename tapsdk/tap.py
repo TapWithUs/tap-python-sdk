@@ -3,7 +3,7 @@ import logging
 from typing import Callable
 
 from . import parsers
-from ._transport import TapClient, client_connected, connect_tap, tap_service  # noqa: F401
+from ._transport import TapClient, client_connected, connect_tap, set_disconnected_callback, tap_service  # noqa: F401
 from .device_info import (  # noqa: F401
     DeviceInfo,
     battery_level_characteristic,
@@ -112,7 +112,7 @@ class TapSDK():
     def register_disconnection_events(self, cb: Callable):
         """Register Bleak's disconnected callback ``cb(client)``."""
         self._disconnect_cb = cb
-        self.client.set_disconnected_callback(cb)
+        set_disconnected_callback(self.client, cb)
 
     def on_moused(self, identifier, data):
         if self.mouse_event_cb:
@@ -229,7 +229,7 @@ class TapSDK():
         if not client_connected(self.client):
             raise ConnectionError("Tap client is not connected; call connect() or run() first")
         if self._disconnect_cb:
-            self.client.set_disconnected_callback(self._disconnect_cb)
+            set_disconnected_callback(self.client, self._disconnect_cb)
         for ch, cb in [(tap_data_characteristic, self.on_tapped),
                        (mouse_data_characteristic, self.on_moused),
                        (air_gesture_data_characteristic, self.on_air_gesture),

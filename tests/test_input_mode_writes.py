@@ -83,7 +83,10 @@ def test_set_input_mode_also_asserts_current_input_type():
 
 
 def test_mode_writes_are_serialized_and_spaced():
-    starts = []
+    # Avoid wall-clock assertions: Windows loop.time() can resolve both
+    # write starts to the same tick even when settle sleep ran between them.
+    events = []
+    settle = 0.01
 
     async def scenario():
         sdk = TapSDK.__new__(TapSDK)
@@ -92,10 +95,15 @@ def test_mode_writes_are_serialized_and_spaced():
 
         async def write_gatt_char(uuid, value, response=False):
             assert response is True
-            starts.append(asyncio.get_running_loop().time())
+            events.append(("write", bytes(value)))
+
+        async def tracking_sleep(delay):
+            events.append(("sleep", delay))
 
         sdk.client.write_gatt_char = AsyncMock(side_effect=write_gatt_char)
-        with patch("tapsdk.tap.MODE_COMMAND_SETTLE_SECONDS", 0.01):
+        with patch("tapsdk.tap.MODE_COMMAND_SETTLE_SECONDS", settle), patch(
+            "tapsdk.tap.asyncio.sleep", side_effect=tracking_sleep
+        ):
             await asyncio.gather(
                 sdk._write_input_mode(InputModeController().get_command()),
                 sdk._write_input_mode(input_type_command(InputType.KEYBOARD)),
@@ -103,5 +111,7 @@ def test_mode_writes_are_serialized_and_spaced():
 
     asyncio.run(scenario())
 
-    assert len(starts) == 2
-    assert starts[1] - starts[0] >= 0.01
+    assert [kind for kind, _ in events] == ["write", "sleep", "write", "sleep"]
+    assert events[1][1] == settle
+    assert events[3][1] == settle
+    assert events[0][1] != events[2][1]

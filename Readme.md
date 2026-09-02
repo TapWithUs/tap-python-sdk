@@ -4,7 +4,7 @@
 
 BLE SDK for building Python apps that connect to **Tap Strap**, **Tap Strap 2**, **TapXR**, and **TapBand**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
 
-**Python ≥ 3.9** · **macOS / Windows / Linux** · **currently in beta**
+**Python ≥ 3.10** · **macOS / Windows / Linux** · **currently in beta**
 
 ### Documentation
 
@@ -28,7 +28,7 @@ Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requi
 pip install tap-python-sdk
 ```
 
-Platform notes (BlueZ on Linux, Bleak pins, pairing): [Install the SDK](docs/how-to/install.md).
+Platform notes (BlueZ on Linux, Bleak 3.x, pairing): [Install the SDK](docs/how-to/install.md).
 
 ### Quick example
 

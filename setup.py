@@ -15,16 +15,7 @@ EMAIL = "support@tapwithus.com"
 AUTHOR = "Tap systems Inc."
 
 REQUIRED = [
-    # linux reqs
-    'bleak==0.12.1;platform_system=="Linux"',
-    # macOS reqs
-    'bleak==0.12.1;platform_system=="Darwin"',
-    # Windows reqs
-    # bleak>=0.22.0 switched its Windows backend to PyWinRT and no longer
-    # depends on bleak-winrt, but tapsdk's Windows code still targets the
-    # bleak-winrt API (see #21), so it must be installed explicitly here.
-    'bleak==0.22.3;platform_system=="Windows"',
-    'bleak-winrt==1.2.0;platform_system=="Windows"',
+    "bleak>=3.0.2,<4",
 ]
 
 
@@ -53,22 +44,24 @@ setup(
     install_requires=REQUIRED,
     include_package_data=True,
     license="MIT",
-    python_requires='>=3.9',
+    python_requires=">=3.10",
     extras_require={
         "dev": ["pytest", "flake8"]
     },
-    # classifiers=[
-    #     # Trove classifiers
-    #     # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    #     "Framework :: AsyncIO",
-    #     "Intended Audience :: Developers",
-    #     "Topic :: Communications",
-    #     "License :: OSI Approved :: MIT License",
-    #     "Operating System :: Microsoft :: Windows :: Windows 10",
-    #     "Operating System :: MacOS :: MacOS X",
-    #     "Programming Language :: Python",
-    #     "Programming Language :: Python :: 3",
-    #     "Programming Language :: Python :: 3.7",
-    #     "Programming Language :: Python :: 3.8"
-    # ],
+    classifiers=[
+        "Framework :: AsyncIO",
+        "Intended Audience :: Developers",
+        "Topic :: Communications",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+    ],
 )

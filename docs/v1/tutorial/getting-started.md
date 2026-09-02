@@ -4,7 +4,7 @@ This tutorial walks you through installing the SDK, connecting with `TapSDK`, an
 
 ## What you need
 
-- Python 3.9 or newer
+- Python 3.10 or newer
 - A Tap Strap, Tap Strap 2, or TapXR on **v1** firmware (no framed `c3ff000e` characteristic)
 
 If `connect()` returns `TapSDK2`, use the [v2 tutorial](../../v2/tutorial/getting-started.md) instead.
