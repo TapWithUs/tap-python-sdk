@@ -28,7 +28,7 @@ Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requi
 pip install tap-python-sdk
 ```
 
-Platform notes (BlueZ on Linux, Bleak pins, pairing): [Install the SDK](docs/how-to/install.md).
+Platform notes (BlueZ on Linux, Bleak 3.x, pairing): [Install the SDK](docs/how-to/install.md).
 
 ### Quick example
 
