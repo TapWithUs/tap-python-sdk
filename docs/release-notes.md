@@ -10,6 +10,12 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+### Bug fixes
+
+## 0.9.0 (2026-09-02)
+______________________
+### Main features
+
 * Python 3.10–3.14 supported; Python 3.9 dropped (#40).
 * Bleak upgraded to 3.x on all platforms (macOS, Windows, Linux); per-OS bleak pins and `bleak-winrt` removed (#21).
 * Docs restructured protocol-first: separate v1 (`TapSDK`) and v2 (`TapSDK2`) trees with a Home compare table
