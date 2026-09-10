@@ -2,13 +2,17 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/tap-python-sdk.svg)](https://pypi.org/project/tap-python-sdk/)
 
-BLE SDK for building Python apps that connect to **Tap Strap**, **Tap Strap 2**, **TapXR**, and **TapBand**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
+BLE SDK for building Python apps that connect to **Tap Strap** / **Tap Strap 2** and **TapXR**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
 
-**Python ≥ 3.10** · **macOS / Windows / Linux** · **currently in beta**
+**Documented SDK hardware:** Tap Strap and TapXR. **TapBand** has the broadest gestures but is not a public first-run SDK target — [waitlist](https://www.tapwithus.com/tapband-waitlist/).
+
+**Python ≥ 3.10** · **macOS / Windows / Linux** · **currently in beta** · PyPI package `tap-python-sdk`, import `tapsdk`
 
 ### Documentation
 
-Published docs (MkDocs Material, versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
+- **Portal (start here):** [Getting started](https://dev.tapwithus.com/docs/getting-started/) · [How Tap works](https://dev.tapwithus.com/docs/how-tap-works/)
+- **App builders / coding agents:** [AGENTS.md](AGENTS.md) · Cursor skill [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md)
+- **Hosted MkDocs** (versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
 
 Docs are split by BLE protocol. Pick the path that matches your device (or what `connect()` returns):
 
@@ -28,20 +32,39 @@ Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requi
 pip install tap-python-sdk
 ```
 
+Pair the Tap in **OS Bluetooth settings** first. The SDK attaches to a device the OS already knows — it does not scan for unpaired devices.
+
 Platform notes (BlueZ on Linux, Bleak 3.x, pairing): [Install the SDK](docs/how-to/install.md).
 
 ### Quick example
 
+Tap boots in **Text** (HID) mode — you get **zero** tap callbacks until you switch. After `start()`, use **Controller** on v1 or **MODEL_DETECTION** on v2:
+
 ```python
 import asyncio
-from tapsdk import TapSDK2, connect
+from tapsdk import DeviceFeatures, InputModeController, TapSDK2, connect
+
+
+def on_tap(identifier, tapcode):
+    # tapcode is int 1..31 (v1) or [int] (v2) — bit0=thumb … bit4=pinky
+    print(identifier, tapcode)
+
 
 async def main():
     sdk = await connect()  # auto-detects v1 / v2
-    sdk.register_tap_events(lambda identifier, tapcode: print(identifier, tapcode))
+    sdk.register_tap_events(on_tap)
     await sdk.start()
-    print("Protocol:", "v2" if isinstance(sdk, TapSDK2) else "v1")
+
+    if isinstance(sdk, TapSDK2):
+        print("Protocol: v2")
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+    else:
+        print("Protocol: v1")
+        await sdk.set_input_mode(InputModeController())
+
+    print("Waiting for taps… (Ctrl+C to quit)")
     await asyncio.Event().wait()
+
 
 asyncio.run(main())
 ```
@@ -54,8 +77,8 @@ Turn the Tap on. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v
 - **Modes (v1):** Text, Controller, Controller+Text, Raw sensors — [v1 how-tos](docs/v1/how-to/index.md)
 - **Features (v2):** `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby — [v2 how-tos](docs/v2/how-to/index.md)
 - **Events:** tap, mouse, air gesture, raw / IMU packets, connect/disconnect
-- **Commands:** set mode / features, Spatial Control input type (TapXR), haptic sequences
-- **Spatial Control** (authorized TapXR builds): [Use Spatial Control](docs/v1/how-to/use-spatial-control.md)
+- **Commands:** set mode / features, haptic sequences
+- **Out of scope for first-run:** Spatial Control (`set_input_type` on authorized TapXR / v1 only — not on `TapSDK2`). See [Use Spatial Control](docs/v1/how-to/use-spatial-control.md) only if you have access.
 
 ### Migrating from 0.6.x
 
