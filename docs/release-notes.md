@@ -12,6 +12,8 @@ ______________________
 
 ### Bug fixes
 
+* `TapSDK()` / `TapSDK2()` no longer crash on Bleak 3 when constructed without an address (`address_or_ble_device`) (#54).
+
 ## 0.9.0 (2026-09-02)
 ______________________
 ### Main features
