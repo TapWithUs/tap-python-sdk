@@ -10,6 +10,14 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* README and `examples/connect.py` happy path now enable Controller (v1) or
+  `MODEL_DETECTION` (v2) after `start()`, so first-run samples are not silent
+  Text/HID sessions
+* Added `AGENTS.md` and Cursor/Claude skills (`.cursor/skills/tap-python-sdk`,
+  `.claude/skills/tap-python-sdk`) for app-builder coding agents
+* Documented SDK hardware framed as Tap Strap / TapXR; TapBand pointed at the
+  waitlist rather than as a public first-run target
+
 ### Bug fixes
 
 ## 0.9.0 (2026-09-02)

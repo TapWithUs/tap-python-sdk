@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from tapsdk import TapSDK2, connect
+from tapsdk import DeviceFeatures, InputModeController, TapSDK2, connect
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("tapsdk").setLevel(logging.DEBUG)
@@ -21,6 +21,7 @@ def on_tap(identifier, tapcode):
 
 
 async def main():
+    # Pair in OS Bluetooth settings first — SDK does not scan unpaired devices.
     # Two-phase: connect+detect, register callbacks, then start notifies.
     sdk = await connect()
     sdk.register_connection_events(on_connect)
@@ -28,10 +29,20 @@ async def main():
     sdk.register_tap_events(on_tap)
 
     await sdk.start()
-    logger.info("Protocol: %s", "v2" if isinstance(sdk, TapSDK2) else "v1")
+    is_v2 = isinstance(sdk, TapSDK2)
+    logger.info("Protocol: %s", "v2" if is_v2 else "v1")
     logger.info("Device info: %s", await sdk.get_device_info())
 
+    # Text/HID mode yields zero tap callbacks. Enable app-bound taps:
+    if is_v2:
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+        logger.info("MODEL_DETECTION enabled")
+    else:
+        await sdk.set_input_mode(InputModeController())
+        logger.info("Controller mode enabled")
+
     await sdk.send_vibration_sequence([100, 200, 100])
+    logger.info("Waiting for taps… (Ctrl+C to quit)")
     await asyncio.Event().wait()
 
 
