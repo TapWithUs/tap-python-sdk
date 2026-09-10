@@ -58,8 +58,8 @@ class TapSDK2:
         if client is not None:
             self.client = client
         else:
-            # Darwin TapClient defaults to ""; Linux treats falsy address as auto-detect.
-            self.client = TapClient(address=address if address is not None else "")
+            # Placeholder until run()/connect(); Bleak 3 wants address_or_ble_device positional.
+            self.client = TapClient(address if address is not None else "")
         self._write_lock = asyncio.Lock()
         self.device_serial_number = None
         self._scale_factors = None
