@@ -1,7 +1,7 @@
 # Windows BLE connect implementation notes
 
 Background/rationale for the Windows-specific connect logic in
-[`tapsdk/_transport.py`](../tapsdk/_transport.py). These are "why", not "what"
+[`tapsdk/_transport.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/tapsdk/_transport.py). These are "why", not "what"
 notes - pulled out of inline comments to keep the source file focused on the
 code itself. Each section is referenced from the corresponding spot in
 `_transport.py` via a short pointer comment.
