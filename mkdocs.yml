@@ -93,6 +93,7 @@ nav:
           - Connection model: v1/explanation/connection-model.md
           - Input modes: v1/explanation/input-modes.md
           - Raw sensors: v1/explanation/raw-sensors.md
+          - Windows BLE connect notes: windows-ble-connect-notes.md
   - v2 (TapSDK2):
       - Overview: v2/index.md
       - Tutorial:
@@ -113,4 +114,5 @@ nav:
           - Overview: v2/explanation/index.md
           - Connection model: v2/explanation/connection-model.md
           - Features model: v2/explanation/features.md
+          - Windows BLE connect notes: windows-ble-connect-notes.md
   - Release notes: release-notes.md

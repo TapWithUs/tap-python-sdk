@@ -99,9 +99,10 @@ a no-op if `disconnect()` already ran normally (attributes will already be
 `None` by then).
 
 Callers should still prefer an explicit, well-behaved shutdown over relying
-on this safety net - e.g. `examples/connect.py` wraps its main loop in
-`try/finally: await sdk.client.disconnect()` and catches `KeyboardInterrupt`
-around `asyncio.run(main())`.
+on this safety net - e.g. `examples/connect.py` uses `sdk` as an async
+context manager (`async with await connect() as sdk:`, which calls
+`sdk.client.disconnect()` on exit via `__aexit__`) and catches
+`KeyboardInterrupt` around `asyncio.run(main())`.
 
 ## Service cache mode on retry
 
