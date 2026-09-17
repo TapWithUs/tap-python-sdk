@@ -103,6 +103,21 @@ class TapSDK2:
                 response=True,
             )
 
+    async def __aenter__(self):
+        """Return self; the SDK is already connected via ``connect()``."""
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        """Disconnect the underlying client on exit.
+
+        Important on Windows: the underlying GATT session is created with
+        maintain_connection=True, which keeps it alive at the OS level
+        independent of this process. If we exit (e.g. Ctrl+C) without
+        disconnecting, that session can leak past process exit and cause
+        the NEXT run to see an incomplete/stale characteristic set.
+        """
+        await self.client.disconnect()
+
     def register_tap_events(self, cb: Callable):
         self.tap_event_cb = cb
 

@@ -9,7 +9,7 @@ Commands and events use framed messages on `c3ff000e` (notify) / `c3ff000f` (wri
 ```python
 from tapsdk import connect
 
-sdk = await connect(address=None, **kwargs)
+sdk = await connect(address=None, *, skip_scan=False, **kwargs)
 ```
 
 Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
@@ -17,6 +17,7 @@ Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK
 | Parameter | Description |
 |-----------|-------------|
 | `address` | Optional BLE address / platform device id (same rules as the constructor) |
+| `skip_scan` | Windows only. If `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`. Raises `ConnectionError` immediately instead of scanning and waiting. Ignored (no effect) on macOS/Linux. |
 | `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
 
 Does **not** start notifications. Register callbacks, then `await sdk.start()`.

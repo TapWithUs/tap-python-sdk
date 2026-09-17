@@ -10,9 +10,13 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* `connect()` accepts `skip_scan: bool = False` (Windows only): when `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports connected/paired, raising `ConnectionError` immediately otherwise instead of waiting on a scan.
+
 ### Bug fixes
 
 * `TapSDK()` / `TapSDK2()` no longer crash on Bleak 3 when constructed without an address (`address_or_ble_device`) (#54).
+* Windows BLE connect reliability: fixed intermittent leaked `GattSession` handles, stale/cached GATT service tables, and a services-changed race that could cause v2 devices to be misdetected as v1 or fail with `"Characteristic ... was not found!"`. See [Windows BLE connect notes](windows-ble-connect-notes.md).
+* `TapSDK` / `TapSDK2` now support use as an async context manager (`async with await connect() as sdk:`), ensuring the underlying GATT session is disconnected on exit.
 
 ## 0.9.0 (2026-09-02)
 ______________________
