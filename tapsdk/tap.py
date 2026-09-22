@@ -4,6 +4,7 @@ import platform
 from typing import Callable
 
 from bleak import BleakClient, BleakScanner
+from bleak.exc import BleakError
 
 from . import parsers
 from .enumerations import InputType, MouseModes
@@ -388,10 +389,34 @@ class TapSDK():
                         connected = await self.client.connect_retrieved()
                     if not connected:
                         logger.info("Falling back to Bleak connect+pair...")
-                        self.client = TapClient(found_device["scanned"])
-                        await self.client.connect()
-                        await self.client.pair(protection_level=2)
-                        connected = self._client_connected(self.client)
+                        # WinRT occasionally fails the connect handshake with
+                        # "Could not get GATT services: Unreachable" - this is a
+                        # transient link-establishment failure (the device dropped
+                        # off / Windows hadn't finished settling the radio link
+                        # yet), not a permanent error. Retry a few times before
+                        # giving up.
+                        last_error = None
+                        for attempt in range(1, 4):
+                            self.client = TapClient(found_device["scanned"])
+                            try:
+                                await self.client.connect()
+                                await self.client.pair(protection_level=2)
+                                connected = self._client_connected(self.client)
+                                if connected:
+                                    break
+                            except BleakError as e:
+                                last_error = e
+                                logger.warning(
+                                    "Bleak connect+pair attempt %d/3 failed: %s",
+                                    attempt, e)
+                                try:
+                                    await self.client.disconnect()
+                                except Exception:
+                                    pass
+                                if attempt < 3:
+                                    await asyncio.sleep(2)
+                        if not connected and last_error:
+                            raise last_error
 
         else:   
             async def detection_cb(device, adv_data):
