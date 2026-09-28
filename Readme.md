@@ -11,7 +11,7 @@ BLE SDK for building Python apps that connect to **Tap Strap** / **Tap Strap 2**
 ### Documentation
 
 - **Portal (start here):** [Getting started](https://dev.tapwithus.com/docs/getting-started/) · [How Tap works](https://dev.tapwithus.com/docs/how-tap-works/)
-- **App builders / coding agents:** [AGENTS.md](AGENTS.md) · Cursor skill [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md)
+- **AI-assisted development:** [section below](#ai-assisted-development) · [AGENTS.md](AGENTS.md) · skill [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md)
 - **Hosted MkDocs** (versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
 
 Docs are split by BLE protocol. Pick the path that matches your device (or what `connect()` returns):
@@ -79,6 +79,67 @@ Turn the Tap on. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v
 - **Events:** tap, mouse, air gesture, raw / IMU packets, connect/disconnect
 - **Commands:** set mode / features, haptic sequences
 - **Out of scope for first-run:** Spatial Control (`set_input_type` on authorized TapXR / v1 only — not on `TapSDK2`). See [Use Spatial Control](docs/v1/how-to/use-spatial-control.md) only if you have access.
+
+### AI-Assisted Development
+
+This repository ships agent skills and a short `AGENTS.md` so coding tools follow the same happy path as the [portal Getting started](https://dev.tapwithus.com/docs/getting-started/) (Controller / `MODEL_DETECTION` after `start()`, not silent Text/HID mode). Pattern inspired by Meta’s [AI-assisted development](https://wearables.developer.meta.com/docs/develop/dat/ai-assisted) guides ([meta-wearables-dat-ios](https://github.com/facebook/meta-wearables-dat-ios)).
+
+| Tool | Public artifact | Recommended setup |
+|------|-----------------|-------------------|
+| [Cursor](https://cursor.com/) | [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md) | Open this repo, or copy the skill into your app project (below) |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`.claude/skills/tap-python-sdk/`](.claude/skills/tap-python-sdk) (symlink twin) | Same skill content; Claude discovers `.claude/skills/` |
+| [AGENTS.md](https://agents.md)-compatible tools | [`AGENTS.md`](AGENTS.md) | Auto-loaded when the file is in the project root |
+
+#### Install the skill into your app project
+
+**Option A — work inside this repo** (no copy): clone or open `TapWithUs/tap-python-sdk`. Cursor and Claude load the checked-in skill paths automatically.
+
+**Option B — copy into another project** (typical host app):
+
+```bash
+# from your app repo root
+mkdir -p .cursor/skills/tap-python-sdk .claude/skills/tap-python-sdk
+curl -fsSL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/.cursor/skills/tap-python-sdk/SKILL.md \
+  -o .cursor/skills/tap-python-sdk/SKILL.md
+cp .cursor/skills/tap-python-sdk/SKILL.md .claude/skills/tap-python-sdk/SKILL.md
+curl -fsSL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/AGENTS.md -o AGENTS.md
+```
+
+Or clone once and symlink:
+
+```bash
+git clone --depth 1 https://github.com/TapWithUs/tap-python-sdk.git /tmp/tap-python-sdk
+mkdir -p .cursor/skills .claude/skills
+ln -sfn /tmp/tap-python-sdk/.cursor/skills/tap-python-sdk .cursor/skills/tap-python-sdk
+ln -sfn /tmp/tap-python-sdk/.claude/skills/tap-python-sdk .claude/skills/tap-python-sdk
+cp /tmp/tap-python-sdk/AGENTS.md ./AGENTS.md
+```
+
+After install, restart the agent session (or reopen the project) so the skill is picked up. Ask the agent to use the **tap-python-sdk** skill before writing BLE code.
+
+#### Sample prompts
+
+```text
+Use the tap-python-sdk skill. Pairing is already done in OS Bluetooth.
+Write a Python asyncio script that connect()s, registers tap events, calls start(),
+enables Controller mode on v1 or MODEL_DETECTION on v2, prints the protocol,
+and keeps the loop alive. Do not leave the device in Text/HID mode.
+```
+
+```text
+Use the tap-python-sdk skill and AGENTS.md. My app gets zero tap callbacks after
+connect. Diagnose the top causes (Text mode, unpaired device, no wait loop, wrong
+v1/v2 path) and patch my script to the documented happy path.
+```
+
+```text
+Use the tap-python-sdk skill. Decode tapcode bitmasks 1–31 (thumb…pinky) and print
+which fingers were used. Stay on documented Tap Strap / TapXR APIs; do not invent
+GATT UUIDs, gesture tables, or TapBand-first-run flows.
+```
+
+What's included in the skill: install, connect order, Controller vs Text, v1 vs v2,
+bitmask, TapBand/XR honesty, Spatial Control footgun, and “do not invent APIs”.
 
 ### Migrating from 0.6.x
 
