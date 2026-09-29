@@ -22,6 +22,12 @@ DEFAULT_GET_TIMEOUT_SEC = 2.0
 tap_data_read_characteristic = 'c3ff000e-1d8b-40fd-a56f-c7bd5d0f3370'
 tap_data_write_characteristic = 'c3ff000f-1d8b-40fd-a56f-c7bd5d0f3370'
 
+# Classic Nordic UART Service (NUS), same UUIDs v1's TapSDK uses. Exposed here
+# as generic raw read/write characteristics (no v1 input-mode semantics).
+nus_service = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
+nus_write_characteristic = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'   # nus rx
+nus_notify_characteristic = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  # nus tx
+
 
 class KeepAliveManager:
     """Manages periodic keepalive messages to maintain device connection."""
@@ -61,6 +67,7 @@ class TapSDK2:
             # Placeholder until run()/connect(); Bleak 3 wants address_or_ble_device positional.
             self.client = TapClient(address if address is not None else "")
         self._write_lock = asyncio.Lock()
+        self._nus_write_lock = asyncio.Lock()
         self.device_serial_number = None
         self._scale_factors = None
         self._pending_requests = {}
@@ -69,6 +76,7 @@ class TapSDK2:
         self.tap_event_cb = None
         self.air_gesture_event_cb = None
         self.raw_data_event_cb = None
+        self.nus_raw_data_event_cb = None
         self.imu_motion_data_cb = None
         self.standby_state_event_cb = None
         self.connection_cb = None
@@ -103,6 +111,21 @@ class TapSDK2:
                 response=True,
             )
 
+    async def write_nus_command(self, write_value: bytearray, identifier=None):
+        """Write raw bytes to the classic NUS RX characteristic (``6e400002-...``).
+        """
+        async with self._nus_write_lock:
+            await self.client.write_gatt_char(
+                nus_write_characteristic,
+                write_value,
+                response=True,
+            )
+
+    def on_nus_raw_data(self, sender, data):
+        args = parsers.raw_data_msg(data, scale_factors=self._scale_factors)
+        if self.nus_raw_data_event_cb:
+            self.nus_raw_data_event_cb(sender, args)
+
     async def __aenter__(self):
         """Return self; the SDK is already connected via ``connect()``."""
         return self
@@ -129,6 +152,9 @@ class TapSDK2:
 
     def register_raw_data_events(self, cb: Callable):
         self.register_raw_imu_data_events(cb)
+
+    def register_nus_raw_data_events(self, cb: Callable):
+        self.nus_raw_data_event_cb = cb
 
     def register_imu_motion_data_events(self, cb: Callable):
         self.imu_motion_data_cb = cb
@@ -300,6 +326,10 @@ class TapSDK2:
         if self._disconnect_cb:
             set_disconnected_callback(self.client, self._disconnect_cb)
         await self.client.start_notify(tap_data_read_characteristic, self.on_inc_msg)
+        try:
+            await self.client.start_notify(nus_notify_characteristic, self.on_nus_raw_data)
+        except Exception as e:
+            logger.debug("NUS raw-data characteristic not available (%s): %s", nus_notify_characteristic, e)
         self.device_serial_number = await self.client.read_gatt_char(
             serial_number_characteristic,
         )
