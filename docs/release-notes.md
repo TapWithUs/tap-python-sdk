@@ -20,7 +20,8 @@ ______________________
 * Added `install-skills.sh` (Cursor / Claude / `AGENTS.md`, interactive or
   `curl … | bash`) modeled on Meta wearables DAT installers
 * Documented SDK hardware framed as Tap Strap / TapXR; TapBand pointed at the
-  waitlist rather than as a public first-run target
+  waitlist rather than as a public first-run target (`docs/index.md`,
+  `docs/v2/tutorial/getting-started.md`, README, `AGENTS.md`)
 
 ### Bug fixes
 
