@@ -17,6 +17,8 @@ ______________________
   `.claude/skills/tap-python-sdk`) for app-builder coding agents
 * README **AI-Assisted Development** section: skill install into an app project
   and sample agent prompts (aligned with Meta-style AI-assisted SDK docs)
+* Added `install-skills.sh` (Cursor / Claude / `AGENTS.md`, interactive or
+  `curl … | bash`) modeled on Meta wearables DAT installers
 * Documented SDK hardware framed as Tap Strap / TapXR; TapBand pointed at the
   waitlist rather than as a public first-run target
 

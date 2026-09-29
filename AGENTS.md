@@ -4,6 +4,10 @@ Short guide for coding agents that build apps with this SDK. Full skill:
 [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md)
 (Claude twin: [`.claude/skills/tap-python-sdk/SKILL.md`](.claude/skills/tap-python-sdk/SKILL.md)).
 
+Install into a host app (Cursor / Claude / this file):
+[`install-skills.sh`](install-skills.sh) — e.g. `./install-skills.sh all` or
+`curl -fsSL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash`.
+
 ## When to use
 
 Use when the user builds a **Python host app** that connects to a Tap over BLE
