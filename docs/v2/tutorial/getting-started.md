@@ -5,7 +5,10 @@ This tutorial walks you through installing the SDK, connecting with `TapSDK2`, a
 ## What you need
 
 - Python 3.10 or newer
-- A TapBand or TapXR on **v2** framed firmware (GATT characteristic `c3ff000e` present)
+- A **TapXR** on **v2** framed firmware (GATT characteristic `c3ff000e` present)
+- Pair the Tap in **OS Bluetooth** first — the SDK does not scan for unpaired devices
+
+**TapBand** is not a public first-run SDK target for this tutorial — [waitlist](https://www.tapwithus.com/tapband-waitlist/).
 
 If `connect()` returns `TapSDK`, use the [v1 tutorial](../../v1/tutorial/getting-started.md) instead.
 

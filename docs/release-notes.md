@@ -10,6 +10,19 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* README and `examples/connect.py` happy path now enable Controller (v1) or
+  `MODEL_DETECTION` (v2) after `start()`, so first-run samples are not silent
+  Text/HID sessions
+* Added `AGENTS.md` and Cursor/Claude skills (`.cursor/skills/tap-python-sdk`,
+  `.claude/skills/tap-python-sdk`) for app-builder coding agents
+* README **AI-Assisted Development** section: skill install into an app project
+  and sample agent prompts (aligned with Meta-style AI-assisted SDK docs)
+* Added `install-skills.sh` (Cursor / Claude / `AGENTS.md`, interactive or
+  `curl … | bash`) modeled on Meta wearables DAT installers
+* Documented SDK hardware framed as Tap Strap / TapXR; TapBand pointed at the
+  waitlist rather than as a public first-run target (`docs/index.md`,
+  `docs/v2/tutorial/getting-started.md`, README, `AGENTS.md`)
+
 ### Bug fixes
 
 * `TapSDK()` / `TapSDK2()` no longer crash on Bleak 3 when constructed without an address (`address_or_ble_device`) (#54).
