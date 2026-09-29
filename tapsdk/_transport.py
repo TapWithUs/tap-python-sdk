@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 import functools
 import logging
 import platform
@@ -67,6 +68,9 @@ if platform.system() == "Darwin":
             return client_connected(self)
 
 elif platform.system() == "Windows":
+    # See docs/windows-ble-connect-notes.md#watchdog-timing-windows_connect_attempt_watchdog_sec
+    WINDOWS_CONNECT_ATTEMPT_WATCHDOG_SEC = 20
+
     try:
         from winrt.windows.devices.bluetooth import (  # noqa: F401
             BluetoothCacheMode,
@@ -87,6 +91,20 @@ elif platform.system() == "Windows":
             "Reinstall with the pinned dependency from setup.py."
         ) from e
 
+    def _windows_parse_address_from_device_id(device_id: str):
+        if not device_id or "-" not in device_id:
+            return None
+        candidate = device_id.split("-")[-1].upper()
+        try:
+            int(candidate.replace(":", ""), 16)
+        except ValueError:
+            return None
+        if ":" in candidate:
+            return candidate
+        if len(candidate) != 12:
+            return None
+        return ":".join(candidate[i : i + 2] for i in range(0, 12, 2))
+
     async def get_connected_taps():
         request_properties = [
             "System.Devices.Aep.IsPaired",
@@ -105,7 +123,10 @@ elif platform.system() == "Windows":
         for device in devices:
             logger.debug("Candidate connected AEP device: name=%s id=%s", device.name, device.id)
             try:
-                device_address_str = device.id.split("-")[-1].upper()
+                device_address_str = _windows_parse_address_from_device_id(device.id)
+                if not device_address_str:
+                    logger.debug("Skipping AEP device with unparseable address in id=%s", device.id)
+                    continue
                 address_int = int(device_address_str.replace(":", ""), 16)
                 ble_device = await BluetoothLEDevice.from_bluetooth_address_async(
                     address_int
@@ -118,13 +139,22 @@ elif platform.system() == "Windows":
                         device_address_str,
                     )
                     continue
-                services = await ble_device.get_gatt_services_async()
-                logger.info("Device %s has the following services:", device.name)
-                for service in services.services:
-                    logger.info("Service UUID: %s", service.uuid)
-                    if str(service.uuid).lower() == tap_service.lower():
-                        taps.append(device)
-                        break
+                try:
+                    services = await ble_device.get_gatt_services_async()
+                    logger.info("Device %s has the following services:", device.name)
+                    for service in services.services:
+                        logger.info("Service UUID: %s", service.uuid)
+                        if str(service.uuid).lower() == tap_service.lower():
+                            taps.append(device_address_str)
+                            break
+                finally:
+                    # See docs/windows-ble-connect-notes.md#closing-ble-device-handles-in-get_connected_taps
+                    close = getattr(ble_device, "close", None)
+                    if callable(close):
+                        try:
+                            close()
+                        except Exception:
+                            pass
             except Exception as e:
                 logger.error(
                     "Failed to retrieve services for device %s: %s", device.name, e
@@ -136,14 +166,33 @@ elif platform.system() == "Windows":
         if not taps:
             logger.info("No connected Tap devices found.")
             return None
-        return taps[0].id
+        return taps[0]
+
+    async def _windows_warn_if_unbonded(client) -> None:
+        # See docs/windows-ble-connect-notes.md#unbonded-connection-warning-_windows_warn_if_unbonded
+        try:
+            requester = getattr(client._backend, "_requester", None)
+            if requester is None:
+                return
+            device_information = await DeviceInformation.create_from_id_async(
+                requester.device_information.id
+            )
+            if not device_information.pairing.is_paired:
+                logger.warning(
+                    "Tap @ %s is not paired/bonded with Windows. This can "
+                    "cause v2-only GATT characteristics to be missing from "
+                    "discovery (protocol misdetected as v1, 'Characteristic "
+                    "... was not found!' warnings). Fix: pair the Tap "
+                    "manually via Windows Settings > Bluetooth & devices > "
+                    "Add device, power-cycle the Tap, then rerun.",
+                    client.address,
+                )
+        except Exception:
+            pass
 
     class TapClient(BleakClient):
         def __init__(self, *args, **kwargs):
-            # Windows caches the GATT service table per-address. A Tap that was
-            # previously paired while running v1 firmware (or before a firmware
-            # update) can otherwise report stale (v1-only) services, causing
-            # detect_protocol() to misidentify a v2 device as v1.
+            # See docs/windows-ble-connect-notes.md#forcing-uncached-services-in-tapclient__init__
             kwargs.setdefault("winrt", {}).setdefault("use_cached_services", False)
             super().__init__(*args, **kwargs)
 
@@ -152,12 +201,137 @@ elif platform.system() == "Windows":
                 logger.info("No connected Tap devices found.")
                 return False
             logger.info("Connecting to Tap device @ %s", self.address)
+            # See docs/windows-ble-connect-notes.md#primary-connect-timeout-vs-watchdog
+            timeout = kwargs.get("timeout", 8)
+            primary_error = None
+            # See docs/windows-ble-connect-notes.md#already_connected---skipping-the-doomed-primary-connect
+            if not kwargs.get("already_connected", False):
+                try:
+                    await self.connect(timeout=timeout)
+                except Exception as e:
+                    primary_error = e
+                else:
+                    return client_connected(self)
+
             try:
-                await self.connect(timeout=kwargs.get("timeout", 30))
-            except Exception as e:
-                logger.error("connect_retrieved failed: %s", e)
+                address_int = int(str(self.address).replace(":", ""), 16)
+            except ValueError:
+                logger.error("connect_retrieved failed: %s", primary_error)
                 return False
-            return client_connected(self)
+
+            try:
+                requester = await BluetoothLEDevice.from_bluetooth_address_async(
+                    address_int
+                )
+                if requester is None:
+                    logger.error(
+                        "WinRT fallback could not create BluetoothLEDevice for %s",
+                        self.address,
+                    )
+                    return False
+
+                backend = self._backend
+                backend._requester = requester
+
+                # See docs/windows-ble-connect-notes.md#services-changed-retry-loop-in-the-winrt-fallback
+                loop = asyncio.get_running_loop()
+                services_changed_event = asyncio.Event()
+
+                def _on_services_changed(sender, args) -> None:
+                    loop.call_soon_threadsafe(services_changed_event.set)
+
+                services_changed_token = requester.add_gatt_services_changed(
+                    _on_services_changed
+                )
+                try:
+                    backend._session = await GattSession.from_device_id_async(
+                        requester.bluetooth_device_id
+                    )
+                    backend._session.maintain_connection = True
+
+                    # See docs/windows-ble-connect-notes.md#leaked-gattsession-cleanup-atexit
+                    def _close_leaked_session(_backend=backend) -> None:
+                        try:
+                            if _backend._session is not None:
+                                _backend._session.close()
+                                _backend._session = None
+                        except Exception:
+                            pass
+                        try:
+                            if _backend._requester is not None:
+                                _backend._requester.close()
+                                _backend._requester = None
+                        except Exception:
+                            pass
+
+                    atexit.register(_close_leaked_session)
+
+                    load_services = getattr(backend, "get_services", None)
+                    if load_services is None:
+                        load_services = getattr(backend, "_get_services", None)
+                    if load_services is None:
+                        logger.error(
+                            "WinRT fallback has no service loader on backend for %s",
+                            self.address,
+                        )
+                        return False
+
+                    service_cache_mode = BluetoothCacheMode.UNCACHED
+                    while True:
+                        services_changed_event.clear()
+                        services = await load_services(
+                            service_cache_mode=service_cache_mode,
+                            cache_mode=BluetoothCacheMode.UNCACHED,
+                        )
+                        if not services_changed_event.is_set():
+                            backend.services = services
+                            break
+                        logger.debug(
+                            "WinRT fallback: services changed mid-discovery "
+                            "for %s, re-fetching",
+                            self.address,
+                        )
+                        # See docs/windows-ble-connect-notes.md#service-cache-mode-on-retry
+                        service_cache_mode = BluetoothCacheMode.CACHED
+
+                    # See docs/windows-ble-connect-notes.md#polling-for-session_status--active
+                    session_deadline = asyncio.get_running_loop().time() + 5.0
+                    while (
+                        backend._session.session_status != GattSessionStatus.ACTIVE
+                        and asyncio.get_running_loop().time() < session_deadline
+                    ):
+                        await asyncio.sleep(0.1)
+                    if backend._session.session_status != GattSessionStatus.ACTIVE:
+                        logger.warning(
+                            "WinRT fallback GattSession not ACTIVE after 5s "
+                            "for %s (status=%s); characteristics may still "
+                            "be incomplete.",
+                            self.address,
+                            backend._session.session_status,
+                        )
+                finally:
+                    requester.remove_gatt_services_changed(services_changed_token)
+
+                if backend._session.session_status == GattSessionStatus.ACTIVE:
+                    if primary_error is not None:
+                        logger.info(
+                            "Primary address connect failed (%s); WinRT fallback session is active for %s",
+                            primary_error,
+                            self.address,
+                        )
+                    logger.info(
+                        "WinRT fallback session active for %s",
+                        self.address,
+                    )
+                    return True
+            except Exception as fallback_error:
+                logger.error(
+                    "connect_retrieved failed for %s (primary=%s, fallback=%s)",
+                    self.address,
+                    primary_error,
+                    fallback_error,
+                )
+            return False
 
 elif platform.system() == "Linux":
     from bleak.backends.device import BLEDevice
@@ -469,67 +643,140 @@ elif platform.system() == "Linux":
         return client
 
 
-async def connect_tap(address=None) -> TapClient:
+async def connect_tap(address=None, skip_scan: bool = False) -> TapClient:
     """Scan/attach to a Tap and return a connected client with GATT services.
 
     Uses the same platform paths as the former TapSDK.run() connect half:
     retrieve already-connected devices when possible; otherwise scan (and on
     Windows poll for paired reconnects).
+
+    ``skip_scan`` (Windows only): if True, never falls back to the
+    BleakScanner-based scan/poll loop - only attempts to attach to a Tap
+    already reported connected/paired via AEP (``get_tap_device()``) or an
+    explicitly given ``address``. Raises ``ConnectionError`` immediately if
+    that attempt doesn't succeed.
     """
     if platform.system() == "Linux":
         return await connect_tap_linux(address=address)
 
     if platform.system() == "Windows":
+        async def _try_connect_retrieved(client, **kwargs):
+            try:
+                return await asyncio.wait_for(
+                    client.connect_retrieved(**kwargs),
+                    timeout=WINDOWS_CONNECT_ATTEMPT_WATCHDOG_SEC,
+                )
+            except asyncio.TimeoutError:
+                logger.error(
+                    "connect_retrieved timed out for %s after %ss",
+                    getattr(client, "address", None),
+                    WINDOWS_CONNECT_ATTEMPT_WATCHDOG_SEC,
+                )
+                return False
+            except asyncio.CancelledError as e:
+                logger.error(
+                    "connect_retrieved cancelled for %s: %s",
+                    getattr(client, "address", None),
+                    e,
+                )
+                return False
+            except Exception as e:
+                logger.error(
+                    "connect_retrieved failed for %s: %s",
+                    getattr(client, "address", None),
+                    e,
+                )
+                return False
+
         tap_device = address or await get_tap_device()
+        # See docs/windows-ble-connect-notes.md#already_connected-derivation-in-connect_tap
+        already_connected = tap_device is not None and address is None
         client = None
         connected = False
         if tap_device:
             client = TapClient(tap_device)
-            connected = await client.connect_retrieved()
+            connected = await _try_connect_retrieved(
+                client, already_connected=already_connected
+            )
+
+        if not connected and skip_scan:
+            raise ConnectionError(
+                "No Tap device is currently connected/paired in Windows "
+                "(skip_scan=True, not falling back to a BLE scan)."
+            )
 
         if not connected:
             logger.info("No connected Tap found. Scanning and waiting for a Tap device...")
-            found_event = asyncio.Event()
-            found_device = {}
+            while not connected:
+                found_event = asyncio.Event()
+                found_device = {}
+                saw_advertisement = False
+                waiting_log_emitted = False
 
-            async def detection_cb(device, adv_data):
-                if tap_service.lower() in adv_data.service_uuids:
-                    logger.info("Found advertising Tap via scan: %s", device.address)
-                    found_device["scanned"] = device
-                    found_event.set()
+                async def detection_cb(device, adv_data):
+                    nonlocal saw_advertisement
+                    uuids = [u.lower() for u in (adv_data.service_uuids or [])]
+                    name = (getattr(device, "name", "") or "")
+                    if tap_service.lower() in uuids or name.startswith("Tap"):
+                        if not saw_advertisement:
+                            logger.info("Found advertising Tap via scan: %s", device.address)
+                        saw_advertisement = True
+                        found_device["scanned"] = device
+                        found_event.set()
 
-            async def windows_reconnect_poller():
-                while not found_event.is_set():
-                    await asyncio.sleep(3)
+                async def windows_reconnect_poller():
+                    nonlocal waiting_log_emitted
+                    while not found_event.is_set():
+                        await asyncio.sleep(3)
+                        tap_id = await get_tap_device()
+                        if tap_id:
+                            logger.info("Found already-paired Tap reconnected: %s", tap_id)
+                            found_device["winrt"] = tap_id
+                            found_event.set()
+                            continue
+                        if saw_advertisement and not waiting_log_emitted:
+                            logger.info(
+                                "Tap is advertising but not connected/paired in Windows yet; "
+                                "trying direct BLE connection from scan results."
+                            )
+                            waiting_log_emitted = True
+
+                async with BleakScanner(detection_callback=detection_cb):
+                    poller_task = asyncio.create_task(windows_reconnect_poller())
+                    await found_event.wait()
+                    poller_task.cancel()
+
+                if "winrt" in found_device:
+                    client = TapClient(found_device["winrt"])
+                    connected = await _try_connect_retrieved(
+                        client, already_connected=True
+                    )
+                    if connected:
+                        break
+
+                if "scanned" in found_device:
+                    scan_client = TapClient(found_device["scanned"])
+                    if await _try_connect_retrieved(scan_client):
+                        client = scan_client
+                        connected = True
+                        break
+                    logger.info(
+                        "Direct BLE connect to scanned Tap failed; continuing to scan."
+                    )
                     tap_id = await get_tap_device()
                     if tap_id:
                         logger.info("Found already-paired Tap reconnected: %s", tap_id)
-                        found_device["winrt"] = tap_id
-                        found_event.set()
-
-            async with BleakScanner(detection_callback=detection_cb):
-                poller_task = asyncio.create_task(windows_reconnect_poller())
-                await found_event.wait()
-                poller_task.cancel()
-
-            if "winrt" in found_device:
-                client = TapClient(found_device["winrt"])
-                connected = await client.connect_retrieved()
-            elif "scanned" in found_device:
-                await asyncio.sleep(1)
-                tap_id = await get_tap_device()
-                if tap_id:
-                    logger.info("Scanned device is now connected via Windows: %s", tap_id)
-                    client = TapClient(tap_id)
-                    connected = await client.connect_retrieved()
-                if not connected:
-                    logger.info("Falling back to Bleak connect+pair...")
-                    client = TapClient(found_device["scanned"], pair=True)
-                    await client.connect()
-                    connected = client_connected(client)
+                        client = TapClient(tap_id)
+                        connected = await _try_connect_retrieved(
+                            client, already_connected=True
+                        )
+                        if connected:
+                            break
+                    await asyncio.sleep(1)
 
         if client is None or not client_connected(client):
             raise ConnectionError("Failed to connect to a Tap device on Windows")
+        await _windows_warn_if_unbonded(client)
         return client
 
     # Darwin
