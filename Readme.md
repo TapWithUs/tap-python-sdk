@@ -86,34 +86,30 @@ This repository ships agent skills and a short `AGENTS.md` so coding tools follo
 
 | Tool | Public artifact | Recommended setup |
 |------|-----------------|-------------------|
-| [Cursor](https://cursor.com/) | [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md) | Open this repo, or copy the skill into your app project (below) |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`.claude/skills/tap-python-sdk/`](.claude/skills/tap-python-sdk) (symlink twin) | Same skill content; Claude discovers `.claude/skills/` |
-| [AGENTS.md](https://agents.md)-compatible tools | [`AGENTS.md`](AGENTS.md) | Auto-loaded when the file is in the project root |
+| [Cursor](https://cursor.com/) | [`.cursor/skills/tap-python-sdk/SKILL.md`](.cursor/skills/tap-python-sdk/SKILL.md) | [`install-skills.sh cursor`](install-skills.sh) (or open this repo) |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`.claude/skills/tap-python-sdk/`](.claude/skills/tap-python-sdk) (symlink twin) | [`install-skills.sh claude`](install-skills.sh) |
+| [AGENTS.md](https://agents.md)-compatible tools | [`AGENTS.md`](AGENTS.md) | [`install-skills.sh agents`](install-skills.sh) |
 
 #### Install the skill into your app project
 
 **Option A — work inside this repo** (no copy): clone or open `TapWithUs/tap-python-sdk`. Cursor and Claude load the checked-in skill paths automatically.
 
-**Option B — copy into another project** (typical host app):
+**Option B — installer script** (typical host app; Meta-style [`install-skills.sh`](install-skills.sh)):
 
 ```bash
-# from your app repo root
-mkdir -p .cursor/skills/tap-python-sdk .claude/skills/tap-python-sdk
-curl -fsSL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/.cursor/skills/tap-python-sdk/SKILL.md \
-  -o .cursor/skills/tap-python-sdk/SKILL.md
-cp .cursor/skills/tap-python-sdk/SKILL.md .claude/skills/tap-python-sdk/SKILL.md
-curl -fsSL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/AGENTS.md -o AGENTS.md
+# from your app repo root — interactive menu, or pass: cursor | claude | agents | all
+curl -fsSL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash
+# equivalent: … | bash -s -- all
 ```
 
-Or clone once and symlink:
+From a local clone of this repo:
 
 ```bash
-git clone --depth 1 https://github.com/TapWithUs/tap-python-sdk.git /tmp/tap-python-sdk
-mkdir -p .cursor/skills .claude/skills
-ln -sfn /tmp/tap-python-sdk/.cursor/skills/tap-python-sdk .cursor/skills/tap-python-sdk
-ln -sfn /tmp/tap-python-sdk/.claude/skills/tap-python-sdk .claude/skills/tap-python-sdk
-cp /tmp/tap-python-sdk/AGENTS.md ./AGENTS.md
+./install-skills.sh all     # Cursor + Claude + AGENTS.md
+./install-skills.sh cursor  # Cursor skill only
 ```
+
+Optional branch override for pre-release installs: `TAP_PYTHON_SDK_BRANCH=master`.
 
 After install, restart the agent session (or reopen the project) so the skill is picked up. Ask the agent to use the **tap-python-sdk** skill before writing BLE code.
 
