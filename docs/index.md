@@ -1,6 +1,8 @@
 # Tap Python SDK documentation
 
-This package talks to Tap Strap, Tap Strap 2, TapXR, and TapBand over BLE. Firmware uses one of two protocols. Pick the tree that matches your device (or what `connect()` returns).
+This package talks over BLE to **Tap Strap** / **Tap Strap 2** and **TapXR** (the documented public SDK targets). Firmware uses one of two protocols. Pick the tree that matches your device (or what `connect()` returns).
+
+**TapBand** has the broadest gestures but is **not** a public first-run SDK target — [waitlist](https://www.tapwithus.com/tapband-waitlist/). XR air gestures are a subset of Band; this site does not list a per-gesture gap table.
 
 ## Pick a protocol
 
@@ -8,11 +10,11 @@ What your app can do depends on firmware protocol. Pick the tree that matches yo
 
 | Capability | [v1 (`TapSDK`)](v1/index.md) | [v2 (`TapSDK2`)](v2/index.md) |
 |------------|------------------------------|-------------------------------|
-| Hardware | Tap Strap, Tap Strap 2, TapXR | TapBand, TapXR |
+| Documented hardware | Tap Strap, Tap Strap 2, TapXR | TapXR (v2 framed firmware) |
 | Finger taps to your app | ✅ | ✅ |
 | HID keyboard / mouse | ✅ | ❌ |
 | Pointer / mouse motion | ✅ | ✅ |
-| Air gestures | Partial | Full |
+| Air gestures | Partial | Full (XR subset of Band) |
 | Raw finger accelerometers | Tap Strap / Tap Strap 2 only | ❌ |
 | Raw IMU | ✅ | ✅ |
 | Vision model / stream control | ❌ | ✅ |
