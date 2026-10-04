@@ -28,6 +28,6 @@ jobs:
       - name: Lint with flake8
         run: |
           pip install flake8
-          flake8 examples tapsdk tests
+          flake8 examples tapsdk tests plugins
       - name: Run tests
         run: pytest -v

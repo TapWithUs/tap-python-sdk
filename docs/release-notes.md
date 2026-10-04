@@ -10,6 +10,8 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* AI-assisted development kit: a skills plugin for Claude Code and Codex, Cursor skills and rule, `AGENTS.md`, and `install-skills.sh`. Skills cover getting started (v1/v2 agnostic), tapping, vision models and air gestures, IMU motion, raw sensors, building apps, and knob / D-Pad gesture recipes. See "AI-Assisted Development" in the README.
+
 ### Bug fixes
 
 * `TapSDK()` / `TapSDK2()` no longer crash on Bleak 3 when constructed without an address (`address_or_ble_device`) (#54).
