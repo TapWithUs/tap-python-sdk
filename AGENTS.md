@@ -73,6 +73,11 @@ On v2, `tapcode` is often a one-element list `[n]`.
 
 ## More docs
 
-- Hosted: https://tapwithus.github.io/tap-python-sdk/
+- Portal Getting started: https://dev.tapwithus.com/docs/getting-started/
+- Hosted MkDocs: https://tapwithus.github.io/tap-python-sdk/
+- LLM / agent index: https://dev.tapwithus.com/llms.txt
+- How Tap works: https://dev.tapwithus.com/docs/how-tap-works/
 - v1 tutorial: `docs/v1/tutorial/getting-started.md`
 - v2 tutorial: `docs/v2/tutorial/getting-started.md`
+- Cursor always-on rule: `.cursor/rules/tap-python-sdk.mdc`
+- GitHub Copilot: `.github/copilot-instructions.md`

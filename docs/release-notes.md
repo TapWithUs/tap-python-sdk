@@ -22,6 +22,10 @@ ______________________
 * Documented SDK hardware framed as Tap Strap / TapXR; TapBand pointed at the
   waitlist rather than as a public first-run target (`docs/index.md`,
   `docs/v2/tutorial/getting-started.md`, README, `AGENTS.md`)
+* Meta-style discovery: Cursor always-on rule
+  (`.cursor/rules/tap-python-sdk.mdc`) and GitHub Copilot instructions
+  (`.github/copilot-instructions.md`); `AGENTS.md` links portal Getting started,
+  hosted docs, and `https://dev.tapwithus.com/llms.txt`
 
 ### Bug fixes
 
