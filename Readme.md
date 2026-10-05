@@ -70,7 +70,8 @@ Run the commands below in your project folder.
 ./install-skills.sh codex     # .agents/skills/
 ./install-skills.sh cursor    # .cursor/skills/ and .cursor/rules/
 ./install-skills.sh agents    # ./AGENTS.md
-./install-skills.sh all       # all four
+./install-skills.sh all       # all four, this folder
+./install-skills.sh -g all    # all four, every project
 ```
 
 Or, without a clone:
@@ -78,6 +79,7 @@ Or, without a clone:
 ```console
 curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash -s cursor
 curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash -s -- -g all
 ```
 
 #### Every project
