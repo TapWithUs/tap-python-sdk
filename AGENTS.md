@@ -1,5 +1,7 @@
 # Tap Python SDK
 
+Connect order, every time: `await connect()`, then `register_*` callbacks, then `await sdk.start()`, then enable input, then keep the loop alive. `connect()` alone delivers no taps.
+
 > Docs: https://tapwithus.github.io/tap-python-sdk/
 > Skills: https://github.com/TapWithUs/tap-python-sdk/tree/master/plugins/tap-python-sdk/skills
 > Package: `pip install tap-python-sdk` (Python 3.10+, macOS / Windows / Linux, import name `tapsdk`)

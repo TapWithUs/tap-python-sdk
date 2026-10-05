@@ -1,6 +1,6 @@
 ---
 name: tap-getting-started
-description: Install the Tap Python SDK, pair a Tap Strap / TapXR / TapBand, connect with auto-detect (v1 or v2), and print taps. Use first for any new Tap project, for "connect to my Tap", setup, pairing, or when the device does not connect.
+description: First skill for any Tap app. The connect order is await connect(), then register_* callbacks, then await sdk.start(), then enable input. connect() alone delivers no taps. Use for install, pairing, "connect to my Tap", setup, or no tap events.
 ---
 
 # Tap getting started

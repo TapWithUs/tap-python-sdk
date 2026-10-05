@@ -1,15 +1,14 @@
 ---
-description: Building apps with the Tap Python SDK (tapsdk) for Tap Strap, TapXR, and TapBand
-globs: **/*.py
-alwaysApply: false
+description: Tap Python SDK. Connect order is await connect(), then register_* callbacks, then await sdk.start(), then enable input. connect() alone delivers no taps.
+alwaysApply: true
 ---
 
 # Tap Python SDK
 
-When code uses `tapsdk` or the user wants to build something with a Tap device, read the matching skill in `.cursor/skills/` first (`tap-getting-started` for any new project).
+When the user wants to build something with a Tap device, read `.cursor/skills/tap-getting-started/SKILL.md` first.
 
-- Use `await connect()`; it returns `TapSDK` (v1) or `TapSDK2` (v2). Handle both unless the user names the device.
-- Order: `connect()`, then `register_*` callbacks, then `await sdk.start()`, then enable input, then keep the loop alive.
+- Order: `await connect()`, then `register_*` callbacks, then `await sdk.start()`, then enable input, then keep the loop alive. `connect()` alone delivers no taps.
+- `connect()` returns `TapSDK` (v1) or `TapSDK2` (v2). Handle both unless the user names the device.
 - v1 needs `set_input_mode(InputModeController())` to get taps. v2 needs `set_feature(DeviceFeatures.MODEL_DETECTION, True)` plus a vision model.
 - v1 tapcode is `int`; v2 tapcode is `[int]`. Normalize with `v[0] if isinstance(v, (list, tuple)) else v`.
 - Callbacks run on the Bluetooth path: keep them short, never block, push work to an `asyncio.Queue`.
