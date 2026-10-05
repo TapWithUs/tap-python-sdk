@@ -12,30 +12,82 @@
 #   ./install-skills.sh -g codex        # Codex plugin for your user
 #   ./install-skills.sh -g cursor       # ~/.cursor/skills/ + ~/.cursor/rules/
 #   ./install-skills.sh -g agents       # ~/.codex/AGENTS.md
-#   ./install-skills.sh -g all
+#   ./install-skills.sh -g all          # all four, for your user
 #   curl -sL .../install-skills.sh | bash          # all, this folder
 #   curl -sL .../install-skills.sh | bash -s -- -g # all, for your user
 
 set -euo pipefail
 
 REPO="TapWithUs/tap-python-sdk"
-BRANCH="master"
-ARCHIVE_URL="https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz"
-EXTRACT_DIR="tap-python-sdk-${BRANCH}"
 PLUGIN="tap-python-sdk"
 MARKETPLACE="tap-python-sdk-marketplace"
 INSTALL_GLOBAL=0
+SOURCE_DIR=""
+DOWNLOADED_DIR=""
+# Used only when master does not contain the skills yet (before this branch merges).
+FALLBACK_REF="cursor/agent-friendly-tap-sdk"
 
 safe_cleanup() {
-  if [[ "${EXTRACT_DIR:-}" =~ ^tap-python-sdk- ]] && [ -d "$EXTRACT_DIR" ]; then
-    rm -rf "$EXTRACT_DIR"
+  if [ -n "${DOWNLOADED_DIR:-}" ] && [[ "$DOWNLOADED_DIR" =~ ^tap-python-sdk- ]] && [ -d "$DOWNLOADED_DIR" ]; then
+    rm -rf "$DOWNLOADED_DIR"
   fi
 }
 trap safe_cleanup EXIT
 
-download_archive() {
-  if [ ! -d "${EXTRACT_DIR}" ]; then
-    curl -sL "$ARCHIVE_URL" | tar xz 2>/dev/null
+archive_dir_for() {
+  local ref="$1"
+  echo "tap-python-sdk-${ref//\//-}"
+}
+
+download_ref() {
+  local ref="$1"
+  local folder url
+  folder="$(archive_dir_for "$ref")"
+  url="https://github.com/${REPO}/archive/refs/heads/${ref}.tar.gz"
+  rm -rf "$folder"
+  echo "Downloading ${url}"
+  if ! curl -fsSL "$url" | tar xz; then
+    echo "Error: Could not download ${url}." >&2
+    rm -rf "$folder"
+    return 1
+  fi
+  DOWNLOADED_DIR="$folder"
+  SOURCE_DIR="$folder"
+}
+
+has_skills() {
+  [ -n "$SOURCE_DIR" ] && [ -d "$SOURCE_DIR/plugins/$PLUGIN/skills" ]
+}
+
+prepare_source() {
+  local root ref
+  if has_skills; then
+    return 0
+  fi
+  # Running ./install-skills.sh from a checkout uses that checkout.
+  if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -d "$root/plugins/$PLUGIN/skills" ]; then
+      SOURCE_DIR="$root"
+      return 0
+    fi
+  fi
+  ref="${TAP_SDK_REF:-master}"
+  download_ref "$ref" || return 1
+  if has_skills; then
+    return 0
+  fi
+  if [ -z "${TAP_SDK_REF:-}" ] && [ "$ref" = "master" ]; then
+    echo "master does not include the Tap skills yet. Downloading ${FALLBACK_REF}."
+    rm -rf "$DOWNLOADED_DIR"
+    DOWNLOADED_DIR=""
+    SOURCE_DIR=""
+    download_ref "$FALLBACK_REF" || return 1
+  fi
+  if ! has_skills; then
+    echo "Error: The archive has no plugins/${PLUGIN}/skills directory." >&2
+    echo "Set TAP_SDK_REF to a branch or tag that contains the skills." >&2
+    return 1
   fi
 }
 
@@ -47,24 +99,20 @@ require_command() {
 }
 
 skills_dir() {
-  echo "${EXTRACT_DIR}/plugins/${PLUGIN}/skills"
+  echo "${SOURCE_DIR}/plugins/${PLUGIN}/skills"
 }
 
 rule_file() {
-  echo "${EXTRACT_DIR}/.cursor/rules/tap-sdk.mdc"
+  echo "${SOURCE_DIR}/.cursor/rules/tap-sdk.mdc"
 }
 
 stage_skills() {
-  download_archive
-  if [ ! -d "$(skills_dir)" ]; then
-    echo "Error: Failed to download skills." >&2
-    return 1
-  fi
+  prepare_source
 }
 
 copy_skills_to() {
   local dest="$1"
-  stage_skills
+  stage_skills || return 1
   mkdir -p "$dest"
   cp -R "$(skills_dir)/." "$dest/"
   find "$dest" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
@@ -74,7 +122,7 @@ copy_skills_to() {
 
 copy_cursor_rule_to() {
   local dest_dir="$1"
-  stage_skills
+  stage_skills || return 1
   if [ ! -f "$(rule_file)" ]; then
     echo "Error: Failed to download Cursor rule." >&2
     return 1
@@ -86,8 +134,8 @@ copy_cursor_rule_to() {
 
 write_agents_file() {
   local dest="$1"
-  download_archive
-  if [ ! -f "${EXTRACT_DIR}/AGENTS.md" ]; then
+  prepare_source || return 1
+  if [ ! -f "${SOURCE_DIR}/AGENTS.md" ]; then
     echo "Error: Failed to download AGENTS.md." >&2
     return 1
   fi
@@ -97,7 +145,7 @@ write_agents_file() {
   fi
   mkdir -p "$(dirname "$dest")"
   # The contributor section is for the SDK repository only.
-  sed '/^## Contributing to this repository/,$d' "${EXTRACT_DIR}/AGENTS.md" > "$dest"
+  sed '/^## Contributing to this repository/,$d' "${SOURCE_DIR}/AGENTS.md" > "$dest"
   echo "Installed ${dest}."
 }
 
