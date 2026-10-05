@@ -52,46 +52,45 @@ Turn the Tap on. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v
 
 You do not need to be a developer to build with a Tap. Install the Tap skills into your coding agent, then describe the app you want in plain words. The agent knows how to connect, which events each device sends, and how to build common interactions.
 
-| Tool | What gets installed | Setup |
-|------|---------------------|-------|
-| Claude Code | Plugin [`plugins/tap-python-sdk/`](plugins/tap-python-sdk/) | Add this repo as a plugin marketplace, then install `tap-python-sdk` |
-| Codex | Same plugin | Add this repo as a plugin marketplace, then install `tap-python-sdk` |
-| Cursor | Skills in `.cursor/skills/` + rule [`.cursor/rules/tap-sdk.mdc`](.cursor/rules/tap-sdk.mdc) | `install-skills.sh cursor` in your project folder |
-| Any agent that reads `AGENTS.md` | [`AGENTS.md`](AGENTS.md) | `install-skills.sh agents` in your project folder |
+The installer writes into the **current folder**. Add `-g` to install for your user instead, so the skills are available in every project.
 
-#### Claude Code
+| Tool | This folder (default) | Every project (`-g`) |
+|------|------------------------|----------------------|
+| Claude Code | `.claude/skills/` | `claude plugin install … --scope user` |
+| Codex | `.agents/skills/` | `codex plugin add …` |
+| Cursor | `.cursor/skills/` + [`.cursor/rules/tap-sdk.mdc`](.cursor/rules/tap-sdk.mdc) | `~/.cursor/skills/` + `~/.cursor/rules/tap-sdk.mdc` |
+| Any agent that reads `AGENTS.md` | [`AGENTS.md`](AGENTS.md) | `~/.codex/AGENTS.md` |
 
-```console
-claude plugin marketplace add TapWithUs/tap-python-sdk
-claude plugin install tap-python-sdk@tap-python-sdk-marketplace
-```
+Run the commands below in your project folder.
 
-#### Codex
+#### This folder
 
 ```console
-codex plugin marketplace add TapWithUs/tap-python-sdk
-codex plugin add tap-python-sdk@tap-python-sdk-marketplace
+./install-skills.sh claude    # .claude/skills/
+./install-skills.sh codex     # .agents/skills/
+./install-skills.sh cursor    # .cursor/skills/ and .cursor/rules/
+./install-skills.sh agents    # ./AGENTS.md
+./install-skills.sh all       # all four
 ```
 
-You can also open `/plugins` in Codex and install **Tap Python SDK** from the marketplace list.
-
-#### Cursor
-
-Run this in your project folder:
+Or, without a clone:
 
 ```console
 curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash -s cursor
-```
-
-#### All at once
-
-Run this in your project folder. It installs the Claude Code and Codex plugins (if those CLIs are installed), plus the Cursor files and `AGENTS.md`:
-
-```console
 curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash
 ```
 
-From a clone of this repo: `./install-skills.sh` (menu) or `./install-skills.sh claude|codex|cursor|agents|all`.
+#### Every project
+
+```console
+./install-skills.sh -g claude
+./install-skills.sh -g codex
+./install-skills.sh -g cursor
+./install-skills.sh -g agents
+./install-skills.sh -g all
+```
+
+`-g claude` and `-g codex` need the `claude` and `codex` commands. You can also open `/plugins` in Codex and install **Tap Python SDK** from the marketplace list.
 
 #### What's included
 

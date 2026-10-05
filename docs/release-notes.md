@@ -10,7 +10,7 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
-* AI-assisted development kit: a skills plugin for Claude Code and Codex, Cursor skills and rule, `AGENTS.md`, and `install-skills.sh`. Skills cover getting started (v1/v2 agnostic), tapping, vision models and air gestures, IMU motion, raw sensors, building apps, and knob / D-Pad gesture recipes. See "AI-Assisted Development" in the README.
+* AI-assisted development kit: a skills plugin for Claude Code and Codex, Cursor skills and rule, `AGENTS.md`, and `install-skills.sh`. The installer writes into the current folder (`.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `AGENTS.md`). Pass `-g` to install for your user instead. Skills cover getting started (v1/v2 agnostic), tapping, vision models and air gestures, IMU motion, raw sensors, building apps, and knob / D-Pad gesture recipes. See "AI-Assisted Development" in the README.
 
 ### Bug fixes
 
