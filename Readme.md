@@ -48,6 +48,85 @@ asyncio.run(main())
 
 Turn the Tap on. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v1) or `TapSDK2` (v2) from GATT. More: [`examples/connect.py`](examples/connect.py).
 
+### AI-Assisted Development
+
+You do not need to be a developer to build with a Tap. Install the Tap skills into your coding agent, then describe the app you want in plain words. The agent knows how to connect, which events each device sends, and how to build common interactions.
+
+The installer writes into the **current folder**. Add `-g` to install for your user instead, so the skills are available in every project.
+
+| Tool | This folder (default) | Every project (`-g`) |
+|------|------------------------|----------------------|
+| Claude Code | `.claude/skills/` | `claude plugin install … --scope user` |
+| Codex | `.agents/skills/` | `codex plugin add …` |
+| Cursor | `.cursor/skills/` + [`.cursor/rules/tap-sdk.mdc`](.cursor/rules/tap-sdk.mdc) | `~/.cursor/skills/` + `~/.cursor/rules/tap-sdk.mdc` |
+| Any agent that reads `AGENTS.md` | [`AGENTS.md`](AGENTS.md) | `~/.codex/AGENTS.md` |
+
+Run the commands below in your project folder.
+
+#### This folder
+
+```console
+./install-skills.sh claude    # .claude/skills/
+./install-skills.sh codex     # .agents/skills/
+./install-skills.sh cursor    # .cursor/skills/ and .cursor/rules/
+./install-skills.sh agents    # ./AGENTS.md
+./install-skills.sh all       # all four, this folder
+./install-skills.sh -g all    # all four, every project
+```
+
+Or, without a clone:
+
+```console
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash -s cursor
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash
+curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/install-skills.sh | bash -s -- -g all
+```
+
+#### Every project
+
+```console
+./install-skills.sh -g claude
+./install-skills.sh -g codex
+./install-skills.sh -g cursor
+./install-skills.sh -g agents
+./install-skills.sh -g all
+```
+
+`-g claude` and `-g codex` need the `claude` and `codex` commands. You can also open `/plugins` in Codex and install **Tap Python SDK** from the marketplace list.
+
+#### What's included
+
+- **tap-getting-started**: install, pairing, connect to any Tap (v1 or v2), quickstart script, troubleshooting
+- **tap-tapping**: which fingers tapped, finger combos, double taps, keyboard shortcuts, haptics
+- **tap-vision-models**: switch between the tapping and air-gesture models; swipes, pinches, holds, fist (v2)
+- **tap-imu-motion**: pointer movement, tilt, roll / pitch / yaw (v2) and mouse events (v1)
+- **tap-raw-sensors**: raw accelerometer and gyro streams, sensitivity, CSV logging
+- **tap-knob**: hold a pinch and twist to turn a value up or down (v2)
+- **tap-dpad**: swipe for directions, pinch to select, hold to rotate or drag (v2)
+- **tap-build-an-app**: turn Tap events into a complete app: browser page, game, keyboard control
+
+#### Onboard your agent
+
+1. Make an empty folder for your project and open your coding agent in it.
+2. Install the skills (see above).
+3. Turn on your Tap, charge it, pair it in your computer's Bluetooth settings, and update its firmware with Tap Manager.
+4. Tell the agent which device you have (Tap Strap, Tap Strap 2, TapXR, or TapBand) and which computer (macOS, Windows, or Linux).
+5. Ask it to connect first: *"Use the tap-getting-started skill to connect to my Tap and show my taps."* Tap your fingers and tell the agent what you see.
+6. When taps arrive, describe your app. Build one interaction at a time and try each one with the device.
+7. If something does not work, tell the agent exactly what happened (for example "nothing prints when I tap" or "letters appear in my editor"). It can use the troubleshooting table in `tap-getting-started`.
+
+#### Sample prompts
+
+- "Connect to my Tap and print which fingers I tap."
+- "Make a presentation clicker: index finger = next slide, middle finger = previous slide, buzz on each tap."
+- "Map my tap combos to keyboard shortcuts for my video editor."
+- "Make a volume knob: hold a pinch and twist my wrist to change the system volume."
+- "Build a browser D-Pad game: swipe to move, pinch to pick a shape, hold and twist to rotate it."
+- "Show a cursor on a web page that follows my hand motion, and click with a pinch."
+- "Switch between the tapping model and the air-gesture model when I make a fist."
+- "Record 30 seconds of raw IMU data to CSV and plot it."
+- "Build a drum machine: each finger plays a different drum sound."
+
 ### Features (summary)
 
 - **Protocols:** v1 (`TapSDK`) and v2 framed (`TapSDK2`); `connect()` auto-detects
