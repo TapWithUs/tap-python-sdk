@@ -24,8 +24,6 @@ MARKETPLACE="tap-python-sdk-marketplace"
 INSTALL_GLOBAL=0
 SOURCE_DIR=""
 DOWNLOADED_DIR=""
-# Used only when master does not contain the skills yet (before this branch merges).
-FALLBACK_REF="cursor/agent-friendly-tap-sdk"
 
 safe_cleanup() {
   if [ -n "${DOWNLOADED_DIR:-}" ] && [[ "$DOWNLOADED_DIR" =~ ^tap-python-sdk- ]] && [ -d "$DOWNLOADED_DIR" ]; then
@@ -74,19 +72,9 @@ prepare_source() {
   fi
   ref="${TAP_SDK_REF:-master}"
   download_ref "$ref" || return 1
-  if has_skills; then
-    return 0
-  fi
-  if [ -z "${TAP_SDK_REF:-}" ] && [ "$ref" = "master" ]; then
-    echo "master does not include the Tap skills yet. Downloading ${FALLBACK_REF}."
-    rm -rf "$DOWNLOADED_DIR"
-    DOWNLOADED_DIR=""
-    SOURCE_DIR=""
-    download_ref "$FALLBACK_REF" || return 1
-  fi
   if ! has_skills; then
-    echo "Error: The archive has no plugins/${PLUGIN}/skills directory." >&2
-    echo "Set TAP_SDK_REF to a branch or tag that contains the skills." >&2
+    echo "Error: The archive from ${ref} has no plugins/${PLUGIN}/skills directory." >&2
+    echo "Set TAP_SDK_REF to a branch that contains the skills." >&2
     return 1
   fi
 }
