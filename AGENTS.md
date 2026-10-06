@@ -50,6 +50,7 @@ asyncio.run(main())
 | `register_mouse_events` | `(id, vx, vy, proximity)` | n/a |
 | `register_imu_motion_data_events` | n/a | `(id, (dx, dy, is_mouse, [roll, pitch, yaw]))` |
 | `register_raw_data_events` | `(id, [{"type", "ts", "payload"}])` | same (alias of `register_raw_imu_data_events`) |
+| `register_nus_raw_data_events` | n/a | `(sender, packets)` from classic NUS notify (`parsers.raw_data_msg`) |
 | `register_air_gesture_state_events` | `(id, MouseModes)` | n/a |
 | `register_standby_state_events` | n/a | `(id, is_standby: bool)` |
 | `register_connection_events` | `(sdk)` | `(serial: bytes)` |

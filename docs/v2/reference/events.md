@@ -70,3 +70,14 @@ cb(identifier, is_standby: bool) -> None
 ```
 
 Also resolved by `get_standby_state()`. Enable related detection with `DeviceFeatures.STANDBY_GESTURE_DETECTION` when needed.
+
+## Nordic UART Service (NUS)
+
+```text
+register_nus_raw_data_events(cb)
+cb(sender, packets: list[dict]) -> None
+```
+
+`packets` comes from `parsers.raw_data_msg`. Each dict has the same keys as [Raw IMU](#raw-imu): `type`, `ts`, and `payload`.
+
+`start()` starts notifications on NUS TX (`6e400003-b5a3-f393-e0a9-e50e24dcca9e`) when the device exposes that characteristic. Write raw bytes with `write_nus_command`. This path is generic RX/TX. It is not the v1 `set_input_mode` path, and it does not use a `DeviceFeatures` switch.

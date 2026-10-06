@@ -2,14 +2,14 @@
 
 v2 framed-protocol entry point. Import with `from tapsdk import TapSDK2`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [v1 docs](../../v1/index.md) when it returns `TapSDK`).
 
-Commands and events use framed messages on `c3ff000e` (notify) / `c3ff000f` (write). There is no NUS `set_input_mode` path — enable streams with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures).
+Commands and events use framed messages on `c3ff000e` (notify) / `c3ff000f` (write). There is no v1-style NUS `set_input_mode` path — enable streams with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures). Classic NUS (`6e400001-b5a3-f393-e0a9-e50e24dcca9e`) is available as generic raw RX/TX. See [Nordic UART Service (NUS)](#nordic-uart-service-nus).
 
 ## `connect`
 
 ```python
 from tapsdk import connect
 
-sdk = await connect(address=None, **kwargs)
+sdk = await connect(address=None, *, skip_scan=False, **kwargs)
 ```
 
 Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
@@ -17,6 +17,7 @@ Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK
 | Parameter | Description |
 |-----------|-------------|
 | `address` | Optional BLE address / platform device id (same rules as the constructor) |
+| `skip_scan` | Windows only. If `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`. Raises `ConnectionError` immediately instead of scanning and waiting. Ignored (no effect) on macOS/Linux. |
 | `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
 
 Does **not** start notifications. Register callbacks, then `await sdk.start()`.
@@ -43,6 +44,18 @@ Start notifications on the framed read characteristic, read the serial number, s
 ### `async run()`
 
 Connect via shared `connect_tap()` if needed, then call `start()`.
+
+### Async context manager
+
+`TapSDK2` supports `async with`. The client is already connected when you enter the block. Exit calls `client.disconnect()`.
+
+```python
+async with await connect() as sdk:
+    sdk.register_tap_events(on_tap)
+    await sdk.start()
+```
+
+Use this on Windows so the GATT session closes when the block ends. See [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/connect.py) and [Windows BLE connect notes](../../windows-ble-connect-notes.md).
 
 ## Commands
 
@@ -104,6 +117,17 @@ gyro, xl = await sdk.get_imu_sensitivity()
 
 `async get_device_info() -> DeviceInfo` — shared DIS/BAS reader via `tapsdk.device_info`.
 
+### Nordic UART Service (NUS)
+
+Generic raw bytes on the classic NUS characteristics. This is not the v1 input-mode command path.
+
+| Method | Description |
+|--------|-------------|
+| `async write_nus_command(write_value: bytearray, identifier=None)` | Write raw bytes to NUS RX `6e400002-b5a3-f393-e0a9-e50e24dcca9e`. `identifier` is reserved and unused. |
+| `register_nus_raw_data_events(cb)` | Register `(sender, packets)`. `packets` is the list from `parsers.raw_data_msg` (same `type` / `ts` / `payload` dicts as raw IMU). |
+
+`start()` also starts notifications on NUS TX `6e400003-b5a3-f393-e0a9-e50e24dcca9e`. If that characteristic is missing, `start()` logs a debug message and continues. Register the callback before `start()`.
+
 ## Event registration
 
 See [Events](events.md) for callback shapes. Methods:
@@ -118,6 +142,7 @@ See [Events](events.md) for callback shapes. Methods:
 | `register_raw_data_events` | Alias for `register_raw_imu_data_events` |
 | `register_imu_motion_data_events` | Motion deltas + Euler angles |
 | `register_standby_state_events` | Standby boolean |
+| `register_nus_raw_data_events` | Classic NUS notify, parsed as raw packets. Callback is `(sender, packets)`, not `(identifier, packets)` |
 
 TapSDK2 does **not** expose `register_mouse_events` or `register_air_gesture_state_events`.
 

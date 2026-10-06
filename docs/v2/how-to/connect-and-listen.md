@@ -25,6 +25,20 @@ asyncio.run(main())
 
 `connect()` attaches to an already-connected Tap when possible, detects v1 vs v2 from GATT characteristics, and returns `TapSDK` or `TapSDK2`. It does **not** start notifications — register callbacks, then `await sdk.start()`.
 
+On Windows, use an async context manager so the GATT session disconnects when the block ends:
+
+```python
+async with await connect() as sdk:
+    sdk.register_tap_events(lambda id, tapcode: print("tap", id, tapcode))
+    await sdk.start()
+    await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+    await asyncio.Event().wait()
+```
+
+Exit calls `sdk.client.disconnect()`. See [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/connect.py).
+
+On Windows, pass `skip_scan=True` to only attach to a Tap Windows already reports as connected/paired, without falling back to a live BLE scan (raises `ConnectionError` immediately instead of waiting on a scan). Pair the Tap once via Settings first; see [Install the SDK](../../how-to/install.md#windows-10) and [Connection model](../explanation/connection-model.md#how-connect-finds-a-device).
+
 On v2, `tapcode` is a one-element list (`[tapcode]`). Register `connection` callbacks before `start()` so they fire.
 
 ## Explicit `TapSDK2`

@@ -9,7 +9,7 @@ Construction imports a platform BLE backend (macOS, Windows, or Linux). Creating
 ```python
 from tapsdk import connect
 
-sdk = await connect(address=None, **kwargs)
+sdk = await connect(address=None, *, skip_scan=False, **kwargs)
 ```
 
 Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
@@ -17,6 +17,7 @@ Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK
 | Parameter | Description |
 |-----------|-------------|
 | `address` | Optional BLE address / platform device id (same rules as the constructor) |
+| `skip_scan` | Windows only. If `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`. Raises `ConnectionError` immediately instead of scanning and waiting. Ignored (no effect) on macOS/Linux. |
 | `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
 
 Does **not** start notifications. Register callbacks, then `await sdk.start()`.
@@ -47,6 +48,18 @@ Connect to a Tap (via shared `connect_tap()`) if needed, then call `start()`.
 - On Windows, also polls for paired devices that reconnect without advertising.
 
 Returns when setup finishes; it does not block forever. Keep the asyncio loop alive yourself.
+
+### Async context manager
+
+`TapSDK` supports `async with`. The client is already connected when you enter the block. Exit calls `client.disconnect()`.
+
+```python
+async with await connect() as sdk:
+    sdk.register_tap_events(on_tap)
+    await sdk.start()
+```
+
+Use this on Windows so the GATT session closes when the block ends. See [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/connect.py) and [Windows BLE connect notes](../../windows-ble-connect-notes.md).
 
 ## Commands
 

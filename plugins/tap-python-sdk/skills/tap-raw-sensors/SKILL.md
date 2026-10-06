@@ -39,6 +39,18 @@ await sdk.set_feature(DeviceFeatures.RAW_IMU_DATA, False)
 
 `await sdk.get_imu_sensitivity()` returns `(ImuGyroSensitivity, ImuAcclSensitivity)`.
 
+## v2 classic NUS (generic raw RX/TX)
+
+`TapSDK2` also exposes the classic Nordic UART Service. This is not `DeviceFeatures.RAW_IMU_DATA` and it is not the v1 `set_input_mode` path.
+
+```python
+sdk.register_nus_raw_data_events(on_nus)  # cb(sender, packets) — not (identifier, packets)
+await sdk.start()                          # also starts NUS notify when the char exists
+await sdk.write_nus_command(bytearray(b"..."))
+```
+
+`packets` uses the same `type` / `ts` / `payload` dicts as the raw IMU callback. If NUS TX is missing, `start()` logs a debug message and continues.
+
 ## v1 (`TapSDK`)
 
 ```python
