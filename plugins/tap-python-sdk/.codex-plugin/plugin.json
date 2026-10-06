@@ -1,0 +1,10 @@
+{
+  "name": "tap-python-sdk",
+  "version": "1.0.0",
+  "description": "Skills for building Python apps with Tap Strap, TapXR, and TapBand.",
+  "author": {
+    "name": "Tap Systems"
+  },
+  "homepage": "https://github.com/TapWithUs/tap-python-sdk",
+  "skills": "./skills/"
+}

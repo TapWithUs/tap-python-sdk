@@ -1,0 +1,22 @@
+{
+  "name": "tap-python-sdk",
+  "version": "1.0.0",
+  "description": "Skills for building Python apps with Tap Strap, TapXR, and TapBand: connect, taps, air gestures, vision models, IMU motion, raw sensors, and knob / D-Pad gesture recipes.",
+  "author": {
+    "name": "Tap Systems"
+  },
+  "homepage": "https://github.com/TapWithUs/tap-python-sdk",
+  "keywords": [
+    "tap",
+    "tapxr",
+    "tap-strap",
+    "ble",
+    "wearables",
+    "gestures",
+    "python",
+    "sdk"
+  ],
+  "skills": [
+    "./skills/"
+  ]
+}

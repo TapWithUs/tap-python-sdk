@@ -8,3 +8,52 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/tests.yml
+
+  # Runs only when the installer or a file it copies has changed.
+  installer-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.detect.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect installer changes
+        id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            range="origin/${BASE_REF}...HEAD"
+          elif [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          else
+            range="${BEFORE}...HEAD"
+          fi
+          files="$(git diff --name-only "$range" -- \
+            install-skills.sh \
+            plugins/tap-python-sdk \
+            AGENTS.md \
+            .cursor/rules/tap-sdk.mdc \
+            tests/check_install_skills.sh \
+            .github/workflows/test.yml)"
+          if [ -n "$files" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            printf '%s\n' "$files"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Installer files are unchanged."
+          fi
+
+  test-installer:
+    needs: installer-changes
+    if: needs.installer-changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test installer
+        run: bash tests/check_install_skills.sh

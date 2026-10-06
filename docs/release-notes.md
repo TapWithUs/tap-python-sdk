@@ -11,6 +11,8 @@ ______________________
 ### Main features
 
 * `connect()` accepts `skip_scan: bool = False` (Windows only): when `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports connected/paired, raising `ConnectionError` immediately otherwise instead of waiting on a scan.
+* `TapSDK2` writes and receives classic Nordic UART Service (NUS) bytes with `write_nus_command` and `register_nus_raw_data_events`. This is generic raw RX/TX, not the v1 input-mode path. `start()` also starts the NUS notify characteristic when the device exposes it.
+* AI-assisted development kit: a skills plugin for Claude Code and Codex, Cursor skills and rule, `AGENTS.md`, and `install-skills.sh`. The installer writes into the current folder (`.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `AGENTS.md`). Pass `-g` to install for your user instead. Skills cover getting started (v1/v2 agnostic), tapping, vision models and air gestures, IMU motion, raw sensors, building apps, and knob / D-Pad gesture recipes. See "AI-Assisted Development" in the README.
 
 ### Bug fixes
 

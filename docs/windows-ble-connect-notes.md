@@ -150,3 +150,5 @@ order they were investigated and ruled out or left open:
    power-cycle the Tap, then rerun.
 
 If this recurs, the next diagnostic step is enabling bleak's own debug logging
+(`logging.getLogger("bleak").setLevel(logging.DEBUG)`) and comparing the GATT
+service list from a failing run with a passing run.

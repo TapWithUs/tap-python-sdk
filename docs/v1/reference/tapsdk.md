@@ -49,6 +49,18 @@ Connect to a Tap (via shared `connect_tap()`) if needed, then call `start()`.
 
 Returns when setup finishes; it does not block forever. Keep the asyncio loop alive yourself.
 
+### Async context manager
+
+`TapSDK` supports `async with`. The client is already connected when you enter the block. Exit calls `client.disconnect()`.
+
+```python
+async with await connect() as sdk:
+    sdk.register_tap_events(on_tap)
+    await sdk.start()
+```
+
+Use this on Windows so the GATT session closes when the block ends. See [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/connect.py) and [Windows BLE connect notes](../../windows-ble-connect-notes.md).
+
 ## Commands
 
 ### `async set_input_mode(input_mode, identifier=None)`

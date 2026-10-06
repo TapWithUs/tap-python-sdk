@@ -103,7 +103,7 @@ elif platform.system() == "Windows":
             return candidate
         if len(candidate) != 12:
             return None
-        return ":".join(candidate[i : i + 2] for i in range(0, 12, 2))
+        return ":".join(candidate[i:i + 2] for i in range(0, 12, 2))
 
     async def get_connected_taps():
         request_properties = [
