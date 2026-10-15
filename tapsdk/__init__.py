@@ -12,17 +12,23 @@ from tapsdk.inputmodes import (InputModeController, InputModeControllerText,  # 
                                InputModeRaw, InputModeText)
 
 
-async def connect(address=None, **kwargs):
+async def connect(address=None, *, skip_scan: bool = False, **kwargs):
     """Attach to a Tap, detect v1/v2 protocol, return the matching SDK.
 
     Does not start notifications. Register callbacks, then ``await sdk.start()``.
+
+    ``skip_scan`` (Windows only): if True, never falls back to a live BLE
+    advertisement scan - only attempts to attach to a Tap Windows already
+    reports as connected/paired (via AEP) or an explicitly given ``address``.
+    Raises ``ConnectionError`` immediately if that attempt doesn't succeed,
+    instead of scanning and waiting for a Tap to become available.
     """
     from tapsdk._detect import detect_protocol, ensure_gatt_services
     from tapsdk._transport import connect_tap
     from tapsdk.tap import TapSDK
     from tapsdk.tap2 import TapSDK2
 
-    client = await connect_tap(address=address)
+    client = await connect_tap(address=address, skip_scan=skip_scan)
     await ensure_gatt_services(client)
     if detect_protocol(client) == "v2":
         return TapSDK2(client=client, **kwargs)

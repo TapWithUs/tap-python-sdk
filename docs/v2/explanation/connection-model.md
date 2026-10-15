@@ -20,6 +20,10 @@ await connect()  →  assert TapSDK2  →  register callbacks  →  await sdk.st
 
 `connect()` attaches to an already-connected Tap when one is present. Otherwise it scans.
 
+On Windows, pass `skip_scan=True` to skip the live BLE scan fallback entirely and only attach to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`; if that attempt doesn't succeed, `connect()` raises `ConnectionError` immediately instead of scanning and waiting. This has no effect on macOS/Linux.
+
+An unbonded/unpaired GATT connection (typically the live-scan fallback path) can expose a reduced, v1-looking characteristic set on a v2 device even though it's a v2 device — Windows omits characteristics requiring a security level the current link doesn't satisfy. If you see a Tap misdetected as v1, or `"Characteristic ... was not found!"`, fully unpair the Tap in Windows Settings, re-pair via **Settings > Bluetooth & devices > Add device**, power-cycle the Tap, then reconnect. Background: [Windows BLE connect notes](../../windows-ble-connect-notes.md).
+
 ## v2 GATT path
 
 | Concern | Behavior |

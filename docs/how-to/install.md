@@ -30,6 +30,19 @@ Uses Apple CoreBluetooth via Bleak 3.x. If you use a non-system Python, install 
 
 Uses Bleak 3.x with PyWinRT (installed via bleak). No external DLL is required.
 
+Pair the Tap once via **Settings > Bluetooth & devices > Add device** before
+connecting with the SDK. If a device connects but is misdetected as v1, or
+you see `"Characteristic ... was not found!"`, fully unpair it and re-pair
+through Settings rather than relying on the SDK's own scan/attach — see
+[Windows BLE connect notes](../windows-ble-connect-notes.md) for background.
+
+Pass `skip_scan=True` to `connect()` to only attach to a Tap Windows already
+reports as connected/paired, without falling back to a live BLE scan:
+
+```python
+sdk = await connect(skip_scan=True)
+```
+
 ### Linux
 
 Install BlueZ tools and grant Bluetooth access:

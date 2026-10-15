@@ -4,7 +4,7 @@
 
 | Name | Kind |
 |------|------|
-| `connect` | Async factory — attach, detect v1/v2, return `TapSDK` or `TapSDK2` (notifies not started) |
+| `connect` | Async factory — attach, detect v1/v2, return `TapSDK` or `TapSDK2` (notifies not started); accepts `skip_scan: bool = False` (Windows only, see [connection model](../v1/explanation/connection-model.md#how-connect-finds-a-device)) |
 | `TapSDK` | Class (lazy import from `tapsdk.tap`) — v1 protocol |
 | `TapSDK2` | Class (lazy import from `tapsdk.tap2`) — v2 framed protocol |
 | `InputModeText` | Class |
