@@ -39,7 +39,7 @@ async def main(seconds, out):
     print(f"recording {seconds}s ...")
     await asyncio.sleep(seconds)
 
-    if isinstance(sdk, TapSDK2):
+    if hasattr(sdk, "set_feature"):
         await sdk.set_feature(DeviceFeatures.RAW_IMU_DATA, False)
 
     with open(out, "w", newline="") as f:
