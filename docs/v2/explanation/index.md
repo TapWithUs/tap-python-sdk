@@ -1,6 +1,6 @@
-# Explanation (v2)
+# Explanation (`TapSDK2`)
 
-Understanding-oriented background for the framed protocol.
+Understanding-oriented background for developer firmware.
 
 | Topic | Page |
 |-------|------|

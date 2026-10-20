@@ -1,6 +1,6 @@
 """Shared device metadata reads (DIS/BAS + Tap proprietary fields).
 
-Not protocol-specific — same GATT UUIDs on v1 and v2 firmware.
+Not firmware-API-specific — same GATT UUIDs on TapSDK and TapSDK2.
 """
 
 import logging
@@ -20,7 +20,7 @@ software_revision_characteristic = '00002a28-0000-1000-8000-00805f9b34fb'  # boo
 battery_level_characteristic = '00002a19-0000-1000-8000-00805f9b34fb'
 gap_device_name_characteristic = '00002a00-0000-1000-8000-00805f9b34fb'
 
-# Tap proprietary readable fields (same on v1/v2 devices).
+# Tap proprietary readable fields (same on TapSDK and TapSDK2 devices).
 device_name_characteristic = 'c3ff0003-1d8b-40fd-a56f-c7bd5d0f3370'
 model_version_characteristic = 'c3ff000c-1d8b-40fd-a56f-c7bd5d0f3370'
 fw_version2_characteristic = 'c3ff000d-1d8b-40fd-a56f-c7bd5d0f3370'

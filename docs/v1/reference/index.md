@@ -1,4 +1,4 @@
-# Reference (v1)
+# Reference (`TapSDK`)
 
 Information-oriented descriptions of the `TapSDK` public API.
 

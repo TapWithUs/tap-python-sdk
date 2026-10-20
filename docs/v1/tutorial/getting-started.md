@@ -1,19 +1,23 @@
-# Getting started (v1)
+# Getting started (`TapSDK`)
 
-This tutorial walks you through installing the SDK, connecting with `TapSDK`, and printing tap events. By the end you will have a small asyncio program that talks to a classic-protocol Tap.
+This tutorial walks you through installing the SDK, connecting with `TapSDK`, and printing tap events. By the end you will have a small asyncio program that talks to input-mode firmware (Tap Strap / Tap Strap 2).
+
+The [docs home](../../index.md) has one script that works for Tap Strap and TapXR. Use this page when you already know you have `set_input_mode`.
 
 ## What you need
 
 - Python 3.10 or newer
-- A Tap Strap, Tap Strap 2, or TapXR on **v1** firmware (no framed `c3ff000e` characteristic)
+- A Tap Strap or Tap Strap 2 (no framed `c3ff000e` characteristic)
 
-If `connect()` returns `TapSDK2`, use the [v2 tutorial](../../v2/tutorial/getting-started.md) instead.
+If `connect()` returns `TapSDK2`, use the [`TapSDK2` tutorial](../../v2/tutorial/getting-started.md) instead.
 
 ## 1. Install the SDK
 
 ```bash
 pip install tap-python-sdk
 ```
+
+Then import with `from tapsdk import ...`. The PyPI name is `tap-python-sdk`; the import name is `tapsdk`.
 
 On Linux, also install BlueZ tooling and add your user to the `bluetooth` group:
 
@@ -29,11 +33,12 @@ Create `hello_tap.py`:
 
 ```python
 import asyncio
-from tapsdk import InputModeController, TapSDK, connect
+from tapsdk import InputModeController, connect
 
 
 def on_tap(identifier, tapcode):
-    print(f"{identifier} tapped {tapcode}")
+    code = tapcode[0] if isinstance(tapcode, (list, tuple)) else tapcode
+    print(f"{identifier} tapped {code}")
 
 
 def on_connect(sdk):
@@ -42,7 +47,8 @@ def on_connect(sdk):
 
 async def main():
     sdk = await connect()
-    assert isinstance(sdk, TapSDK), "Expected v1 TapSDK — this device is v2"
+    if not hasattr(sdk, "set_input_mode"):
+        raise SystemExit("This device uses set_feature. See the TapSDK2 tutorial.")
 
     sdk.register_connection_events(on_connect)
     sdk.register_tap_events(on_tap)
@@ -56,7 +62,7 @@ async def main():
 asyncio.run(main())
 ```
 
-Or construct `TapSDK()` and call `await tap.run()` when you already know the firmware is v1.
+Or construct `TapSDK()` and call `await tap.run()` when you already know the firmware uses input modes.
 
 ## 3. Run it
 
@@ -79,7 +85,7 @@ Without Controller (or Controller+Text) mode, Text-mode devices stay silent for 
 
 ## 4. What just happened
 
-1. `await connect()` attaches to a Tap (already connected, or by scan), detects protocol, and returns `TapSDK` for v1. Notifications are **not** started yet.
+1. `await connect()` attaches to a Tap (already connected, or by scan) and returns `TapSDK` for input-mode firmware. Notifications are **not** started yet.
 2. `register_*` attaches callbacks (sync; register connection callbacks before `start()`).
 3. `await sdk.start()` arms GATT notifications and fires the connection callback with the SDK instance.
 4. `set_input_mode(InputModeController())` enables app-bound tap delivery.
@@ -89,4 +95,4 @@ Without Controller (or Controller+Text) mode, Text-mode devices stay silent for 
 - Switch modes, stream sensors, or send haptics: [How-to guides](../how-to/index.md)
 - Full callback and command signatures: [API reference](../reference/index.md)
 - Why modes and sensors are designed this way: [Explanation](../explanation/index.md)
-- Explicit v1 sample: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/basic.py)
+- Explicit `TapSDK` sample: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py)

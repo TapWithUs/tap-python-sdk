@@ -1,6 +1,6 @@
 # TapSDK2
 
-v2 framed-protocol entry point. Import with `from tapsdk import TapSDK2`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [v1 docs](../../v1/index.md) when it returns `TapSDK`).
+Developer-firmware entry point (TapXR developer firmware and TapBand). Import with `from tapsdk import TapSDK2`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [`TapSDK` docs](../../v1/index.md) when it returns `TapSDK`).
 
 Commands and events use framed messages on `c3ff000e` (notify) / `c3ff000f` (write). There is no NUS `set_input_mode` path — enable streams with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures).
 
@@ -12,13 +12,13 @@ from tapsdk import connect
 sdk = await connect(address=None, *, skip_scan=False, **kwargs)
 ```
 
-Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
+Attach to a Tap, detect firmware (`c3ff000e` present → `TapSDK2`), and return `TapSDK` or `TapSDK2` with an already-connected client.
 
 | Parameter | Description |
 |-----------|-------------|
 | `address` | Optional BLE address / platform device id (same rules as the constructor) |
 | `skip_scan` | Windows only. If `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`. Raises `ConnectionError` immediately instead of scanning and waiting. Ignored (no effect) on macOS/Linux. |
-| `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
+| `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on `TapSDK2`) |
 
 Does **not** start notifications. Register callbacks, then `await sdk.start()`.
 

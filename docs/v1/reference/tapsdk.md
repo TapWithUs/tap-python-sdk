@@ -1,6 +1,6 @@
 # TapSDK
 
-v1 protocol entry point. Import with `from tapsdk import TapSDK`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [v2 docs](../../v2/index.md) when it returns `TapSDK2`).
+Input-mode firmware entry point. Import with `from tapsdk import TapSDK`, or prefer [`connect()`](#connect) which returns `TapSDK` or `TapSDK2` (use [`TapSDK2` docs](../../v2/index.md) when it returns `TapSDK2`).
 
 Construction imports a platform BLE backend (macOS, Windows, or Linux). Creating `TapSDK` on an unsupported platform, or with the wrong Bleak pin, raises `ImportError`.
 
@@ -12,13 +12,13 @@ from tapsdk import connect
 sdk = await connect(address=None, *, skip_scan=False, **kwargs)
 ```
 
-Attach to a Tap, detect v1 vs v2 (`c3ff000e` present → v2), and return `TapSDK` or `TapSDK2` with an already-connected client.
+Attach to a Tap, detect firmware (`c3ff000e` present → `TapSDK2`), and return `TapSDK` or `TapSDK2` with an already-connected client.
 
 | Parameter | Description |
 |-----------|-------------|
 | `address` | Optional BLE address / platform device id (same rules as the constructor) |
 | `skip_scan` | Windows only. If `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`. Raises `ConnectionError` immediately instead of scanning and waiting. Ignored (no effect) on macOS/Linux. |
-| `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on v2) |
+| `**kwargs` | Forwarded to the SDK constructor (for example `keepalive_timeout` on `TapSDK2`) |
 
 Does **not** start notifications. Register callbacks, then `await sdk.start()`.
 
@@ -85,7 +85,7 @@ TapXR Spatial Control only. Force mouse, keyboard, or automatic input selection.
 
 ### `async send_vibration_sequence(sequence, identifier=None)`
 
-Send haptic on/off periods via the v1 UI characteristic.
+Send haptic on/off periods via the `TapSDK` UI characteristic.
 
 | Parameter | Description |
 |-----------|-------------|

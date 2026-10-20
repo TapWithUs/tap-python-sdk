@@ -1,4 +1,4 @@
-# How-to guides (v1)
+# How-to guides (`TapSDK`)
 
 Problem-oriented recipes for `TapSDK`.
 

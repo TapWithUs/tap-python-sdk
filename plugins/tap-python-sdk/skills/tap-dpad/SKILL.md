@@ -1,11 +1,11 @@
 ---
 name: tap-dpad
-description: Build a D-Pad style controller with a Tap v2 - swipes for directions, short pinches to select, pinch-hold that locks into rotate (twist) or drag (move) mode, fist-hold to hide. Use for D-Pad, menu navigation, select and move, drag and drop, rotate objects, or game controls with gestures.
+description: Build a D-Pad style controller with a Tap - swipes for directions, short pinches to select, pinch-hold that locks into rotate (twist) or drag (move) mode, fist-hold to hide. Use for D-Pad, menu navigation, select and move, drag and drop, rotate objects, or game controls with gestures.
 ---
 
 # D-Pad (swipe, pinch, hold to rotate or drag)
 
-**v2 (`TapSDK2`) only.** It needs air gestures and IMU motion. This is the same interaction as the D-Pad page in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
+Needs the TapXR developer firmware or TapBand: air gestures and IMU motion. TapBand uses the same BLE API and is coming soon. This is the same interaction as the D-Pad page in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
 
 ## Interaction
 
@@ -41,7 +41,7 @@ Copy [scripts/dpad.py](scripts/dpad.py). It has:
   - `on_motion(dx, dy, roll, now)`: feed IMU motion.
   - `tick(now)`: optional; locks drag mode on time if motion packets stop.
   - `held`, `mode`, `hidden`: current state for drawing the UI.
-- `main()`: connects, checks v2, enables features, prints events, and buzzes on hold / mode lock / pinch.
+- `main()`: connects, checks for `set_feature`, enables features, prints events, and buzzes on hold / mode lock / pinch.
 
 Required device setup (after `await sdk.start()`):
 

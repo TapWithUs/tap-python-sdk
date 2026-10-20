@@ -1,3 +1,8 @@
+"""Cycle TapSDK2 features: vision models, IMU, raw IMU, standby, haptics.
+
+For the TapXR developer firmware and TapBand (same BLE API; TapBand is coming
+soon). Prefer examples/connect.py for a first connection.
+"""
 from tapsdk import DeviceFeatures, TapSDK2
 from tapsdk.enumerations import (  # noqa: F401
     ImuAcclSensitivity,

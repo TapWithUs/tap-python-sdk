@@ -1,13 +1,13 @@
 ---
 name: tap-vision-models
-description: Switch the Tap v2 vision model between TAPPING and AIR_GESTURE, set the op mode, and decode UnifiedAirGestures (swipes, pinches, holds, fist). Use for air gestures, pinch, swipe, fist, model switching, gesture mode vs tap mode, or v1 AirGestures.
+description: Switch the TapXR / TapBand vision model between TAPPING and AIR_GESTURE, set the op mode, and decode UnifiedAirGestures (swipes, pinches, holds, fist). Use for air gestures, pinch, swipe, fist, model switching, or AirGestures on Tap Strap.
 ---
 
 # Vision models and air gestures
 
-**v2 (`TapSDK2`) only** for model switching. v1 air gestures are at the end of this page.
+Model switching is `TapSDK2` (`set_feature` / vision helpers). That is the TapXR developer firmware and TapBand (same BLE API; TapBand is coming soon). Python, Web, iOS, and Android all receive the **raw** detections. In Python that is `register_air_gesture_events`. Do not treat swipes or pinches as iOS/Android-only.
 
-The v2 device runs one vision model at a time:
+The device runs one vision model at a time:
 
 | `ModelTypes` | Output | Callback |
 |--------------|--------|----------|
@@ -23,7 +23,7 @@ The v2 device runs one vision model at a time:
 ## Enable and switch
 
 ```python
-from tapsdk import DeviceFeatures, ModelTypes, TapSDK2, UnifiedAirGestures, VisionSensorOpModes, connect
+from tapsdk import DeviceFeatures, ModelTypes, UnifiedAirGestures, VisionSensorOpModes, connect
 
 async def use_air_gestures(sdk):
     await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
@@ -46,6 +46,8 @@ for feature in DeviceFeatures:
 ```
 
 ## UnifiedAirGestures codes
+
+The TapXR developer firmware supports the full set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold. TapBand uses the same codes.
 
 Letters: A = thumb, B = index, C = middle, D = ring, E = pinky. "AB" = thumb touches index (pinch).
 
@@ -90,9 +92,9 @@ def on_tap(identifier, data):
 
 `DeviceFeatures.STANDBY_GESTURE_DETECTION` lets the user put the device in standby with a gesture. `register_standby_state_events(cb(id, is_standby))` reports changes. `await sdk.set_standby_state(False)` wakes it; `await sdk.get_standby_state()` reads it.
 
-## v1 air gestures (TapXR / Tap Strap 2 in Controller mode)
+## Tap Strap / Tap Strap 2 air gestures
 
-v1 has no model switching. In `InputModeController()`, `register_air_gesture_events` gives `cb(id, gesture: int)` that matches `AirGestures` (for example `UP_ONE_FINGER`, `LEFT_TWO_FINGERS`, `PINCH`, `THUMB_FINGER`, `STATE_FIST`). `register_air_gesture_state_events` gives `cb(id, MouseModes)` when the air-mouse state changes.
+`TapSDK` has no model switching. In `InputModeController()`, `register_air_gesture_events` gives `cb(id, gesture: int)` that matches `AirGestures` (for example `UP_ONE_FINGER`, `LEFT_TWO_FINGERS`, `PINCH`, `THUMB_FINGER`, `STATE_FIST`). `register_air_gesture_state_events` gives `cb(id, MouseModes)` when the air-mouse state changes. Normalize with `first()` if you share a callback with `TapSDK2`.
 
 ## Docs
 

@@ -4,47 +4,57 @@ Connect order, every time: `await connect()`, then `register_*` callbacks, then 
 
 > Docs: https://tapwithus.github.io/tap-python-sdk/
 > Skills: https://github.com/TapWithUs/tap-python-sdk/tree/master/plugins/tap-python-sdk/skills
-> Package: `pip install tap-python-sdk` (Python 3.10+, macOS / Windows / Linux, import name `tapsdk`)
+> Package: `pip install tap-python-sdk` (Python 3.10+, macOS / Windows / Linux). Import name: `tapsdk` (`from tapsdk import connect`). Do not `pip install tapsdk`.
 
 BLE SDK for Tap Strap, Tap Strap 2, TapXR, and TapBand. It receives taps, air gestures, mouse / IMU motion, and raw sensor data, and sends haptics and mode commands.
 
-## Two protocols, one entry point
+TapBand uses the same BLE API as TapXR and is coming soon (not for sale yet): https://www.tapwithus.com/tapband-waitlist/
 
-`await connect()` attaches to the Tap, detects the firmware protocol, and returns:
+The TapXR developer firmware supports the full gesture set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold. All four SDKs (Python, Web, iOS, Android) receive those raw detections. In Python that is `register_air_gesture_events`. Do not treat swipes or pinches as iOS/Android-only.
 
-- `TapSDK` (**v1**, classic firmware): input modes (`InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`)
-- `TapSDK2` (**v2**, framed firmware): `DeviceFeatures` switches, vision models (`ModelTypes.TAPPING` / `AIR_GESTURE`), IMU motion with roll / pitch / yaw
+Do not describe this package as “SDK v1” or “SDK v2”. `connect()` selects `TapSDK` or `TapSDK2` from firmware. Write one path that handles both unless the user names the device.
 
-Check with `isinstance(sdk, TapSDK2)`. Write code that handles both unless the user names the device.
+## One entry point
+
+`await connect()` attaches to the Tap, reads GATT, and returns `TapSDK` or `TapSDK2`. Enable input with duck typing (`hasattr`), not a product version:
+
+- `TapSDK` (input modes: `InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`) — Tap Strap, Tap Strap 2
+- `TapSDK2` (`DeviceFeatures`, vision models `ModelTypes.TAPPING` / `AIR_GESTURE`, IMU motion with roll / pitch / yaw) — TapXR developer firmware, TapBand
 
 ## Required order
 
 ```python
 import asyncio
-from tapsdk import DeviceFeatures, InputModeController, ModelTypes, TapSDK2, VisionSensorOpModes, connect
+from tapsdk import (
+    DeviceFeatures,
+    InputModeController,
+    ModelTypes,
+    VisionSensorOpModes,
+    connect,
+)
 
-def first(v):                      # v1 sends int, v2 sends [int]
+def first(v):  # some firmware sends int, some sends [int]
     return v[0] if isinstance(v, (list, tuple)) else v
 
 async def main():
-    sdk = await connect()                                   # 1. connect + detect
+    sdk = await connect()                                  # 1. connect
     sdk.register_tap_events(lambda i, t: print(first(t)))  # 2. register callbacks
-    await sdk.start()                                       # 3. start notifications
-    if isinstance(sdk, TapSDK2):                            # 4. enable input
+    await sdk.start()                                      # 3. start notifications
+    if hasattr(sdk, "set_input_mode"):                     # 4. enable input
+        await sdk.set_input_mode(InputModeController())
+    else:
         await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
         await sdk.set_vision_sensor_model(ModelTypes.TAPPING)
         await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)
-    else:
-        await sdk.set_input_mode(InputModeController())
-    await asyncio.Event().wait()                            # 5. keep running
+    await asyncio.Event().wait()                           # 5. keep running
 
 asyncio.run(main())
 ```
 
 ## Callback signatures
 
-| Register | v1 `TapSDK` | v2 `TapSDK2` |
-|----------|-------------|--------------|
+| Register | `TapSDK` | `TapSDK2` |
+|----------|----------|-----------|
 | `register_tap_events` | `(id, tapcode: int)` | `(id, [tapcode])` |
 | `register_air_gesture_events` | `(id, gesture: int)` -> `AirGestures` | `(id, [code])` -> `UnifiedAirGestures` |
 | `register_mouse_events` | `(id, vx, vy, proximity)` | n/a |
@@ -59,14 +69,14 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 
 ## Gotchas
 
-- v1 boots in **Text mode**: the Tap types on the OS keyboard and the SDK gets **no** taps. Call `set_input_mode(InputModeController())` after `start()`.
-- v2 sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
-- v2 runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
+- `TapSDK` boots in **Text mode**: the Tap types on the OS keyboard and the SDK gets **no** taps. Call `set_input_mode(InputModeController())` after `start()`.
+- `TapSDK2` sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
+- `TapSDK2` runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
 - Register callbacks before `start()`. `start()` returns right away; keep the event loop alive.
 - Callbacks run on the Bluetooth notification path. Keep them short; never block. Schedule async work with `asyncio.get_running_loop().create_task(...)` or push to an `asyncio.Queue`.
 - Haptics: `await sdk.send_vibration_sequence([on_ms, off_ms, ...])`, 10-2550 ms per value, max 18 values.
 - Do not invent APIs, UUIDs, or enum values. Check `tapsdk/enumerations.py` and the docs.
-- Update firmware with the Tap Manager app. v1 raw sensors need Developer mode in Tap Manager.
+- Update firmware with the Tap Manager app. Raw sensors on `TapSDK` need Developer mode in Tap Manager.
 - Test with the real device and ask the user what they see. There is no simulator.
 
 ## Skills
@@ -75,11 +85,11 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 |-------|---------|
 | `tap-getting-started` | install, pairing, connect, quickstart script, troubleshooting |
 | `tap-tapping` | tapcodes, finger combos, double taps, shortcuts, haptics |
-| `tap-vision-models` | v2 model switching, `UnifiedAirGestures` (swipe, pinch, hold, fist) |
-| `tap-imu-motion` | pointer, tilt, roll / pitch / yaw, v1 mouse |
+| `tap-vision-models` | model switching, `UnifiedAirGestures` (swipe, pinch, hold, fist) |
+| `tap-imu-motion` | pointer, tilt, roll / pitch / yaw, mouse events |
 | `tap-raw-sensors` | raw accelerometer / gyro, sensitivity, CSV logging |
-| `tap-knob` | v2 pinch-hold + twist to change a value |
-| `tap-dpad` | v2 swipes, pinch select, hold to rotate or drag |
+| `tap-knob` | pinch-hold + twist to change a value (TapXR developer firmware / TapBand) |
+| `tap-dpad` | swipes, pinch select, hold to rotate or drag (TapXR developer firmware / TapBand) |
 | `tap-build-an-app` | complete apps: queue pattern, browser / pygame / keyboard output |
 
 Skill files live in `plugins/tap-python-sdk/skills/<name>/SKILL.md` in the SDK repository.
@@ -90,6 +100,6 @@ Only for work on the SDK itself (not for apps that use it):
 
 - Use the local virtual environment: `.venv/bin/python`, `.venv/bin/pip install -e ".[dev]"`.
 - Test: `.venv/bin/pytest`. Lint: `.venv/bin/flake8`.
-- Docs follow Diátaxis per protocol (see `.cursor/rules/diataxis-docs.mdc`); `mkdocs build --strict` must pass.
+- Docs follow Diátaxis per firmware API (see `.cursor/rules/diataxis-docs.mdc`); `mkdocs build --strict` must pass.
 - Add a user-facing entry under `## Unreleased` in `docs/release-notes.md` for every PR.
 - When the public API changes, update the matching skill in `plugins/tap-python-sdk/skills/` and this file.

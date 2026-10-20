@@ -1,11 +1,11 @@
 ---
 name: tap-tapping
-description: Decode Tap tapcodes (which fingers tapped), map finger combinations to app actions or keyboard shortcuts, and give haptic feedback. Use for tapping, finger combos, chords, tap-to-action, shortcuts, v1 input modes, or the v2 TAPPING model.
+description: Decode Tap tapcodes (which fingers tapped), map finger combinations to app actions or keyboard shortcuts, and give haptic feedback. Use for tapping, finger combos, chords, tap-to-action, shortcuts, input modes, or the TAPPING vision model.
 ---
 
 # Tapping
 
-Works on v1 and v2. Start from the `tap-getting-started` skill for connection.
+Works on every Tap. Start from the `tap-getting-started` skill for connection.
 
 ## Tapcode bitmask
 
@@ -24,7 +24,7 @@ Examples: `1` thumb, `2` index, `3` thumb+index, `6` index+middle, `31` all five
 ```python
 FINGERS = ["thumb", "index", "middle", "ring", "pinky"]
 
-def first(value):  # v1 int, v2 [int]
+def first(value):  # int or [int]
     return value[0] if isinstance(value, (list, tuple)) else value
 
 def fingers(tapcode):
@@ -47,12 +47,14 @@ Single-finger taps are the most reliable. Prefer them for frequent actions. Use 
 
 ## Turn on tap events
 
-- **v1**: `await sdk.set_input_mode(InputModeController())` after `start()`.
+After `await sdk.start()`:
+
+- If `hasattr(sdk, "set_input_mode")`: `await sdk.set_input_mode(InputModeController())`.
   - `InputModeText()` (default): the Tap types letters on the OS keyboard. The SDK gets no taps.
   - `InputModeController()`: the SDK gets tap, mouse, and air-gesture events. No typing.
   - `InputModeControllerText()`: both at the same time.
   - The SDK re-sends the mode every 10 s, so the device stays in it.
-- **v2**: `set_feature(DeviceFeatures.MODEL_DETECTION, True)`, `set_vision_sensor_model(ModelTypes.TAPPING)`, `set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)`.
+- Otherwise: `set_feature(DeviceFeatures.MODEL_DETECTION, True)`, `set_vision_sensor_model(ModelTypes.TAPPING)`, `set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)`.
 
 ## Double taps and multi-taps
 
@@ -103,6 +105,6 @@ Values are on/off durations in ms (10-2550, max 18 values). From a sync callback
 
 ## Docs
 
-- v1 events: https://tapwithus.github.io/tap-python-sdk/latest/v1/reference/events/
-- v1 input modes: https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/switch-input-modes/
-- v2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/
+- TapSDK events: https://tapwithus.github.io/tap-python-sdk/latest/v1/reference/events/
+- Input modes: https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/switch-input-modes/
+- TapSDK2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/

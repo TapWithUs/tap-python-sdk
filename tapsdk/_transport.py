@@ -180,8 +180,8 @@ elif platform.system() == "Windows":
             if not device_information.pairing.is_paired:
                 logger.warning(
                     "Tap @ %s is not paired/bonded with Windows. This can "
-                    "cause v2-only GATT characteristics to be missing from "
-                    "discovery (protocol misdetected as v1, 'Characteristic "
+                    "cause TapSDK2 GATT characteristics to be missing from "
+                    "discovery (connect() returns TapSDK, 'Characteristic "
                     "... was not found!' warnings). Fix: pair the Tap "
                     "manually via Windows Settings > Bluetooth & devices > "
                     "Add device, power-cycle the Tap, then rerun.",

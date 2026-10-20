@@ -22,17 +22,17 @@ dpad = _load(PLUGIN / "skills" / "tap-dpad" / "scripts" / "dpad.py")
 
 
 def test_marketplaces_point_at_plugin():
-    claude = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
-    codex = json.loads((ROOT / ".agents" / "plugins" / "marketplace.json").read_text())
+    claude = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+    codex = json.loads((ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8"))
     assert (ROOT / claude["plugins"][0]["source"]).resolve() == PLUGIN
     assert (ROOT / codex["plugins"][0]["source"]["path"]).resolve() == PLUGIN
     for manifest in (".claude-plugin", ".codex-plugin"):
-        assert json.loads((PLUGIN / manifest / "plugin.json").read_text())["name"] == PLUGIN.name
+        assert json.loads((PLUGIN / manifest / "plugin.json").read_text(encoding="utf-8"))["name"] == PLUGIN.name
 
 
 @pytest.mark.parametrize("skill", SKILLS, ids=lambda p: p.name)
 def test_skill_frontmatter(skill):
-    text = (skill / "SKILL.md").read_text()
+    text = (skill / "SKILL.md").read_text(encoding="utf-8")
     front = re.match(r"^---\nname: (\S+)\ndescription: (.+)\n---\n", text)
     assert front, "SKILL.md needs name + description frontmatter"
     assert front.group(1) == skill.name

@@ -1,9 +1,14 @@
 # Install the SDK
 
+Requires **Python 3.10 or newer**.
+
+The PyPI distribution name is **`tap-python-sdk`**. The import name is **`tapsdk`**. Do not run `pip install tapsdk` — that package is not this SDK.
+
 ## From PyPI
 
 ```bash
 pip install tap-python-sdk
+python -c "from tapsdk import connect; print('ok')"
 ```
 
 ## From source
@@ -31,7 +36,8 @@ Uses Apple CoreBluetooth via Bleak 3.x. If you use a non-system Python, install 
 Uses Bleak 3.x with PyWinRT (installed via bleak). No external DLL is required.
 
 Pair the Tap once via **Settings > Bluetooth & devices > Add device** before
-connecting with the SDK. If a device connects but is misdetected as v1, or
+connecting with the SDK. If a device connects but `connect()` returns
+`TapSDK` when you expected `TapSDK2`, or
 you see `"Characteristic ... was not found!"`, fully unpair it and re-pair
 through Settings rather than relying on the SDK's own scan/attach — see
 [Windows BLE connect notes](../windows-ble-connect-notes.md) for background.
@@ -58,5 +64,5 @@ Uses Bleak 3.x with BlueZ. The device’s Bluetooth name must start with `Tap` f
 ## Verify the import
 
 ```bash
-python -c "from tapsdk import TapSDK; print('ok')"
+python -c "from tapsdk import connect; print('ok')"
 ```

@@ -9,7 +9,7 @@ from setuptools import find_packages, setup
 # Package meta-data.
 DISTRIBUTION_NAME = "tap-python-sdk"
 PACKAGE_NAME = "tapsdk"
-DESCRIPTION = "Tap strap python sdk"
+DESCRIPTION = "BLE SDK for Tap Strap, TapXR, and TapBand"
 URL = "https://github.com/TapWithUs/tap-python-sdk"
 EMAIL = "support@tapwithus.com"
 AUTHOR = "Tap systems Inc."
@@ -49,6 +49,7 @@ setup(
         "dev": ["pytest", "flake8"]
     },
     classifiers=[
+        "Development Status :: 5 - Production/Stable",
         "Framework :: AsyncIO",
         "Intended Audience :: Developers",
         "Topic :: Communications",

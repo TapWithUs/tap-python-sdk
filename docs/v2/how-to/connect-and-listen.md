@@ -1,6 +1,6 @@
 # Connect and listen for events
 
-## Preferred: auto-detect, then assert v2
+## Preferred: auto-detect, then use `TapSDK2`
 
 Turn the Tap on. Then:
 
@@ -23,7 +23,7 @@ async def main():
 asyncio.run(main())
 ```
 
-`connect()` attaches to an already-connected Tap when possible, detects v1 vs v2 from GATT characteristics, and returns `TapSDK` or `TapSDK2`. It does **not** start notifications — register callbacks, then `await sdk.start()`.
+`connect()` attaches to an already-connected Tap when possible, reads GATT, and returns `TapSDK` or `TapSDK2`. It does **not** start notifications — register callbacks, then `await sdk.start()`.
 
 On Windows, use an async context manager so the GATT session disconnects when the block ends:
 
@@ -39,7 +39,7 @@ Exit calls `sdk.client.disconnect()`. See [`examples/connect.py`](https://github
 
 On Windows, pass `skip_scan=True` to only attach to a Tap Windows already reports as connected/paired, without falling back to a live BLE scan (raises `ConnectionError` immediately instead of waiting on a scan). Pair the Tap once via Settings first; see [Install the SDK](../../how-to/install.md#windows-10) and [Connection model](../explanation/connection-model.md#how-connect-finds-a-device).
 
-On v2, `tapcode` is a one-element list (`[tapcode]`). Register `connection` callbacks before `start()` so they fire.
+On `TapSDK2`, `tapcode` is a one-element list (`[tapcode]`). Register `connection` callbacks before `start()` so they fire.
 
 ## Explicit `TapSDK2`
 
@@ -64,7 +64,7 @@ sdk.register_connection_events(on_connect)
 sdk.register_disconnection_events(on_disconnect)
 ```
 
-On v2, `on_connect` receives the device serial number (`bytes`). `on_disconnect` receives the underlying Bleak client (platform-dependent).
+On `TapSDK2`, `on_connect` receives the device serial number (`bytes`). `on_disconnect` receives the underlying Bleak client (platform-dependent).
 
 ## Subscribe to input events
 
@@ -89,7 +89,7 @@ await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
 await sdk.set_feature(DeviceFeatures.IMU_MOTION_DATA, True)
 ```
 
-v2 has no `set_input_mode` — toggle streams with `DeviceFeatures`. Full walkthrough: [Use features](use-features.md).
+`TapSDK2` has no `set_input_mode` — toggle streams with `DeviceFeatures`. Full walkthrough: [Use features](use-features.md).
 
 ## Keep the process alive
 
@@ -100,4 +100,4 @@ await sdk.start()
 await asyncio.Event().wait()
 ```
 
-See also [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/connect.py) and [`examples/v2.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/v2.py).
+See also [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/connect.py) and [`examples/features.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/features.py).

@@ -1,10 +1,10 @@
 # Features model
 
-On v2 (`TapSDK2`), the device does not use Text / Controller / Raw mode writes. Streams and behaviors are toggled with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures) over framed GATT writes.
+On `TapSDK2`, the device does not use Text / Controller / Raw mode writes. Streams and behaviors are toggled with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures) over framed GATT writes.
 
 ## Why features instead of modes
 
-v1 modes are a single personality for the whole device (who receives HID vs app events). v2 firmware exposes independent streams: model detection (taps / air gestures), IMU motion, raw IMU, standby, and vision sensor settings. Your app enables only what it needs.
+`TapSDK` input modes are a single personality for the whole device (who receives HID vs app events). Developer firmware exposes independent streams: model detection (taps / air gestures), IMU motion, raw IMU, standby, and vision sensor settings. Your app enables only what it needs. The TapXR developer firmware has the full gesture set; TapBand uses the same BLE API.
 
 ## Typical flow
 

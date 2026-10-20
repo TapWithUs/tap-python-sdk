@@ -1,6 +1,6 @@
 # Use features
 
-Recipes for `TapSDK2` (framed protocol). Prefer `await connect()` so protocol detection picks v2 automatically; or construct `TapSDK2()` when you know the firmware.
+Recipes for `TapSDK2` (TapXR developer firmware and TapBand). Prefer `await connect()` so firmware detection picks `TapSDK2` automatically; or construct `TapSDK2()` when you know the firmware.
 
 There is no `set_input_mode`. Enable streams with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures).
 
@@ -41,6 +41,26 @@ async def main():
 asyncio.run(main())
 ```
 
+## Receive air gestures
+
+The TapXR developer firmware supports the full set: thumb swipes, pinches with hold, fist with hold. TapBand uses the same BLE API. Python, Web, iOS, and Android all receive these **raw** detections. In Python that is `register_air_gesture_events`. iOS and Android also add a processed click/drag/drop layer.
+
+```python
+from tapsdk import UnifiedAirGestures
+
+def on_air_gesture(identifier, data):
+    gesture = UnifiedAirGestures(int(data[0]))
+    print(gesture.name)
+
+sdk.register_air_gesture_events(on_air_gesture)
+await sdk.start()
+await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+await sdk.set_vision_sensor_model(ModelTypes.AIR_GESTURE)
+await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.STREAM)
+```
+
+Codes: `COMBINED_GESTURE_LEFT` / `RIGHT` / `UP` / `DOWN` (swipes), `AB`–`AE` (pinches), `AB_HOLD`–`AE_HOLD`, `FIST` / `FIST_HOLD`, `NONE` (release). See [Enumerations](../../reference/enumerations.md#unifiedairgestures).
+
 ## Stream IMU motion
 
 ```python
@@ -76,4 +96,4 @@ await sdk.send_vibration_sequence([500, 200, 500])
 # same as await sdk.set_haptic_pattern([...])
 ```
 
-Full demo that cycles features: [`examples/v2.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/v2.py). API surface: [TapSDK2 reference](../reference/tapsdk2.md).
+Full demo that cycles features: [`examples/features.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/features.py). API surface: [TapSDK2 reference](../reference/tapsdk2.md).

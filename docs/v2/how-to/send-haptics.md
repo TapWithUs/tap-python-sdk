@@ -21,4 +21,4 @@ The list alternates **on** and **off** durations. The example above vibrates for
 await sdk.send_vibration_sequence([100, 200, 100, 200, 500])
 ```
 
-Runnable samples: [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/connect.py), [`examples/v2.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/v2.py).
+Runnable samples: [`examples/connect.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/connect.py), [`examples/features.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/features.py).

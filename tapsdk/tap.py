@@ -44,7 +44,7 @@ MODE_COMMAND_SETTLE_SECONDS = 0.2
 
 
 class TapSDK():
-    """High-level async API for one Tap Strap / TapXR over BLE (v1 protocol).
+    """High-level async API for one Tap over BLE (input-mode firmware).
 
     Register event callbacks, then ``await run()`` (or ``await start()`` after
     ``connect()``) to subscribe to notifications. Issue commands with

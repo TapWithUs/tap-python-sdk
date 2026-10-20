@@ -5,7 +5,7 @@ def tapcode_to_fingers(tapcode: int):
 def mouse_data_msg(data: bytearray, parse_euler_angles=False):
     """Parse a mouse notification into ``(vx, vy, proximity)``.
 
-    When ``parse_euler_angles`` is True (v2 IMU motion payloads), also return
+    When ``parse_euler_angles`` is True (TapSDK2 IMU motion payloads), also return
     ``[roll, pitch, yaw]`` as a fourth element.
     """
     vx = int.from_bytes(data[1:3], "little", signed=True)
