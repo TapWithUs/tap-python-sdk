@@ -1,3 +1,7 @@
+"""TapSDK demo: input modes, taps, mouse, air gestures, raw sensors, haptics.
+
+For Tap Strap / Tap Strap 2. Prefer examples/connect.py for a first connection.
+"""
 import asyncio
 import logging
 import time

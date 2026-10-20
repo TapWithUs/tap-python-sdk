@@ -1,13 +1,13 @@
 ---
 name: tap-raw-sensors
-description: Stream raw accelerometer and gyroscope samples from a Tap (v1 raw mode or v2 RAW_IMU_DATA), set sensitivity and scaling, log to CSV, and plot. Use for raw sensors, raw IMU, accelerometer, gyro, data logging, datasets, custom gesture recognition, or research.
+description: Stream raw accelerometer and gyroscope samples from a Tap (InputModeRaw or RAW_IMU_DATA), set sensitivity and scaling, log to CSV, and plot. Use for raw sensors, raw IMU, accelerometer, gyro, data logging, datasets, custom gesture recognition, or research.
 ---
 
 # Raw sensors
 
 For research, datasets, and custom gesture models. For pointer movement or orientation, prefer `tap-imu-motion` (less data, already processed).
 
-## Packet format (both protocols)
+## Packet format
 
 The callback gets a list of packets: `cb(identifier, packets: list[dict])`.
 
@@ -19,7 +19,9 @@ The callback gets a list of packets: `cb(identifier, packets: list[dict])`.
 
 Units: raw LSB counts, or **mdps** (gyro) and **mg** (accelerometer) when scaling is on. Rate is about 200 Hz per sensor, delivered in batches.
 
-## v2 (`TapSDK2`)
+## `TapSDK2` (`RAW_IMU_DATA`)
+
+TapXR developer firmware and TapBand.
 
 ```python
 from tapsdk import DeviceFeatures
@@ -39,7 +41,9 @@ await sdk.set_feature(DeviceFeatures.RAW_IMU_DATA, False)
 
 `await sdk.get_imu_sensitivity()` returns `(ImuGyroSensitivity, ImuAcclSensitivity)`.
 
-## v1 (`TapSDK`)
+## `TapSDK` (`InputModeRaw`)
+
+Tap Strap and Tap Strap 2.
 
 ```python
 from tapsdk import InputModeController, InputModeRaw
@@ -63,7 +67,7 @@ await sdk.set_input_mode(InputModeController())
 
 ## Log to CSV
 
-Copy [scripts/log_csv.py](scripts/log_csv.py): `python log_csv.py --seconds 30 --out raw.csv`. It works on v1 and v2.
+Copy [scripts/log_csv.py](scripts/log_csv.py): `python log_csv.py --seconds 30 --out raw.csv`. It works on `TapSDK` and `TapSDK2`.
 
 ## Plot (optional, in the user's app)
 
@@ -84,6 +88,6 @@ plt.show()
 
 ## Docs
 
-- v1 raw sensors: https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/stream-raw-sensors/
-- v1 raw explanation (axes, scaling): https://tapwithus.github.io/tap-python-sdk/latest/v1/explanation/raw-sensors/
-- v2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/
+- TapSDK raw sensors: https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/stream-raw-sensors/
+- Raw explanation (axes, scaling): https://tapwithus.github.io/tap-python-sdk/latest/v1/explanation/raw-sensors/
+- TapSDK2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/

@@ -1,5 +1,5 @@
 site_name: Tap Python SDK
-site_description: BLE SDK documentation for Tap Strap and TapXR
+site_description: BLE SDK documentation for Tap Strap, TapXR, and TapBand
 site_url: https://tapwithus.github.io/tap-python-sdk/
 site_author: Tap Systems Inc.
 
@@ -68,7 +68,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - v1 (TapSDK):
+  - TapSDK:
       - Overview: v1/index.md
       - Tutorial:
           - Getting started: v1/tutorial/getting-started.md
@@ -94,7 +94,7 @@ nav:
           - Input modes: v1/explanation/input-modes.md
           - Raw sensors: v1/explanation/raw-sensors.md
           - Windows BLE connect notes: windows-ble-connect-notes.md
-  - v2 (TapSDK2):
+  - TapSDK2:
       - Overview: v2/index.md
       - Tutorial:
           - Getting started: v2/tutorial/getting-started.md

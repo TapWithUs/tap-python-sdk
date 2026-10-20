@@ -1,5 +1,7 @@
 # Windows BLE connect implementation notes
 
+In this page, `"v1"` / `"v2"` are `detect_protocol()` return values (GATT), not product SDK versions. `"v1"` means `TapSDK`; `"v2"` means `TapSDK2`.
+
 Background/rationale for the Windows-specific connect logic in
 [`tapsdk/_transport.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/tapsdk/_transport.py). These are "why", not "what"
 notes - pulled out of inline comments to keep the source file focused on the
@@ -42,9 +44,9 @@ diagnostic instead of a silent "protocol detected as v1" surprise.
 ## Forcing uncached services in `TapClient.__init__`
 
 Windows caches the GATT service table per-address. A Tap that was previously
-paired while running v1 firmware (or before a firmware update) can otherwise
-report stale (v1-only) services, causing `detect_protocol()` to misidentify a
-v2 device as v1.
+paired while running input-mode firmware (or before a firmware update) can otherwise
+report stale (`TapSDK`-only) services, causing `detect_protocol()` to misidentify a
+`TapSDK2` device as `TapSDK`.
 
 ## Primary connect timeout vs. watchdog
 

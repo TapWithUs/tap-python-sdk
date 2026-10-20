@@ -1,12 +1,14 @@
 # Package layout
 
+PyPI distribution name: **`tap-python-sdk`** (`pip install tap-python-sdk`). Import name: **`tapsdk`** (`from tapsdk import connect`).
+
 ## Public imports (`tapsdk`)
 
 | Name | Kind |
 |------|------|
-| `connect` | Async factory — attach, detect v1/v2, return `TapSDK` or `TapSDK2` (notifies not started); accepts `skip_scan: bool = False` (Windows only, see [connection model](../v1/explanation/connection-model.md#how-connect-finds-a-device)) |
-| `TapSDK` | Class (lazy import from `tapsdk.tap`) — v1 protocol |
-| `TapSDK2` | Class (lazy import from `tapsdk.tap2`) — v2 framed protocol |
+| `connect` | Async factory — attach, return `TapSDK` or `TapSDK2` from firmware (notifies not started); accepts `skip_scan: bool = False` (Windows only, see [connection model](../v1/explanation/connection-model.md#how-connect-finds-a-device)) |
+| `TapSDK` | Class (lazy import from `tapsdk.tap`) — input-mode firmware |
+| `TapSDK2` | Class (lazy import from `tapsdk.tap2`) — developer firmware (TapXR, TapBand) |
 | `InputModeText` | Class |
 | `InputModeController` | Class |
 | `InputModeControllerText` | Class |
@@ -27,27 +29,27 @@ Version string: `tapsdk.__version__`.
 | Module | Role |
 |--------|------|
 | `tapsdk._transport` | Shared `TapClient`, `connect_tap()` scan/attach |
-| `tapsdk._detect` | `ensure_gatt_services`, `detect_protocol(client)` → `"v1"` / `"v2"` |
+| `tapsdk._detect` | `ensure_gatt_services`, `detect_protocol(client)` → `"v1"` / `"v2"` (internal labels for `TapSDK` / `TapSDK2`) |
 | `tapsdk.device_info` | Shared `DeviceInfo` / `get_device_info` GATT reads (DIS/BAS) |
-| `tapsdk.tap` | `TapSDK` (v1), GATT UUIDs |
-| `tapsdk.tap2` | `TapSDK2` (v2), framed-protocol UUIDs |
+| `tapsdk.tap` | `TapSDK`, GATT UUIDs |
+| `tapsdk.tap2` | `TapSDK2`, framed-protocol UUIDs |
 | `tapsdk.inputmodes` | Mode command builders |
 | `tapsdk.enumerations` | Public enums |
 | `tapsdk.parsers` | Notification payload parsers |
-| `tapsdk.encoder` | v2 outbound framed commands |
+| `tapsdk.encoder` | `TapSDK2` outbound framed commands |
 
 ## GATT characteristics (SDK-owned)
 
 | Constant | UUID | Use |
 |----------|------|-----|
 | `tap_service` | `c3ff0001-…` | Tap proprietary service |
-| `tap_data_characteristic` | `c3ff0005-…` | v1 tap events (notify) |
-| `mouse_data_characteristic` | `c3ff0006-…` | v1 mouse events (notify) |
-| `ui_cmd_characteristic` | `c3ff0009-…` | v1 haptics (write) |
-| `air_gesture_data_characteristic` | `c3ff000a-…` | v1 air gestures / mouse mode (notify) |
+| `tap_data_characteristic` | `c3ff0005-…` | `TapSDK` tap events (notify) |
+| `mouse_data_characteristic` | `c3ff0006-…` | `TapSDK` mouse events (notify) |
+| `ui_cmd_characteristic` | `c3ff0009-…` | `TapSDK` haptics (write) |
+| `air_gesture_data_characteristic` | `c3ff000a-…` | `TapSDK` air gestures / mouse mode (notify) |
 | `tap_mode_characteristic` | `6e400002-…` | NUS RX — mode / input-type commands (write) |
 | `raw_sensors_characteristic` | `6e400003-…` | NUS TX — raw stream (notify) |
-| `tap_data_read_characteristic` | `c3ff000e-…` | v2 framed notify (also used for protocol detect) |
-| `tap_data_write_characteristic` | `c3ff000f-…` | v2 framed write |
+| `tap_data_read_characteristic` | `c3ff000e-…` | `TapSDK2` framed notify (also used for firmware detect) |
+| `tap_data_write_characteristic` | `c3ff000f-…` | `TapSDK2` framed write |
 
 Lower-level BLE protocol details: [Tap BLE API Documentation](https://tapwithus.atlassian.net/wiki/spaces/FIR/pages/426803201/Tap+BLE+API+Documentation) (internal).

@@ -1,22 +1,22 @@
-## Tap Python SDK (beta)
+## Tap Python SDK
 
 [![PyPI version](https://img.shields.io/pypi/v/tap-python-sdk.svg)](https://pypi.org/project/tap-python-sdk/)
 
-BLE SDK for building Python apps that connect to **Tap Strap**, **Tap Strap 2**, **TapXR**, and **TapBand**, send commands, and receive tap, mouse, air-gesture, and raw sensor events.
+BLE SDK for Python apps that connect to **Tap Strap**, **Tap Strap 2**, **TapXR**, and **TapBand**. Send commands and receive tap, mouse, air-gesture, and raw sensor events.
 
-**Python ≥ 3.10** · **macOS / Windows / Linux** · **currently in beta**
+**Python 3.10+** · **macOS / Windows / Linux**
+
+TapBand uses the same BLE API as TapXR and is coming soon. It is not for sale yet. Join the [TapBand waitlist](https://www.tapwithus.com/tapband-waitlist/).
 
 ### Documentation
 
 Published docs (MkDocs Material, versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
 
-Docs are split by BLE protocol. Pick the path that matches your device (or what `connect()` returns):
-
 | I want to… | Go to |
 |------------|--------|
-| Choose protocol / compare v1 vs v2 | [Docs home](docs/index.md) |
-| Start with classic `TapSDK` (v1) | [v1 Getting started](docs/v1/tutorial/getting-started.md) |
-| Start with framed `TapSDK2` (v2) | [v2 Getting started](docs/v2/tutorial/getting-started.md) |
+| First connect (Tap Strap and TapXR) | [Docs home](docs/index.md) |
+| Input modes (`TapSDK`) | [TapSDK](docs/v1/index.md) |
+| Features and air gestures (`TapSDK2`) | [TapSDK2](docs/v2/index.md) |
 | Install the package | [Install the SDK](docs/how-to/install.md) |
 | Read the changelog | [Release notes](docs/release-notes.md) |
 
@@ -28,25 +28,102 @@ Full index: [docs/index.md](docs/index.md). Local preview: `pip install -r requi
 pip install tap-python-sdk
 ```
 
-Platform notes (BlueZ on Linux, Bleak 3.x, pairing): [Install the SDK](docs/how-to/install.md).
+Requires **Python 3.10 or newer**. PyPI name: `tap-python-sdk`. Import name: `tapsdk` (`from tapsdk import connect`). Platform notes (BlueZ on Linux, Bleak 3.x, pairing): [Install the SDK](docs/how-to/install.md).
 
-### Quick example
+### Quick start
+
+One path for Tap Strap and TapXR. Pair the Tap in OS Bluetooth settings, then run:
 
 ```python
 import asyncio
-from tapsdk import TapSDK2, connect
+from tapsdk import (
+    DeviceFeatures,
+    InputModeController,
+    ModelTypes,
+    VisionSensorOpModes,
+    connect,
+)
+
+
+def on_tap(identifier, tapcode):
+    # tapcode is int 1..31 — bit0=thumb … bit4=pinky
+    code = tapcode[0] if isinstance(tapcode, (list, tuple)) else tapcode
+    print(f"{identifier} tapped {code} (0b{int(code):05b})")
+
 
 async def main():
-    sdk = await connect()  # auto-detects v1 / v2
-    sdk.register_tap_events(lambda identifier, tapcode: print(identifier, tapcode))
+    sdk = await connect()
+    sdk.register_tap_events(on_tap)
     await sdk.start()
-    print("Protocol:", "v2" if isinstance(sdk, TapSDK2) else "v1")
+    if hasattr(sdk, "set_input_mode"):
+        await sdk.set_input_mode(InputModeController())
+    else:
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+        await sdk.set_vision_sensor_model(ModelTypes.TAPPING)
+        await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)
+
+    print("Waiting for taps… (Ctrl+C to quit)")
     await asyncio.Event().wait()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+The script switches the Tap out of keyboard mode. Call that enable step after `start()`, or you get no tap events.
+
+Turn the Tap on. Update firmware with Tap Manager. `connect()` attaches and returns `TapSDK` or `TapSDK2` from the firmware. You do not pick a protocol. More: [`examples/connect.py`](examples/connect.py).
+
+### Air gestures (raw swipes, pinches, fist)
+
+Python, Web, iOS, and Android all receive the **raw** gesture detections from the sensor. In Python that is `register_air_gesture_events`. iOS and Android also add a processed layer (click, drag, drop with debounce). Swipes and pinches are not iOS/Android-only.
+
+The TapXR developer firmware (and TapBand, same BLE API) supports the full set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, and fist with hold. Codes match `UnifiedAirGestures`.
+
+```python
+import asyncio
+from tapsdk import (
+    DeviceFeatures,
+    ModelTypes,
+    UnifiedAirGestures,
+    VisionSensorOpModes,
+    connect,
+)
+
+
+def first(value):
+    return value[0] if isinstance(value, (list, tuple)) else value
+
+
+def on_air_gesture(identifier, data):
+    gesture = UnifiedAirGestures(int(first(data)))
+    print(identifier, gesture.name)
+
+
+async def main():
+    sdk = await connect()
+    sdk.register_air_gesture_events(on_air_gesture)
+    await sdk.start()
+    if hasattr(sdk, "set_feature"):
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+        await sdk.set_vision_sensor_model(ModelTypes.AIR_GESTURE)
+        await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.STREAM)
+    print("Swipe, pinch, or make a fist. Ctrl+C to quit.")
+    await asyncio.Event().wait()
+
 
 asyncio.run(main())
 ```
 
-Turn the Tap on. Update firmware with Tap Manager. `connect()` picks `TapSDK` (v1) or `TapSDK2` (v2) from GATT. More: [`examples/connect.py`](examples/connect.py).
+| `UnifiedAirGestures` | Meaning |
+|----------------------|---------|
+| `COMBINED_GESTURE_LEFT` / `RIGHT` / `UP` / `DOWN` | Thumb swipe |
+| `COMBINED_GESTURE_AB` … `AE` | Short pinch (thumb + index / middle / ring / pinky) |
+| `COMBINED_GESTURE_AB_HOLD` … `AE_HOLD` | Pinch held |
+| `COMBINED_GESTURE_FIST` / `FIST_HOLD` | Fist / fist held |
+| `COMBINED_GESTURE_NONE` | Hand relaxed (use as release after a hold) |
+
+Tap Strap and Tap Strap 2 in Controller mode report `AirGestures` on the same callback (`UP_ONE_FINGER`, `PINCH`, `STATE_FIST`, and related codes). Normalize the payload with `first()` on every device.
 
 ### AI-Assisted Development
 
@@ -96,13 +173,13 @@ curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/insta
 
 #### What's included
 
-- **tap-getting-started**: install, pairing, connect to any Tap (v1 or v2), quickstart script, troubleshooting
+- **tap-getting-started**: install, pairing, connect to any Tap, quickstart script, troubleshooting
 - **tap-tapping**: which fingers tapped, finger combos, double taps, keyboard shortcuts, haptics
-- **tap-vision-models**: switch between the tapping and air-gesture models; swipes, pinches, holds, fist (v2)
-- **tap-imu-motion**: pointer movement, tilt, roll / pitch / yaw (v2) and mouse events (v1)
+- **tap-vision-models**: tapping vs air-gesture model; swipes, pinches, holds, fist
+- **tap-imu-motion**: pointer movement, tilt, roll / pitch / yaw, and mouse events
 - **tap-raw-sensors**: raw accelerometer and gyro streams, sensitivity, CSV logging
-- **tap-knob**: hold a pinch and twist to turn a value up or down (v2)
-- **tap-dpad**: swipe for directions, pinch to select, hold to rotate or drag (v2)
+- **tap-knob**: hold a pinch and twist to turn a value up or down (TapXR developer firmware / TapBand)
+- **tap-dpad**: swipe for directions, pinch to select, hold to rotate or drag (TapXR developer firmware / TapBand)
 - **tap-build-an-app**: turn Tap events into a complete app: browser page, game, keyboard control
 
 #### Onboard your agent
@@ -110,7 +187,7 @@ curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/insta
 1. Make an empty folder for your project and open your coding agent in it.
 2. Install the skills (see above).
 3. Turn on your Tap, charge it, pair it in your computer's Bluetooth settings, and update its firmware with Tap Manager.
-4. Tell the agent which device you have (Tap Strap, Tap Strap 2, TapXR, or TapBand) and which computer (macOS, Windows, or Linux).
+4. Tell the agent which device you have (Tap Strap, Tap Strap 2, or TapXR) and which computer (macOS, Windows, or Linux). TapBand uses the same API as TapXR and is coming soon.
 5. Ask it to connect first: *"Use the tap-getting-started skill to connect to my Tap and show my taps."* Tap your fingers and tell the agent what you see.
 6. When taps arrive, describe your app. Build one interaction at a time and try each one with the device.
 7. If something does not work, tell the agent exactly what happened (for example "nothing prints when I tap" or "letters appear in my editor"). It can use the troubleshooting table in `tap-getting-started`.
@@ -129,16 +206,16 @@ curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/insta
 
 ### Features (summary)
 
-- **Protocols:** v1 (`TapSDK`) and v2 framed (`TapSDK2`); `connect()` auto-detects
-- **Modes (v1):** Text, Controller, Controller+Text, Raw sensors — [v1 how-tos](docs/v1/how-to/index.md)
-- **Features (v2):** `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby — [v2 how-tos](docs/v2/how-to/index.md)
-- **Events:** tap, mouse, air gesture, raw / IMU packets, connect/disconnect
+- **Connect:** `await connect()` attaches and returns `TapSDK` or `TapSDK2` from firmware
+- **Input modes** (`TapSDK`): Text, Controller, Controller+Text, Raw sensors — [TapSDK how-tos](docs/v1/how-to/index.md)
+- **Features** (`TapSDK2`): `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby — [TapSDK2 how-tos](docs/v2/how-to/index.md)
+- **Events:** tap, mouse, air gesture (raw detections), raw / IMU packets, connect/disconnect
 - **Commands:** set mode / features, Spatial Control input type (TapXR), haptic sequences
 - **Spatial Control** (authorized TapXR builds): [Use Spatial Control](docs/v1/how-to/use-spatial-control.md)
 
 ### Migrating from 0.6.x
 
-Breaking API changes for v1 (`TapSDK`) are listed in [Migrate from 0.6](docs/v1/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
+Breaking API changes for `TapSDK` are listed in [Migrate from 0.6](docs/v1/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
 
 ### Contributing
 

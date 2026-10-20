@@ -1,6 +1,6 @@
 # Raw sensors
 
-Raw mode exposes the motion sensors behind Tap’s gesture pipeline. That is useful for research, custom gesture models, and XR prototypes — not for everyday typing. This page describes v1 `InputModeRaw` / NUS streaming.
+Raw mode exposes the motion sensors behind Tap’s gesture pipeline. That is useful for research, custom gesture models, and XR prototypes — not for everyday typing. This page describes `TapSDK` `InputModeRaw` / NUS streaming.
 
 ## What is streamed
 

@@ -10,13 +10,17 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
+* Version **1.0.0**: the package leaves beta. The PyPI distribution name stays **`tap-python-sdk`** (`pip install tap-python-sdk`; import `tapsdk`). The Development Status classifier is now `5 - Production/Stable`. Publishing this version to PyPI is a separate maintainer step (run `scripts/prepare_release.py 1.0.0`, then tag).
+* Product messaging matches current devices: the TapXR developer firmware has the full gesture set (taps, thumb swipes, pinches with hold, fist with hold). TapBand uses the same BLE API as TapXR and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)); it is not for sale yet.
+* One first-run path for Tap Strap and TapXR: README and `examples/connect.py` enable input with `hasattr(sdk, "set_input_mode")` (Controller mode) or `DeviceFeatures.MODEL_DETECTION` + the tapping vision model — the same sequence as the [developer portal Getting started](https://dev.tapwithus.com/docs/getting-started/).
+* README, docs, and agent skills no longer describe the product as “SDK v1 / SDK v2”. `connect()` still returns `TapSDK` or `TapSDK2` from firmware; user-facing text talks about devices and those class names.
 * `connect()` accepts `skip_scan: bool = False` (Windows only): when `True`, never falls back to a live BLE scan — only attaches to a Tap Windows already reports connected/paired, raising `ConnectionError` immediately otherwise instead of waiting on a scan.
-* AI-assisted development kit: a skills plugin for Claude Code and Codex, Cursor skills and rule, `AGENTS.md`, and `install-skills.sh`. The installer writes into the current folder (`.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `AGENTS.md`). Pass `-g` to install for your user instead. Skills cover getting started (v1/v2 agnostic), tapping, vision models and air gestures, IMU motion, raw sensors, building apps, and knob / D-Pad gesture recipes. See "AI-Assisted Development" in the README.
+* AI-assisted development kit: a skills plugin for Claude Code and Codex, Cursor skills and rule, `AGENTS.md`, and `install-skills.sh`. The installer writes into the current folder (`.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `AGENTS.md`). Pass `-g` to install for your user instead. Skills cover getting started, tapping, vision models and air gestures, IMU motion, raw sensors, building apps, and knob / D-Pad gesture recipes. See "AI-Assisted Development" in the README.
 
 ### Bug fixes
 
 * `TapSDK()` / `TapSDK2()` no longer crash on Bleak 3 when constructed without an address (`address_or_ble_device`) (#54).
-* Windows BLE connect reliability: fixed intermittent leaked `GattSession` handles, stale/cached GATT service tables, and a services-changed race that could cause v2 devices to be misdetected as v1 or fail with `"Characteristic ... was not found!"`. See [Windows BLE connect notes](windows-ble-connect-notes.md).
+* Windows BLE connect reliability: fixed intermittent leaked `GattSession` handles, stale/cached GATT service tables, and a services-changed race that could cause `TapSDK2` devices to be misdetected as `TapSDK` or fail with `"Characteristic ... was not found!"`. See [Windows BLE connect notes](windows-ble-connect-notes.md).
 * `TapSDK` / `TapSDK2` now support use as an async context manager (`async with await connect() as sdk:`), ensuring the underlying GATT session is disconnected on exit.
 
 ## 0.9.0 (2026-09-02)

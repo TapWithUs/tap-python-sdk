@@ -51,6 +51,13 @@ class KeepAliveManager:
 
 
 class TapSDK2:
+    """High-level async API for TapXR developer firmware and TapBand.
+
+    Enable streams with ``DeviceFeatures``. Air gestures use
+    ``UnifiedAirGestures`` (full set: swipes, pinches with hold, fist with
+    hold). TapBand uses the same BLE API and is coming soon.
+    """
+
     def __init__(self, client=None, address=None, **kwargs):
         if address is None:
             address = kwargs.get("address")
@@ -289,7 +296,7 @@ class TapSDK2:
         """Read device name, FW versions, battery, and other public device fields.
 
         Shared with TapSDK — DIS/BAS and Tap proprietary readable chars, not the
-        framed v2 command pipe. Missing characteristics yield None.
+        framed command pipe. Missing characteristics yield None.
         """
         return await read_device_info(self.client)
 

@@ -6,25 +6,27 @@ alwaysApply: false
 
 # Diátaxis docs guidelines
 
-This repository's docs follow [Diátaxis](https://diataxis.fr/) **inside each protocol tree**. Top-level nav is protocol-first (Stripe-style): **v1 (`TapSDK`)** and **v2 (`TapSDK2`)** are separate sections. Shared pages (`how-to/install`, `reference/enumerations`, `reference/package`, `release-notes`) are linked from both. Migrate from 0.6 is v1-only.
+This repository's docs follow [Diátaxis](https://diataxis.fr/) **inside each firmware-API tree**. Top-level nav is API-first: **`TapSDK`** (input-mode firmware) and **`TapSDK2`** (developer firmware). Do not label these “SDK v1” / “SDK v2”. Shared pages (`how-to/install`, `reference/enumerations`, `reference/package`, `release-notes`) are linked from both. Migrate from 0.6 is `TapSDK`-only.
 
-## Quadrants (per protocol)
+Folder paths `docs/v1/` and `docs/v2/` stay for published URL stability. Nav titles and page headings use the class names `TapSDK` and `TapSDK2`.
+
+## Quadrants (per firmware API)
 
 | Quadrant | Path | Purpose |
 |----------|------|---------|
-| Tutorial | `docs/v1/tutorial/`, `docs/v2/tutorial/` | Learning-oriented; one successful first path per protocol |
+| Tutorial | `docs/v1/tutorial/`, `docs/v2/tutorial/` | Learning-oriented; one successful first path per API |
 | How-to | `docs/v1/how-to/`, `docs/v2/how-to/` (+ shared `docs/how-to/`) | Problem-oriented recipes for a specific goal |
 | Reference | `docs/v1/reference/`, `docs/v2/reference/` (+ shared `docs/reference/`) | Information-oriented API / type / event facts |
 | Explanation | `docs/v1/explanation/`, `docs/v2/explanation/` | Understanding-oriented background |
 
-`Readme.md` stays a short overview that links into `docs/` and the published MkDocs site. Do not re-inflate it into a full API manual. Home (`docs/index.md`) owns the v1 vs v2 compare table and CTAs.
+`Readme.md` stays a short overview that links into `docs/` and the published MkDocs site, plus the shared first-run script and a short raw-gesture example. Home (`docs/index.md`) owns the one hello-tap path, the device table (including TapBand coming soon), and CTAs into each API tree.
 
 ## When a code change requires doc updates
 
-- Public API, callbacks, command semantics, or example behavior → **Reference** under the affected protocol (and How-to / Tutorial if the happy path changed)
-- New supported task or platform install step → **How-to** (shared install if cross-protocol; else under `v1/` / `v2/`)
-- Conceptual behavior (modes, features, connection, sensors) → **Explanation** under the matching protocol
-- First-run experience changes → **Tutorial** for that protocol
+- Public API, callbacks, command semantics, or example behavior → **Reference** under the affected API (and How-to / Tutorial if the happy path changed)
+- New supported task or platform install step → **How-to** (shared install if cross-API; else under `v1/` / `v2/`)
+- Conceptual behavior (modes, features, connection, sensors) → **Explanation** under the matching API
+- First-run experience changes → Home and the matching **Tutorial**
 - Docs-only PRs that already match the change → no further edits
 
 ## Style
@@ -32,12 +34,14 @@ This repository's docs follow [Diátaxis](https://diataxis.fr/) **inside each pr
 - Prefer clear, unambiguous language; one job per page
 - Do not invent features or UUIDs not present in the code
 - Keep MkDocs links valid (`mkdocs build --strict` must pass)
-- Example file links should point at GitHub `blob` URLs, not `../../examples/...`
+- Example file links should point at GitHub `blob` URLs on `master`, not `../../examples/...`
 - Axis diagrams live under `docs/assets/`
-- Do not mix v1 and v2 recipes on one page; put protocol differences on Home or in the matching tree
+- Do not mix `TapSDK` and `TapSDK2` recipes on one page; put firmware differences on Home or in the matching tree
+- Do not say TapXR supports only a subset of gestures. The TapXR developer firmware has the full set. TapBand uses the same BLE API and is coming soon; never mark it unsupported or for sale.
+- User-facing text must not say “SDK v1”, “SDK v2”, or “v1 TapSDK”. Class names `TapSDK` / `TapSDK2` and quoted `detect_protocol()` return values (`"v1"` / `"v2"`) are allowed.
 
 ## Published site
 
-Configured by `mkdocs.yml` (Material + mike version picker). Changelog: `docs/release-notes.md`, which keeps an `## Unreleased` section maintained per PR (renamed to the version at release time by `scripts/prepare_release.py`).
+Configured by `mkdocs.yml` (Material + mike). Changelog: `docs/release-notes.md`, which keeps an `## Unreleased` section maintained per PR (renamed to the version at release time by `scripts/prepare_release.py`).
 
 GitHub Pages is the `gh-pages` branch (mike). The Deploy docs workflow builds on docs PRs and deploys a versioned site (from the tagged release commit) only after a successful Publish to PyPI run (`workflow_run`), not on every `master` docs push.

@@ -25,7 +25,7 @@ register_tap_events(cb)
 cb(identifier, tapcode) -> None
 ```
 
-The second argument is a one-element list `[tapcode]` from the framed parser. The bitmask meaning matches v1: bit 0 (LSb) is the thumb; bit 4 is the pinky. Example: `[5]` = thumb + middle.
+The second argument is a one-element list `[tapcode]` from the framed parser. The bitmask meaning matches `TapSDK`: bit 0 (LSb) is the thumb; bit 4 is the pinky. Example: `[5]` = thumb + middle.
 
 ## Air gesture
 
@@ -34,7 +34,7 @@ register_air_gesture_events(cb)
 cb(identifier, gesture_data) -> None
 ```
 
-`gesture_data` is a one-element list; `gesture_data[0]` matches [`UnifiedAirGestures`](../../reference/enumerations.md#unifiedairgestures). TapSDK2 has no air-gesture **state** register.
+`gesture_data` is a one-element list; `gesture_data[0]` matches [`UnifiedAirGestures`](../../reference/enumerations.md#unifiedairgestures). These are the raw detections (swipes, pinches with hold, fist with hold). Python, Web, iOS, and Android all receive them; iOS and Android also add a processed click/drag/drop layer. `TapSDK2` has no air-gesture **state** register.
 
 ## Raw IMU
 

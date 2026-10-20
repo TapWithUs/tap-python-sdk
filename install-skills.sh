@@ -237,6 +237,8 @@ show_menu() {
 }
 
 usage() {
+  echo "Install Tap Python SDK skills for Tap Strap, TapXR, and TapBand." >&2
+  echo "TapBand uses the same BLE API as TapXR and is coming soon." >&2
   echo "Usage: $0 [-g] [claude|codex|cursor|agents|all]" >&2
   echo "  default  install into the current folder" >&2
   echo "  -g       install for your user, in every project" >&2

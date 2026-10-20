@@ -9,14 +9,14 @@ The user may not be a developer. Keep the project small, explain how to run it i
 
 ## Workflow
 
-1. **Ask** (only what is missing): device (Tap Strap / Tap Strap 2 / TapXR / TapBand), OS, and what the app should do.
+1. **Ask** (only what is missing): device (Tap Strap / Tap Strap 2 / TapXR; TapBand uses the same API as TapXR and is coming soon), OS, and what the app should do.
 2. **Connect first.** Run the `tap-getting-started` quickstart and confirm taps arrive before building anything else.
 3. **Pick the input** (load the matching skill):
    - finger taps and combos: `tap-tapping`
-   - swipes, pinches, fist: `tap-vision-models` (v2)
+   - swipes, pinches, fist: `tap-vision-models`
    - pointer, tilt, rotation: `tap-imu-motion`
-   - twist-to-adjust value: `tap-knob` (v2)
-   - directions + select + drag/rotate: `tap-dpad` (v2)
+   - twist-to-adjust value: `tap-knob` (TapXR developer firmware / TapBand)
+   - directions + select + drag/rotate: `tap-dpad` (TapXR developer firmware / TapBand)
    - data recording: `tap-raw-sensors`
 4. **Pick the output** (pattern below).
 5. **Build one interaction, test it with the user, then add the next.**
@@ -29,7 +29,13 @@ SDK callbacks run on the Bluetooth path. Do not draw UI or do slow work in them.
 
 ```python
 import asyncio
-from tapsdk import InputModeController, TapSDK2, connect
+from tapsdk import (
+    DeviceFeatures,
+    InputModeController,
+    ModelTypes,
+    VisionSensorOpModes,
+    connect,
+)
 
 def first(v):
     return v[0] if isinstance(v, (list, tuple)) else v
@@ -40,9 +46,12 @@ async def main():
     sdk.register_tap_events(lambda i, t: events.put_nowait(("tap", first(t))))
     sdk.register_air_gesture_events(lambda i, g: events.put_nowait(("air", first(g))))
     await sdk.start()
-    if not isinstance(sdk, TapSDK2):
+    if hasattr(sdk, "set_input_mode"):
         await sdk.set_input_mode(InputModeController())
-    # v2: enable a vision model here (tap-vision-models)
+    else:
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+        await sdk.set_vision_sensor_model(ModelTypes.TAPPING)
+        await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)
 
     while True:
         kind, code = await events.get()
@@ -108,7 +117,7 @@ threading.Thread(target=lambda: asyncio.run(tap_main(q)), daemon=True).start()
 ## Rules
 
 - Do not add dependencies to the SDK. Add them to the app's `requirements.txt`.
-- Use a virtual environment (`python3 -m venv .venv`).
+- Use a virtual environment (`python3 -m venv .venv`). Requires Python 3.10 or newer.
 - Add a keyboard fallback (arrow keys, space) so the user can test the app without the Tap.
 - Show connection status on screen ("Connecting...", "Connected", "Disconnected").
 - macOS: Bluetooth permission for the terminal; Accessibility permission when sending keys.

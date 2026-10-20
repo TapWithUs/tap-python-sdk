@@ -1,13 +1,15 @@
 ---
 name: tap-imu-motion
-description: Use Tap hand motion - v2 IMU motion data (dx, dy, roll, pitch, yaw) and v1 mouse events - to move a cursor, steer, tilt, or rotate things. Use for air mouse, pointer, cursor control, tilt, orientation, euler angles, roll/pitch/yaw, or motion-driven UI.
+description: Use Tap hand motion - IMU motion data (dx, dy, roll, pitch, yaw) and mouse events - to move a cursor, steer, tilt, or rotate things. Use for air mouse, pointer, cursor control, tilt, orientation, euler angles, roll/pitch/yaw, or motion-driven UI.
 ---
 
 # IMU motion and mouse
 
-The two protocols give motion in different ways.
+Firmware gives motion in two ways. Use `hasattr` to pick the API.
 
-## v2 (`TapSDK2`): IMU motion feature
+## `TapSDK2`: IMU motion feature
+
+TapXR developer firmware and TapBand (same BLE API; TapBand is coming soon).
 
 ```python
 from tapsdk import DeviceFeatures
@@ -27,7 +29,9 @@ await sdk.set_feature(DeviceFeatures.IMU_MOTION_DATA, True)
 - Turn off with `set_feature(DeviceFeatures.IMU_MOTION_DATA, False)` to save battery and bandwidth.
 - Motion works together with `MODEL_DETECTION` (air gestures). The `tap-knob` and `tap-dpad` skills combine them.
 
-## v1 (`TapSDK`): mouse events
+## `TapSDK`: mouse events
+
+Tap Strap and Tap Strap 2.
 
 ```python
 from tapsdk import InputModeController
@@ -41,7 +45,7 @@ await sdk.set_input_mode(InputModeController())
 ```
 
 - `vx`, `vy`: signed velocities. `proximity`: `True` when a surface is detected (optical mouse on Tap Strap).
-- v1 has no euler angles. For orientation on v1, use raw IMU (`tap-raw-sensors`).
+- `TapSDK` mouse events have no euler angles. For orientation, use raw IMU (`tap-raw-sensors`).
 - TapXR Spatial Control: `await sdk.set_input_type(InputType.MOUSE)` forces air-mouse; `InputType.AUTO` returns to automatic.
 
 ## Patterns
@@ -70,7 +74,7 @@ smooth = alpha * value + (1 - alpha) * smooth
 
 **Dead zone**: ignore `abs(dx) + abs(dy) < 2` to stop drift when the hand is still.
 
-**Rate**: count packets per second if timing matters (see `examples/v2.py` in the repo). Do not assume a fixed rate.
+**Rate**: count packets per second if timing matters (see `examples/features.py` in the repo). Do not assume a fixed rate.
 
 ## Axes
 
@@ -81,6 +85,6 @@ If a direction is inverted on the user's device, flip the sign. Ask the user to 
 
 ## Docs
 
-- v2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/
-- v1 events: https://tapwithus.github.io/tap-python-sdk/latest/v1/reference/events/
-- Spatial Control (v1 TapXR): https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/use-spatial-control/
+- TapSDK2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/
+- TapSDK events: https://tapwithus.github.io/tap-python-sdk/latest/v1/reference/events/
+- Spatial Control (TapXR): https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/use-spatial-control/

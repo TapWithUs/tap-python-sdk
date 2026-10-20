@@ -2,7 +2,7 @@
 
 Tap hardware always has a “personality” toward the host: it can act as a keyboard/mouse for the operating system, stream structured controller events to an app, stream raw IMU data, or combine some of these.
 
-On v1 (`TapSDK`), the SDK models that personality as **input modes** (`set_input_mode` / NUS).
+On `TapSDK`, the SDK models that personality as **input modes** (`set_input_mode` / NUS).
 
 - **Text** — OS-facing HID behavior; your Python callbacks stay quiet for taps.
 - **Controller** — events are for your app; classic typing to the OS is not the goal.

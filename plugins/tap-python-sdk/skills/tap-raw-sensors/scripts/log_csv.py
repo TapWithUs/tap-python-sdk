@@ -1,16 +1,16 @@
-"""Log raw Tap sensor packets to CSV (v1 or v2).
+"""Log raw Tap sensor packets to CSV.
 
 Run:  python log_csv.py --seconds 30 --out raw.csv
 Columns: host_time, device_ts_ms, type ("imu" or "accl"), v0..vN
   imu  = [gyro_x, gyro_y, gyro_z, accl_x, accl_y, accl_z]   (mdps, mg when scaled)
-  accl = 5 fingers x [x, y, z]                               (mg when scaled; v1 only)
+  accl = 5 fingers x [x, y, z]                               (mg when scaled; TapSDK only)
 """
 import argparse
 import asyncio
 import csv
 import time
 
-from tapsdk import DeviceFeatures, InputModeRaw, TapSDK2, connect
+from tapsdk import DeviceFeatures, InputModeRaw, connect
 from tapsdk.enumerations import ImuAcclSensitivity, ImuGyroSensitivity
 
 
@@ -26,7 +26,7 @@ async def main(seconds, out):
     sdk.register_raw_data_events(on_raw)
     await sdk.start()
 
-    if isinstance(sdk, TapSDK2):
+    if hasattr(sdk, "set_feature"):
         await sdk.set_feature(DeviceFeatures.RAW_IMU_DATA, True)
         await sdk.set_imu_sensitivity(
             xl_sensitivity=ImuAcclSensitivity.G2,

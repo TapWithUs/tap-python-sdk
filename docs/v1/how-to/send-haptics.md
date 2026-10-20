@@ -4,7 +4,7 @@
 await tap.send_vibration_sequence([1000, 300, 200])
 ```
 
-Periods are in milliseconds, clamped to **0–2550** in **10 ms** steps. Values are stored as `period // 10` on the wire (v1 UI characteristic).
+Periods are in milliseconds, clamped to **0–2550** in **10 ms** steps. Values are stored as `period // 10` on the wire (`TapSDK` UI characteristic).
 
 The list alternates **on** and **off** durations. The example above vibrates for 1 s, pauses 300 ms, then vibrates 200 ms.
 
@@ -20,4 +20,4 @@ The list alternates **on** and **off** durations. The example above vibrates for
 await tap.send_vibration_sequence([100, 200, 100, 200, 500])
 ```
 
-Runnable sample: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/v2/examples/basic.py).
+Runnable sample: [`examples/basic.py`](https://github.com/TapWithUs/tap-python-sdk/blob/master/examples/basic.py).

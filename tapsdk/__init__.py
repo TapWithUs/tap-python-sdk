@@ -1,8 +1,9 @@
-"""Tap Strap / TapXR Python BLE SDK.
+"""Tap Strap / TapXR / TapBand Python BLE SDK.
 
 Public exports: ``connect``, ``TapSDK``, ``TapSDK2``, input-mode classes,
 ``InputType``, and gesture/feature enumerations. See the ``docs/`` directory
-for tutorials, how-to guides, reference, and explanation.
+for tutorials, how-to guides, reference, and explanation. TapBand uses the
+same BLE API as TapXR and is coming soon.
 """
 
 from tapsdk.enumerations import (AirGestures, DeviceFeatures,  # noqa: F401
@@ -13,9 +14,11 @@ from tapsdk.inputmodes import (InputModeController, InputModeControllerText,  # 
 
 
 async def connect(address=None, *, skip_scan: bool = False, **kwargs):
-    """Attach to a Tap, detect v1/v2 protocol, return the matching SDK.
+    """Attach to a Tap and return ``TapSDK`` or ``TapSDK2`` from firmware.
 
     Does not start notifications. Register callbacks, then ``await sdk.start()``.
+    Enable input with ``hasattr(sdk, "set_input_mode")`` (Controller mode) or
+    ``DeviceFeatures.MODEL_DETECTION`` plus a vision model.
 
     ``skip_scan`` (Windows only): if True, never falls back to a live BLE
     advertisement scan - only attempts to attach to a Tap Windows already

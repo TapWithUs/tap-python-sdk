@@ -1,6 +1,6 @@
-# Explanation (v1)
+# Explanation (`TapSDK`)
 
-Understanding-oriented background for the classic protocol.
+Understanding-oriented background for input-mode firmware.
 
 | Topic | Page |
 |-------|------|

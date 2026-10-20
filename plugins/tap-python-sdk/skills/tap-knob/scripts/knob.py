@@ -1,4 +1,6 @@
-"""Knob: hold a pinch and twist the hand to turn a value up or down (Tap v2).
+"""Knob: hold a pinch and twist the hand to turn a value up or down.
+
+Needs the TapXR developer firmware or TapBand (air-gesture holds + IMU roll).
 
 Run:  python knob.py
 Hold thumb+index (AB) and roll the wrist: the value changes. Relax the hand to release.
@@ -61,11 +63,14 @@ class KnobTracker:
 
 
 async def main():
-    from tapsdk import DeviceFeatures, ModelTypes, TapSDK2, VisionSensorOpModes, connect
+    from tapsdk import DeviceFeatures, ModelTypes, VisionSensorOpModes, connect
 
     sdk = await connect()
-    if not isinstance(sdk, TapSDK2):
-        raise SystemExit("The knob needs a v2 (TapSDK2) device: air-gesture holds + IMU roll.")
+    if not hasattr(sdk, "set_feature"):
+        raise SystemExit(
+            "The knob needs the TapXR developer firmware or TapBand: "
+            "air-gesture holds and IMU roll."
+        )
 
     knob = KnobTracker(step_deg=2)
     values = [50, 50, 50, 50]

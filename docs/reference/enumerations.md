@@ -14,7 +14,7 @@ Spatial Control input selection.
 
 ## `MouseModes`
 
-Reported by air-gesture state events (`0x14` notifications) on v1.
+Reported by air-gesture state events (`0x14` notifications) on `TapSDK`.
 
 | Member | Value |
 |--------|-------|
@@ -25,7 +25,7 @@ Reported by air-gesture state events (`0x14` notifications) on v1.
 
 ## `AirGestures`
 
-v1 air-gesture codes (and remapped tap codes in air-mouse).
+`TapSDK` air-gesture codes (and remapped tap codes in air-mouse).
 
 | Member | Value |
 |--------|-------|
@@ -51,7 +51,7 @@ v1 air-gesture codes (and remapped tap codes in air-mouse).
 
 ## `UnifiedAirGestures`
 
-v2 unified / combined air-gesture codes from `TapSDK2` air-gesture events.
+Raw unified air-gesture codes from `TapSDK2` (`register_air_gesture_events`). Full set on the TapXR developer firmware and TapBand: swipes, pinches with hold, fist with hold.
 
 | Member | Value |
 |--------|-------|
@@ -73,7 +73,7 @@ v2 unified / combined air-gesture codes from `TapSDK2` air-gesture events.
 
 ## `VisionSensorOpModes`
 
-v2 vision sensor operating mode (`set_vision_sensor_op_mode`).
+`TapSDK2` vision sensor operating mode (`set_vision_sensor_op_mode`).
 
 | Member | Value |
 |--------|-------|
@@ -83,7 +83,7 @@ v2 vision sensor operating mode (`set_vision_sensor_op_mode`).
 
 ## `ModelTypes`
 
-v2 vision / model selection (`set_vision_sensor_model`).
+`TapSDK2` vision / model selection (`set_vision_sensor_model`).
 
 | Member | Value |
 |--------|-------|
@@ -92,7 +92,7 @@ v2 vision / model selection (`set_vision_sensor_model`).
 
 ## `DeviceFeatures`
 
-v2 streams toggled with `TapSDK2.set_feature` / `get_feature`.
+`TapSDK2` streams toggled with `set_feature` / `get_feature`.
 
 | Member | Value | Notes |
 |--------|-------|-------|

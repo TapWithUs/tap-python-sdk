@@ -1,4 +1,6 @@
-"""D-Pad: swipe for directions, pinch to select, hold a pinch to rotate or drag (Tap v2).
+"""D-Pad: swipe for directions, pinch to select, hold a pinch to rotate or drag.
+
+Needs the TapXR developer firmware or TapBand (air gestures + IMU motion).
 
 Run:  python dpad.py
 - Swipe left / right / up / down       -> direction
@@ -128,11 +130,14 @@ class DpadStateMachine:
 
 
 async def main():
-    from tapsdk import DeviceFeatures, ModelTypes, TapSDK2, VisionSensorOpModes, connect
+    from tapsdk import DeviceFeatures, ModelTypes, VisionSensorOpModes, connect
 
     sdk = await connect()
-    if not isinstance(sdk, TapSDK2):
-        raise SystemExit("The D-Pad needs a v2 (TapSDK2) device: air gestures + IMU motion.")
+    if not hasattr(sdk, "set_feature"):
+        raise SystemExit(
+            "The D-Pad needs the TapXR developer firmware or TapBand: "
+            "air gestures and IMU motion."
+        )
 
     dpad = DpadStateMachine()
     loop = asyncio.get_running_loop()

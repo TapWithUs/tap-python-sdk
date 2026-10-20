@@ -11,7 +11,7 @@ class MouseModes(Enum):
 
 
 class InputType(Enum):
-    """Spatial Control input modality (TapXR experimental firmware)."""
+    """Spatial Control input modality (authorized TapXR builds)."""
 
     MOUSE = 1
     KEYBOARD = 2
@@ -19,7 +19,7 @@ class InputType(Enum):
 
 
 class AirGestures(Enum):
-    """Air-gesture and spatial-state codes from gesture notifications."""
+    """Air-gesture and spatial-state codes from ``TapSDK`` gesture notifications."""
 
     NONE = 0
     GENERAL = 1
@@ -71,6 +71,12 @@ class ImuAcclSensitivity(Enum):
 
 
 class UnifiedAirGestures(Enum):
+    """Raw air-gesture codes from TapXR developer firmware and TapBand.
+
+    Thumb swipes, thumb-to-finger pinches with hold, and fist with hold.
+    Delivered by ``register_air_gesture_events``.
+    """
+
     COMBINED_GESTURE_NONE = 100
     COMBINED_GESTURE_LEFT = 101
     COMBINED_GESTURE_RIGHT = 102

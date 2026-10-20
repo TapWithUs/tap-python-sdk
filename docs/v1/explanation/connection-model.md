@@ -10,7 +10,7 @@ await connect()  →  assert TapSDK  →  register callbacks  →  await sdk.sta
 
 1. `connect()` calls shared `connect_tap()` (attach if already connected, otherwise scan), ensures GATT services are populated (`ensure_gatt_services`), then `detect_protocol()`: if characteristic `c3ff000e` is absent, return `TapSDK`. Empty service caches raise instead of guessing.
 2. Notifications are **not** started yet — register callbacks first.
-3. `start()` arms v1 notify characteristics and fires the connection callback with the SDK instance.
+3. `start()` arms `TapSDK` notify characteristics and fires the connection callback with the SDK instance.
 
 `TapSDK.run()` still works: connect if needed, then `start()`, in one call.
 
@@ -22,9 +22,9 @@ await connect()  →  assert TapSDK  →  register callbacks  →  await sdk.sta
 
 On Windows, pass `skip_scan=True` to skip the live BLE scan fallback entirely and only attach to a Tap Windows already reports as connected/paired (via AEP) or an explicitly given `address`; if that attempt doesn't succeed, `connect()` raises `ConnectionError` immediately instead of scanning and waiting. This has no effect on macOS/Linux.
 
-An unbonded/unpaired GATT connection (typically the live-scan fallback path) can expose a reduced, v1-looking characteristic set on a v2 device even though it's a v2 device — Windows omits characteristics requiring a security level the current link doesn't satisfy. If you see a Tap misdetected as v1, or `"Characteristic ... was not found!"`, fully unpair the Tap in Windows Settings, re-pair via **Settings > Bluetooth & devices > Add device**, power-cycle the Tap, then reconnect. Background: [Windows BLE connect notes](../../windows-ble-connect-notes.md).
+An unbonded/unpaired GATT connection (typically the live-scan fallback path) can expose a reduced, `TapSDK`-looking characteristic set on a `TapSDK2` device — Windows omits characteristics requiring a security level the current link doesn't satisfy. If `connect()` returns `TapSDK` when you expected `TapSDK2`, or you see `"Characteristic ... was not found!"`, fully unpair the Tap in Windows Settings, re-pair via **Settings > Bluetooth & devices > Add device**, power-cycle the Tap, then reconnect. Background: [Windows BLE connect notes](../../windows-ble-connect-notes.md).
 
-## v1 GATT path
+## `TapSDK` GATT path
 
 | Concern | Behavior |
 |---------|----------|

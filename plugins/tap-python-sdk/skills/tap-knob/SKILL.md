@@ -1,11 +1,11 @@
 ---
 name: tap-knob
-description: Build a virtual knob with a Tap v2 - hold a pinch and twist the wrist to turn a value up or down (volume, brightness, zoom, scroll, color). Use for knob, dial, twist, rotate-to-adjust, slider, volume control, or continuous value control.
+description: Build a virtual knob with a Tap - hold a pinch and twist the wrist to turn a value up or down (volume, brightness, zoom, scroll, color). Use for knob, dial, twist, rotate-to-adjust, slider, volume control, or continuous value control.
 ---
 
 # Knob (pinch-hold + twist)
 
-**v2 (`TapSDK2`) only.** It needs air-gesture holds and IMU roll, which v1 does not provide. This is the same interaction as the Knob in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
+Needs the TapXR developer firmware or TapBand: air-gesture holds and IMU roll. TapBand uses the same BLE API and is coming soon. This is the same interaction as the Knob in the TAP_EV sandbox (https://tapwithus.github.io/TAP_EV/).
 
 ## How it works
 
@@ -28,7 +28,7 @@ Copy [scripts/knob.py](scripts/knob.py). It has:
   - `on_gesture(code)` returns `"start"`, `"release"`, or `None`.
   - `on_roll(roll)` returns signed int steps (0 when idle).
   - `active` is the knob index 0-3 (AB, AC, AD, AE) or `None`.
-- `main()`: connects, checks v2, enables the features, and prints 4 values (0-100).
+- `main()`: connects, checks for `set_feature`, enables the features, and prints 4 values (0-100).
 
 Required device setup (after `await sdk.start()`):
 
