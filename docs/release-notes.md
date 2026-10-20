@@ -10,7 +10,13 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
-* Version **1.0.0**: the package leaves beta. The PyPI distribution name stays **`tap-python-sdk`** (`pip install tap-python-sdk`; import `tapsdk`). The Development Status classifier is now `5 - Production/Stable`. Publishing this version to PyPI is a separate maintainer step (run `scripts/prepare_release.py 1.0.0`, then tag).
+### Bug fixes
+
+## 1.0.0 (2026-10-20)
+______________________
+### Main features
+
+* Version **1.0.0**: the package leaves beta. The PyPI distribution name stays **`tap-python-sdk`** (`pip install tap-python-sdk`; import `tapsdk`). The Development Status classifier is now `5 - Production/Stable`.
 * Product messaging matches current devices: the TapXR developer firmware has the full gesture set (taps, thumb swipes, pinches with hold, fist with hold). TapBand uses the same BLE API as TapXR and is coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)); it is not for sale yet.
 * One first-run path for Tap Strap and TapXR: README and `examples/connect.py` enable input with `hasattr(sdk, "set_input_mode")` (Controller mode) or `DeviceFeatures.MODEL_DETECTION` + the tapping vision model — the same sequence as the [developer portal Getting started](https://dev.tapwithus.com/docs/getting-started/).
 * README, docs, and agent skills no longer describe the product as “SDK v1 / SDK v2”. `connect()` still returns `TapSDK` or `TapSDK2` from firmware; user-facing text talks about devices and those class names.
