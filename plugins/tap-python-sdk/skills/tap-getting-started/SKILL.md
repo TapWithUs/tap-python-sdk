@@ -5,7 +5,7 @@ description: First skill for any Tap app. The connect order is await connect(), 
 
 # Tap getting started
 
-`connect()` returns `TapSDK` or `TapSDK2` from the firmware. Do not call these “SDK v1” / “SDK v2”. Write one path that handles both unless the user names the device.
+`connect()` returns `TapSDK` or `TapSDK2` from the firmware. Do not call these "SDK v1" / "SDK v2". Write one path that handles both unless the user names the device.
 
 TapBand uses the same BLE API as TapXR and is coming soon (not for sale yet): https://www.tapwithus.com/tapband-waitlist/
 
