@@ -10,7 +10,7 @@ BLE SDK for Tap Strap, Tap Strap 2, TapXR, and TapBand. It receives taps, air ge
 
 TapBand uses the same BLE API as TapXR and is coming soon (not for sale yet): https://www.tapwithus.com/tapband-waitlist/
 
-The TapXR developer firmware supports the full gesture set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold. All four SDKs (Python, Web, iOS, Android) receive those raw detections. In Python that is `register_air_gesture_events`. Do not treat swipes or pinches as iOS/Android-only.
+The TapXR developer firmware supports the full gesture set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold. Python, Web, and Android receive those raw detections (in Python, `register_air_gesture_events`); iOS exposes only processed XR gestures on the developer firmware today. Do not treat swipes or pinches as iOS/Android-only.
 
 Do not describe this package as “SDK v1” or “SDK v2”. `connect()` selects `TapSDK` or `TapSDK2` from firmware. Write one path that handles both unless the user names the device.
 
@@ -18,8 +18,8 @@ Do not describe this package as “SDK v1” or “SDK v2”. `connect()` select
 
 `await connect()` attaches to the Tap, reads GATT, and returns `TapSDK` or `TapSDK2`. Enable input with duck typing (`hasattr`), not a product version:
 
-- `TapSDK` (input modes: `InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`) — Tap Strap, Tap Strap 2
-- `TapSDK2` (`DeviceFeatures`, vision models `ModelTypes.TAPPING` / `AIR_GESTURE`, IMU motion with roll / pitch / yaw) — TapXR developer firmware, TapBand
+- `TapSDK` (input modes: `InputModeText`, `InputModeController`, `InputModeControllerText`, `InputModeRaw`; `set_input_type`) — Tap Strap, Tap Strap 2, and TapXR on stock firmware (every TapXR by default). Has HID: Text mode makes the Tap a Bluetooth keyboard / mouse.
+- `TapSDK2` (`DeviceFeatures`, vision models `ModelTypes.TAPPING` / `AIR_GESTURE`, IMU motion with roll / pitch / yaw) — TapXR developer firmware (opt-in developer program only), TapBand. **No HID**: no Text mode, no keyboard, no `set_input_type`. Tap Strap cannot run this firmware.
 
 ## Required order
 
@@ -69,8 +69,9 @@ Tapcode bits: thumb = 1, index = 2, middle = 4, ring = 8, pinky = 16.
 
 ## Gotchas
 
-- `TapSDK` boots in **Text mode**: the Tap types on the OS keyboard and the SDK gets **no** taps. Call `set_input_mode(InputModeController())` after `start()`.
-- `TapSDK2` sends nothing until features are on: `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
+- `TapSDK` (Tap Strap, stock TapXR) boots in **Text mode**: the Tap types on the OS keyboard and the SDK gets **no** taps. Call `set_input_mode(InputModeController())` after `start()`.
+- `TapSDK2` has no Text mode and no HID: `set_input_mode`, `set_input_type`, and `register_mouse_events` do not exist on it (`AttributeError`). Never promise typing or a system cursor on the TapXR developer firmware.
+- `TapSDK2` sends nothing until features are on (the developer firmware boots with tap detection off): `MODEL_DETECTION` + a vision model for taps / gestures, `IMU_MOTION_DATA` for motion, `RAW_IMU_DATA` for raw.
 - `TapSDK2` runs one vision model at a time: `TAPPING` (with `TRIGGER`) or `AIR_GESTURE` (with `STREAM`).
 - Register callbacks before `start()`. `start()` returns right away; keep the event loop alive.
 - Callbacks run on the Bluetooth notification path. Keep them short; never block. Schedule async work with `asyncio.get_running_loop().create_task(...)` or push to an `asyncio.Queue`.

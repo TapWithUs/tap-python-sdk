@@ -9,6 +9,8 @@ On `TapSDK`, the SDK models that personality as **input modes** (`set_input_mode
 - **Controller + Text** — parallel paths when users still need to type.
 - **Raw** — bypass gesture interpretation and ship sensor samples.
 
-Modes are orthogonal to **Spatial Control input type** (mouse vs keyboard vs auto) on TapXR. Mode answers “who receives data and in what form?”; input type answers “which XR input modality is forced?” when you have experimental firmware access.
+Modes are orthogonal to the **TapXR input type** (mouse vs keyboard vs auto, `set_input_type`) on stock TapXR firmware. Mode answers “who receives data and in what form?”; input type answers “which XR input modality is forced?”.
+
+Text mode and HID exist only on this firmware (Tap Strap and stock TapXR). The TapXR developer firmware (`TapSDK2`) has no input modes, no HID, and no input type.
 
 Switching modes is a small binary command on the NUS RX characteristic. The SDK owns the byte layout so applications work with typed classes instead of magic numbers.

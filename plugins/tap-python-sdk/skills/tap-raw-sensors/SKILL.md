@@ -43,7 +43,7 @@ await sdk.set_feature(DeviceFeatures.RAW_IMU_DATA, False)
 
 ## `TapSDK` (`InputModeRaw`)
 
-Tap Strap and Tap Strap 2.
+Tap Strap, Tap Strap 2, and TapXR on stock firmware.
 
 ```python
 from tapsdk import InputModeController, InputModeRaw

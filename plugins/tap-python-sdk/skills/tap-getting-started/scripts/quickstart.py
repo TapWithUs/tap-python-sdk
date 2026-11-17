@@ -32,9 +32,11 @@ def on_air_gesture(identifier, gesture):
 
 async def enable_input(sdk, air):
     if hasattr(sdk, "set_input_mode"):
-        # TapSDK boots in Text mode, which sends no tap events to the SDK.
+        # TapSDK (Tap Strap / stock TapXR) boots in Text mode (HID keyboard),
+        # which sends no tap events to the SDK.
         await sdk.set_input_mode(InputModeController())
         return
+    # TapSDK2 (TapXR developer firmware): no HID, tap detection off at boot.
     await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
     if air:
         await sdk.set_vision_sensor_model(ModelTypes.AIR_GESTURE)

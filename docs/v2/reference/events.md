@@ -34,7 +34,7 @@ register_air_gesture_events(cb)
 cb(identifier, gesture_data) -> None
 ```
 
-`gesture_data` is a one-element list; `gesture_data[0]` matches [`UnifiedAirGestures`](../../reference/enumerations.md#unifiedairgestures). These are the raw detections (swipes, pinches with hold, fist with hold). Python, Web, iOS, and Android all receive them; iOS and Android also add a processed click/drag/drop layer. `TapSDK2` has no air-gesture **state** register.
+`gesture_data` is a one-element list; `gesture_data[0]` matches [`UnifiedAirGestures`](../../reference/enumerations.md#unifiedairgestures). These are the raw detections (swipes, pinches with hold, fist with hold). Python, Web, and Android receive them; iOS and Android add a processed click/drag/drop layer (iOS exposes only that processed layer today). `TapSDK2` has no air-gesture **state** register.
 
 ## Raw IMU
 

@@ -9,12 +9,20 @@ description: First skill for any Tap app. The connect order is await connect(), 
 
 TapBand uses the same BLE API as TapXR and is coming soon (not for sale yet): https://www.tapwithus.com/tapband-waitlist/
 
+Which class you get:
+
+| Device and firmware | Class | HID (keyboard / mouse) |
+|---------------------|-------|------------------------|
+| Tap Strap, Tap Strap 2 | `TapSDK` | Yes. Boots in Text mode (types on the OS keyboard). |
+| TapXR, stock firmware (default) | `TapSDK` | Yes. Boots in Text mode. `set_input_type` available. |
+| TapXR developer firmware (opt-in developer program) | `TapSDK2` | **No.** No Text mode, no keyboard, no `set_input_type`. Boots with tap detection off. |
+
 ## 1. Ask the user (once)
 
 - Which device: Tap Strap, Tap Strap 2, or TapXR? (TapBand: same API as TapXR, coming soon.)
 - Which OS: macOS, Windows, or Linux?
 - Is the Tap turned on, charged, and paired in the OS Bluetooth settings?
-- Is the firmware up to date (update it in the Tap Manager app)? For TapXR, use the TapXR developer firmware.
+- Is the firmware up to date (update it in the Tap Manager app)? For TapXR: stock firmware (the default) or the TapXR developer firmware (opt-in developer program)? Both work; the API differs (see below).
 
 ## 2. Install
 
@@ -44,7 +52,7 @@ Copy [scripts/quickstart.py](scripts/quickstart.py) into the project and run it.
 3. `await sdk.start()`: start notifications.
 4. Enable input (after `start()`):
    - If `hasattr(sdk, "set_input_mode")`: `await sdk.set_input_mode(InputModeController())`. `TapSDK` boots in Text mode, which types on the OS keyboard and sends **no** tap events to the SDK.
-   - Otherwise: `set_feature(DeviceFeatures.MODEL_DETECTION, True)`, then `set_vision_sensor_model(ModelTypes.TAPPING)` and `set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)` (see the `tap-vision-models` skill).
+   - Otherwise (`TapSDK2`, TapXR developer firmware, tap detection off at boot, no HID): `set_feature(DeviceFeatures.MODEL_DETECTION, True)`, then `set_vision_sensor_model(ModelTypes.TAPPING)` and `set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)` (see the `tap-vision-models` skill).
 5. Keep the loop alive: `await asyncio.Event().wait()`.
 
 ## 4. Callback shapes differ by class
@@ -80,7 +88,7 @@ Enable input with `hasattr(sdk, "set_input_mode")`, not a product version name.
 | No device found / scan timeout | Turn the Tap on, pair it in OS Bluetooth settings, close Tap Manager and other apps that hold the connection, then retry. |
 | Connected but no tap events (`TapSDK`) | Set `InputModeController()` after `start()`. |
 | Connected but no tap events (`TapSDK2`) | Enable `MODEL_DETECTION` and set the `TAPPING` model with `TRIGGER` op mode. |
-| Letters appear in the editor when tapping | Device is in Text mode. Set Controller mode. |
+| Letters appear in the editor when tapping | `TapSDK` device (Tap Strap / stock TapXR) is in Text mode. Set Controller mode. This cannot happen on the TapXR developer firmware, which has no HID. |
 | `ConnectionError: GATT services not available` | Turn Bluetooth off and on, unpair and pair again. |
 | macOS: nothing happens, no error | Grant Bluetooth permission to the terminal / IDE, then restart it. |
 | Linux: permission denied | Add the user to the `bluetooth` group and log in again. |

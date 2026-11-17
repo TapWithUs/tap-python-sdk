@@ -79,7 +79,7 @@ nav:
           - Switch input modes: v1/how-to/switch-input-modes.md
           - Stream raw sensors: v1/how-to/stream-raw-sensors.md
           - Send haptics: v1/how-to/send-haptics.md
-          - Use Spatial Control: v1/how-to/use-spatial-control.md
+          - Set the TapXR input type: v1/how-to/use-spatial-control.md
           - Migrate from 0.6: v1/how-to/migrate-from-0.6.md
       - Reference:
           - Overview: v1/reference/index.md

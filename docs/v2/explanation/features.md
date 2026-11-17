@@ -1,6 +1,6 @@
 # Features model
 
-On `TapSDK2`, the device does not use Text / Controller / Raw mode writes. Streams and behaviors are toggled with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures) over framed GATT writes.
+On `TapSDK2`, the device does not use Text / Controller / Raw mode writes, and it has no HID: it never acts as a keyboard or mouse for the OS, and there is no `set_input_type`. Tap detection is off at boot. Streams and behaviors are toggled with [`DeviceFeatures`](../../reference/enumerations.md#devicefeatures) over framed GATT writes.
 
 ## Why features instead of modes
 

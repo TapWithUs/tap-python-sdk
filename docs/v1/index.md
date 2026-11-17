@@ -1,6 +1,6 @@
 # `TapSDK`
 
-Input-mode firmware: NUS input modes, separate notify characteristics, tap codes as integers. Typical hardware: Tap Strap and Tap Strap 2.
+Input-mode firmware: NUS input modes, separate notify characteristics, tap codes as integers. Hardware: Tap Strap, Tap Strap 2, and TapXR on stock firmware (every TapXR by default). This firmware has HID: in Text mode the Tap is a Bluetooth keyboard and mouse.
 
 | Goal | Section |
 |------|---------|

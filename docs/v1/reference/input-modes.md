@@ -53,4 +53,4 @@ Internal helper used by `InputModeRaw`.
 
 ## `input_type_command(input_type)`
 
-Builds the Spatial Control write: `bytearray([0x3, 0xd, 0x0, input_type.value])`. Used by `TapSDK.set_input_type`.
+Builds the TapXR input-type write: `bytearray([0x3, 0xd, 0x0, input_type.value])`. Used by `TapSDK.set_input_type`.

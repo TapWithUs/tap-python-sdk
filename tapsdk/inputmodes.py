@@ -89,6 +89,6 @@ class InputModeRaw(InputMode):
 
 
 def input_type_command(input_type):
-    """Build the Spatial Control input-type write payload."""
+    """Build the TapXR input-type write payload (stock firmware)."""
     assert isinstance(input_type, InputType), "input_type must be of type InputType"
     return bytearray([0x3, 0xd, 0x0, input_type.value])

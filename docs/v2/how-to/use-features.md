@@ -43,7 +43,7 @@ asyncio.run(main())
 
 ## Receive air gestures
 
-The TapXR developer firmware supports the full set: thumb swipes, pinches with hold, fist with hold. TapBand uses the same BLE API. Python, Web, iOS, and Android all receive these **raw** detections. In Python that is `register_air_gesture_events`. iOS and Android also add a processed click/drag/drop layer.
+The TapXR developer firmware supports the full set: thumb swipes, pinches with hold, fist with hold. TapBand uses the same BLE API. Python, Web, and Android receive these **raw** detections. In Python that is `register_air_gesture_events`. iOS and Android add a processed click/drag/drop layer (iOS exposes only that processed layer today).
 
 ```python
 from tapsdk import UnifiedAirGestures

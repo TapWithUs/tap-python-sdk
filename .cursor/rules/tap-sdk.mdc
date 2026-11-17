@@ -10,6 +10,7 @@ When the user wants to build something with a Tap device, read `.cursor/skills/t
 - Install: `pip install tap-python-sdk`. Import: `from tapsdk import connect`. Do not `pip install tapsdk`.
 - Order: `await connect()`, then `register_*` callbacks, then `await sdk.start()`, then enable input, then keep the loop alive. `connect()` alone delivers no taps.
 - `connect()` returns `TapSDK` or `TapSDK2` from firmware. Do not call these “SDK v1” / “SDK v2”. Handle both unless the user names the device.
+- `TapSDK` = Tap Strap and TapXR on stock firmware: has HID (Text mode types on the OS keyboard), input modes, `set_input_type`. `TapSDK2` = TapXR developer firmware only: **no HID** (no Text mode, no keyboard/mouse, no `set_input_type`), and tap detection is off at boot.
 - If `hasattr(sdk, "set_input_mode")`, call `set_input_mode(InputModeController())` to get taps. Otherwise call `set_feature(DeviceFeatures.MODEL_DETECTION, True)` plus a vision model.
 - Tapcode may be `int` or `[int]`. Normalize with `v[0] if isinstance(v, (list, tuple)) else v`.
 - Callbacks run on the Bluetooth path: keep them short, never block, push work to an `asyncio.Queue`.

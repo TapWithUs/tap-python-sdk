@@ -4,7 +4,7 @@ All live in `tapsdk.enumerations`. `InputType`, `AirGestures`, `ImuAcclSensitivi
 
 ## `InputType`
 
-Spatial Control input selection.
+TapXR input type for `TapSDK.set_input_type` (stock TapXR firmware). Not available on `TapSDK2`.
 
 | Member | Value |
 |--------|-------|

@@ -209,7 +209,7 @@ class TapSDK():
             await self.input_mode_refresh.start()
 
     async def set_input_type(self, input_type: InputType, identifier=None):
-        """Force Spatial Control input type on TapXR (experimental firmware).
+        """Force the TapXR input type (stock TapXR firmware; also used by Spatial Control).
 
         Args:
             input_type: ``InputType.MOUSE``, ``KEYBOARD``, or ``AUTO``.
