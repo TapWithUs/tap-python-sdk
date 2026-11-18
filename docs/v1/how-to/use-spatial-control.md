@@ -1,6 +1,6 @@
-# Set the TapXR input type
+# Use Spatial Control (TapXR)
 
-`set_input_type` forces the TapXR input type (air mouse vs tapping vs automatic). It is a stock TapXR firmware command on `TapSDK`; Spatial Control is one use of it. The TapXR developer firmware (`TapSDK2`) has no input type, no Text mode, and no HID.
+Spatial Control lets authorized apps force input type (air mouse vs tapping) and receive extended air-gesture state. It requires TapXR with experimental Spatial Control firmware and developer access. Request access via [Tap contact](https://www.tapwithus.com/contact-us/).
 
 Uses `TapSDK.set_input_type` and `register_air_gesture_state_events`.
 

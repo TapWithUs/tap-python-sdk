@@ -5,7 +5,7 @@ description: Switch the TapXR / TapBand vision model between TAPPING and AIR_GES
 
 # Vision models and air gestures
 
-Model switching is `TapSDK2` (`set_feature` / vision helpers). That is the TapXR developer firmware and TapBand (same BLE API; TapBand is coming soon). Python, Web, and Android receive the **raw** detections (iOS exposes processed XR gestures on this firmware). In Python that is `register_air_gesture_events`. Do not treat swipes or pinches as iOS/Android-only.
+Model switching is `TapSDK2` (`set_feature` / vision helpers). That is the TapXR developer firmware and TapBand (same BLE API; TapBand is coming soon). Python, Web, iOS, and Android all receive the **raw** detections. In Python that is `register_air_gesture_events`. Do not treat swipes or pinches as iOS/Android-only.
 
 The device runs one vision model at a time:
 
@@ -92,7 +92,7 @@ def on_tap(identifier, data):
 
 `DeviceFeatures.STANDBY_GESTURE_DETECTION` lets the user put the device in standby with a gesture. `register_standby_state_events(cb(id, is_standby))` reports changes. `await sdk.set_standby_state(False)` wakes it; `await sdk.get_standby_state()` reads it.
 
-## Tap Strap / Tap Strap 2 / stock TapXR air gestures
+## Tap Strap / Tap Strap 2 air gestures
 
 `TapSDK` has no model switching. In `InputModeController()`, `register_air_gesture_events` gives `cb(id, gesture: int)` that matches `AirGestures` (for example `UP_ONE_FINGER`, `LEFT_TWO_FINGERS`, `PINCH`, `THUMB_FINGER`, `STATE_FIST`). `register_air_gesture_state_events` gives `cb(id, MouseModes)` when the air-mouse state changes. Normalize with `first()` if you share a callback with `TapSDK2`.
 

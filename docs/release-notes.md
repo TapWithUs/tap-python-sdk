@@ -10,8 +10,6 @@ new version and opens a fresh empty one.
 ______________________
 ### Main features
 
-* Docs and agent skills now state which firmware has HID. Tap Strap and TapXR on stock firmware (`TapSDK`) act as a Bluetooth keyboard / mouse (Text mode, Controller + Text) and support `set_input_type`; the TapXR developer firmware (`TapSDK2`) has no HID, no Text mode, and no `set_input_type`, and boots with tap detection off. `set_input_type` is documented as a stock TapXR firmware command rather than an experimental Spatial Control build. Raw air-gesture codes are documented for Python, Web, and Android; iOS exposes processed XR gestures. No API changes.
-
 ### Bug fixes
 
 ## 1.0.0 (2026-10-20)

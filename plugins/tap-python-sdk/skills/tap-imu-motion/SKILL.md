@@ -31,7 +31,7 @@ await sdk.set_feature(DeviceFeatures.IMU_MOTION_DATA, True)
 
 ## `TapSDK`: mouse events
 
-Tap Strap, Tap Strap 2, and TapXR on stock firmware.
+Tap Strap and Tap Strap 2.
 
 ```python
 from tapsdk import InputModeController
@@ -46,7 +46,7 @@ await sdk.set_input_mode(InputModeController())
 
 - `vx`, `vy`: signed velocities. `proximity`: `True` when a surface is detected (optical mouse on Tap Strap).
 - `TapSDK` mouse events have no euler angles. For orientation, use raw IMU (`tap-raw-sensors`).
-- TapXR on stock firmware only (`TapSDK`): `await sdk.set_input_type(InputType.MOUSE)` forces air-mouse; `InputType.AUTO` returns to automatic. `TapSDK2` (TapXR developer firmware) has no `set_input_type` and no HID mouse; use `IMU_MOTION_DATA` above.
+- TapXR Spatial Control: `await sdk.set_input_type(InputType.MOUSE)` forces air-mouse; `InputType.AUTO` returns to automatic.
 
 ## Patterns
 
@@ -87,4 +87,4 @@ If a direction is inverted on the user's device, flip the sign. Ask the user to 
 
 - TapSDK2 events: https://tapwithus.github.io/tap-python-sdk/latest/v2/reference/events/
 - TapSDK events: https://tapwithus.github.io/tap-python-sdk/latest/v1/reference/events/
-- TapXR input type (stock firmware): https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/use-spatial-control/
+- Spatial Control (TapXR): https://tapwithus.github.io/tap-python-sdk/latest/v1/how-to/use-spatial-control/

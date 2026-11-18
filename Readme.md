@@ -8,18 +8,6 @@ BLE SDK for Python apps that connect to **Tap Strap**, **Tap Strap 2**, **TapXR*
 
 TapBand uses the same BLE API as TapXR and is coming soon. It is not for sale yet. Join the [TapBand waitlist](https://www.tapwithus.com/tapband-waitlist/).
 
-### Which firmware your Tap runs
-
-| Device and firmware | `connect()` returns | Keyboard / mouse (HID) | What your app controls |
-|---------------------|---------------------|------------------------|------------------------|
-| Tap Strap, Tap Strap 2 | `TapSDK` | Yes: Text mode, Controller + Text | Input modes (`set_input_mode`) |
-| TapXR on stock firmware (every TapXR by default) | `TapSDK` | Yes: Text mode, Controller + Text | Input modes, plus `set_input_type` (air mouse / tapping / auto) |
-| TapXR on the TapXR developer firmware (opt-in developer program) | `TapSDK2` | **No.** No Text mode, no HID, no `set_input_type` | `DeviceFeatures`, vision models, IMU motion, standby |
-
-- Tap Strap and stock TapXR firmware act as a Bluetooth keyboard and mouse. They boot in Text mode with tap detection on.
-- The TapXR developer firmware sends no HID at all: the Tap never types or moves the system cursor. It also boots with tap detection off, so your app must enable `MODEL_DETECTION` and a vision model before taps arrive.
-- Only TapXR owners who join the developer program move to the developer firmware. Tap Strap stays on stock firmware.
-
 ### Documentation
 
 Published docs (MkDocs Material, versioned with mike): [https://tapwithus.github.io/tap-python-sdk/](https://tapwithus.github.io/tap-python-sdk/)
@@ -82,13 +70,13 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-On Tap Strap and stock TapXR firmware (`TapSDK`), the script switches the Tap out of keyboard (Text) mode into Controller mode. On the TapXR developer firmware (`TapSDK2`) there is no keyboard mode, and tap detection is off at boot, so the script turns on `MODEL_DETECTION` with the `TAPPING` model. Call that enable step after `start()`, or you get no tap events.
+The script switches the Tap out of keyboard mode. Call that enable step after `start()`, or you get no tap events.
 
 Turn the Tap on. Update firmware with Tap Manager. `connect()` attaches and returns `TapSDK` or `TapSDK2` from the firmware. You do not pick a protocol. More: [`examples/connect.py`](examples/connect.py).
 
 ### Air gestures (raw swipes, pinches, fist)
 
-Python, Web, and Android receive the **raw** gesture detections from the sensor. In Python that is `register_air_gesture_events`. iOS and Android add a processed layer (click, drag, drop with debounce); on the TapXR developer firmware, iOS exposes only that processed layer today. Swipes and pinches are not iOS/Android-only.
+Python, Web, iOS, and Android all receive the **raw** gesture detections from the sensor. In Python that is `register_air_gesture_events`. iOS and Android also add a processed layer (click, drag, drop with debounce). Swipes and pinches are not iOS/Android-only.
 
 The TapXR developer firmware (and TapBand, same BLE API) supports the full set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, and fist with hold. Codes match `UnifiedAirGestures`.
 
@@ -116,12 +104,10 @@ async def main():
     sdk = await connect()
     sdk.register_air_gesture_events(on_air_gesture)
     await sdk.start()
-    if not hasattr(sdk, "set_feature"):
-        # Tap Strap / stock TapXR (TapSDK): see the AirGestures note below.
-        raise SystemExit("This example needs the TapXR developer firmware (TapSDK2).")
-    await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
-    await sdk.set_vision_sensor_model(ModelTypes.AIR_GESTURE)
-    await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.STREAM)
+    if hasattr(sdk, "set_feature"):
+        await sdk.set_feature(DeviceFeatures.MODEL_DETECTION, True)
+        await sdk.set_vision_sensor_model(ModelTypes.AIR_GESTURE)
+        await sdk.set_vision_sensor_op_mode(VisionSensorOpModes.STREAM)
     print("Swipe, pinch, or make a fist. Ctrl+C to quit.")
     await asyncio.Event().wait()
 
@@ -137,7 +123,7 @@ asyncio.run(main())
 | `COMBINED_GESTURE_FIST` / `FIST_HOLD` | Fist / fist held |
 | `COMBINED_GESTURE_NONE` | Hand relaxed (use as release after a hold) |
 
-Tap Strap, Tap Strap 2, and stock TapXR firmware (`TapSDK`) in Controller mode report `AirGestures` on the same callback (`UP_ONE_FINGER`, `PINCH`, `STATE_FIST`, and related codes). Enable them with `await sdk.set_input_mode(InputModeController())`. `UnifiedAirGestures` names above apply only to `TapSDK2`, so decode by class. Normalize the payload with `first()` on every device.
+Tap Strap and Tap Strap 2 in Controller mode report `AirGestures` on the same callback (`UP_ONE_FINGER`, `PINCH`, `STATE_FIST`, and related codes). Normalize the payload with `first()` on every device.
 
 ### AI-Assisted Development
 
@@ -221,11 +207,13 @@ curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/insta
 ### Features (summary)
 
 - **Connect:** `await connect()` attaches and returns `TapSDK` or `TapSDK2` from firmware
-- **Input modes** (`TapSDK`, Tap Strap and stock TapXR firmware): Text (HID keyboard), Controller, Controller+Text, Raw sensors — [TapSDK how-tos](docs/v1/how-to/index.md)
-- **Features** (`TapSDK2`, TapXR developer firmware): `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby. No HID, no Text mode, no input type — [TapSDK2 how-tos](docs/v2/how-to/index.md)
+- **Input modes** (`TapSDK`): Text, Controller, Controller+Text, Raw sensors — [TapSDK how-tos](docs/v1/how-to/index.md)
+- **Features** (`TapSDK2`): `DeviceFeatures`, vision model/op-mode, IMU motion/raw, standby — [TapSDK2 how-tos](docs/v2/how-to/index.md)
 - **Events:** tap, mouse, air gesture (raw detections), raw / IMU packets, connect/disconnect
-- **Commands:** set mode / features, TapXR input type (`TapSDK.set_input_type`, stock TapXR firmware only), haptic sequences
-- **TapXR input type** (air mouse / tapping / auto, stock TapXR firmware on `TapSDK`): [Set the TapXR input type](docs/v1/how-to/use-spatial-control.md)
+- **Commands:** set mode / features, Spatial Control input type (TapXR), haptic sequences
+- **Spatial Control** (authorized TapXR builds): [Use Spatial Control](docs/v1/how-to/use-spatial-control.md)
+
+> **HID availability:** Text mode, keyboard/mouse (HID) input, and `set_input_type` work only on the standard firmware (every Tap Strap, and TapXR by default), where `connect()` returns `TapSDK`. TapXR on the developer firmware, which owners join through the developer program, has no HID: `connect()` returns `TapSDK2`, so enable tap detection with `set_feature(DeviceFeatures.MODEL_DETECTION, True)` after `start()`.
 
 ### Migrating from 0.6.x
 

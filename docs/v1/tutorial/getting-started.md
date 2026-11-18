@@ -1,13 +1,13 @@
 # Getting started (`TapSDK`)
 
-This tutorial walks you through installing the SDK, connecting with `TapSDK`, and printing tap events. By the end you will have a small asyncio program that talks to input-mode firmware (Tap Strap / Tap Strap 2 / TapXR on stock firmware).
+This tutorial walks you through installing the SDK, connecting with `TapSDK`, and printing tap events. By the end you will have a small asyncio program that talks to input-mode firmware (Tap Strap / Tap Strap 2).
 
 The [docs home](../../index.md) has one script that works for Tap Strap and TapXR. Use this page when you already know you have `set_input_mode`.
 
 ## What you need
 
 - Python 3.10 or newer
-- A Tap Strap, Tap Strap 2, or TapXR on stock firmware (no framed `c3ff000e` characteristic)
+- A Tap Strap or Tap Strap 2 (no framed `c3ff000e` characteristic)
 
 If `connect()` returns `TapSDK2`, use the [`TapSDK2` tutorial](../../v2/tutorial/getting-started.md) instead.
 

@@ -6,12 +6,11 @@ This package talks to Tap Strap, Tap Strap 2, TapXR, and TapBand over BLE. One i
 
 | Device | Status | Gestures |
 |--------|--------|----------|
-| Tap Strap, Tap Strap 2 | Available. `TapSDK`. Keyboard / mouse (HID) in Text mode. | Finger taps, mouse, and `AirGestures` in Controller mode |
-| TapXR, stock firmware (default) | Available. `TapSDK`. Keyboard / mouse (HID) in Text mode, plus `set_input_type`. | Finger taps, mouse, and `AirGestures` in Controller mode |
-| TapXR, TapXR developer firmware (opt-in developer program) | Available. `TapSDK2`. **No HID** (no Text mode, no keyboard, no `set_input_type`); tap detection is off at boot. | Full set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold |
+| Tap Strap, Tap Strap 2 | Available | Finger taps, mouse, and `AirGestures` in Controller mode |
+| TapXR | Available. Use the TapXR developer firmware. | Full set: taps, thumb swipes up/down/left/right, thumb-to-finger pinches with hold, fist with hold |
 | TapBand | Coming soon ([waitlist](https://www.tapwithus.com/tapband-waitlist/)). Same BLE API as TapXR. Not for sale yet. | Same full set as TapXR |
 
-Python, Web, and Android receive the **raw** gesture detections from the sensor; iOS exposes only the processed layer on the developer firmware today. In Python that is `register_air_gesture_events`. iOS and Android add a processed layer (click, drag, drop with debounce). Swipes and pinches are not iOS/Android-only.
+Python, Web, iOS, and Android all receive the **raw** gesture detections from the sensor. In Python that is `register_air_gesture_events`. iOS and Android also add a processed layer (click, drag, drop with debounce). Swipes and pinches are not iOS/Android-only.
 
 ## First program
 
@@ -59,8 +58,8 @@ if __name__ == "__main__":
 
 | I want to… | Go to |
 |------------|--------|
-| Input modes and HID on Tap Strap / Tap Strap 2 / stock TapXR | [`TapSDK`](v1/index.md) |
-| Features and air gestures on the TapXR developer firmware / TapBand (no HID) | [`TapSDK2`](v2/index.md) |
+| Input modes on Tap Strap / Tap Strap 2 | [`TapSDK`](v1/index.md) |
+| Features and air gestures on TapXR / TapBand | [`TapSDK2`](v2/index.md) |
 
 Do not mix the two APIs on one page. Home is the shared first path.
 

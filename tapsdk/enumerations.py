@@ -11,7 +11,7 @@ class MouseModes(Enum):
 
 
 class InputType(Enum):
-    """TapXR input type (stock TapXR firmware, ``TapSDK`` only)."""
+    """Spatial Control input modality (authorized TapXR builds)."""
 
     MOUSE = 1
     KEYBOARD = 2

@@ -49,12 +49,12 @@ Single-finger taps are the most reliable. Prefer them for frequent actions. Use 
 
 After `await sdk.start()`:
 
-- If `hasattr(sdk, "set_input_mode")` (`TapSDK`: Tap Strap, stock TapXR firmware): `await sdk.set_input_mode(InputModeController())`.
+- If `hasattr(sdk, "set_input_mode")`: `await sdk.set_input_mode(InputModeController())`.
   - `InputModeText()` (default): the Tap types letters on the OS keyboard. The SDK gets no taps.
   - `InputModeController()`: the SDK gets tap, mouse, and air-gesture events. No typing.
   - `InputModeControllerText()`: both at the same time.
   - The SDK re-sends the mode every 10 s, so the device stays in it.
-- Otherwise (`TapSDK2`, TapXR developer firmware): there is no Text mode or HID; tap detection is off at boot. `set_feature(DeviceFeatures.MODEL_DETECTION, True)`, `set_vision_sensor_model(ModelTypes.TAPPING)`, `set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)`.
+- Otherwise: `set_feature(DeviceFeatures.MODEL_DETECTION, True)`, `set_vision_sensor_model(ModelTypes.TAPPING)`, `set_vision_sensor_op_mode(VisionSensorOpModes.TRIGGER)`.
 
 ## Double taps and multi-taps
 

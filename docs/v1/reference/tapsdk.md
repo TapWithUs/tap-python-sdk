@@ -76,7 +76,7 @@ Starts periodic mode refresh on first call. Changing raw sensitivities while alr
 
 ### `async set_input_type(input_type, identifier=None)`
 
-TapXR on stock firmware. Force mouse, keyboard, or automatic input selection (also used by Spatial Control). Not available on `TapSDK2` (TapXR developer firmware).
+TapXR Spatial Control only. Force mouse, keyboard, or automatic input selection.
 
 | Parameter | Description |
 |-----------|-------------|
