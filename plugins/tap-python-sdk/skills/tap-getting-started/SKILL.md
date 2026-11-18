@@ -7,6 +7,8 @@ description: First skill for any Tap app. The connect order is await connect(), 
 
 `connect()` returns `TapSDK` or `TapSDK2` from the firmware. Do not call these "SDK v1" / "SDK v2". Write one path that handles both unless the user names the device.
 
+HID availability: Text mode, keyboard/mouse (HID) input, and `set_input_type` work only on the standard firmware (`TapSDK`: every Tap Strap, and TapXR by default); TapXR on the developer firmware (`TapSDK2`, joined through the developer program) has no HID, so enable tap detection with `set_feature(DeviceFeatures.MODEL_DETECTION, True)` after `start()`.
+
 TapBand uses the same BLE API as TapXR and is coming soon (not for sale yet): https://www.tapwithus.com/tapband-waitlist/
 
 ## 1. Ask the user (once)

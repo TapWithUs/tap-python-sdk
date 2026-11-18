@@ -213,6 +213,8 @@ curl -sL https://raw.githubusercontent.com/TapWithUs/tap-python-sdk/master/insta
 - **Commands:** set mode / features, Spatial Control input type (TapXR), haptic sequences
 - **Spatial Control** (authorized TapXR builds): [Use Spatial Control](docs/v1/how-to/use-spatial-control.md)
 
+> **HID availability:** Text mode, keyboard/mouse (HID) input, and `set_input_type` work only on the standard firmware (every Tap Strap, and TapXR by default), where `connect()` returns `TapSDK`. TapXR on the developer firmware, which owners join through the developer program, has no HID: `connect()` returns `TapSDK2`, so enable tap detection with `set_feature(DeviceFeatures.MODEL_DETECTION, True)` after `start()`.
+
 ### Migrating from 0.6.x
 
 Breaking API changes for `TapSDK` are listed in [Migrate from 0.6](docs/v1/how-to/migrate-from-0.6.md) and [Release notes](docs/release-notes.md).
